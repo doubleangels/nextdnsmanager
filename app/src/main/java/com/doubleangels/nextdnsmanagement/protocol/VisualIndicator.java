@@ -52,8 +52,14 @@ public class VisualIndicator {
         this.httpClient = new OkHttpClient();
     }
 
+
     // Method to initialize VisualIndicator
     public void initialize(Context context, LifecycleOwner lifecycleOwner, AppCompatActivity activity) {
+        if (context == null || lifecycleOwner == null || activity == null) {
+            sentryManager.captureMessage("Cannot initialize with null context, lifecycleOwner, or activity");
+            return;
+        }
+
         // Get ConnectivityManager service
         connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
         // Build a network request
@@ -72,8 +78,12 @@ public class VisualIndicator {
             @Override
             public void onLinkPropertiesChanged(@NonNull Network network, @NonNull LinkProperties linkProperties) {
                 super.onLinkPropertiesChanged(network, linkProperties);
-                // Update visual indicator on link properties change
-                update(linkProperties, activity, context);
+                // Ensure updates happen on main thread with activity lifecycle check
+                activity.runOnUiThread(() -> {
+                    if (!activity.isFinishing() && !activity.isDestroyed()) {
+                        update(linkProperties, activity, context);
+                    }
+                });
             }
         };
         // Register network callback
@@ -86,20 +96,36 @@ public class VisualIndicator {
     private class NetworkConnectivityObserver implements DefaultLifecycleObserver {
         @Override
         public void onDestroy(@NonNull LifecycleOwner owner) {
-            connectivityManager.unregisterNetworkCallback(networkCallback);
+            try {
+                if (connectivityManager != null && networkCallback != null) {
+                    connectivityManager.unregisterNetworkCallback(networkCallback);
+                }
+            } catch (Exception e) {
+                sentryManager.captureException(e);
+            }
         }
     }
 
+
     // Method to update visual indicator based on link properties
     public void update(@Nullable LinkProperties linkProperties, AppCompatActivity activity, Context context) {
+        if (activity == null || context == null || activity.isFinishing() || activity.isDestroyed()) {
+            sentryManager.captureMessage("Cannot update: invalid activity state");
+            return;
+        }
+
         try {
-            // If link properties are null, set connection status to failure
+            ImageView connectionStatus = activity.findViewById(R.id.connectionStatus);
+            if (connectionStatus == null) {
+                sentryManager.captureMessage("Connection status view not found");
+                return;
+            }
+
             if (linkProperties == null) {
-                setConnectionStatus(activity.findViewById(R.id.connectionStatus), R.drawable.failure, R.color.red, context);
+                setConnectionStatus(connectionStatus, R.drawable.failure, R.color.red, context);
                 checkInheritedDNS(context, activity);
                 return;
             }
-            // Get connection status views
             ImageView connectionStatus = activity.findViewById(R.id.connectionStatus);
             // Determine status drawable and color based on private DNS status
             int statusDrawable = linkProperties.isPrivateDnsActive()
@@ -119,8 +145,14 @@ public class VisualIndicator {
         }
     }
 
+
     // Method to check inherited DNS
     public void checkInheritedDNS(Context context, AppCompatActivity activity) {
+        if (context == null || activity == null) {
+            sentryManager.captureMessage("Cannot check inherited DNS with null context or activity");
+            return;
+        }
+
         // Build HTTP request to test NextDNS connection
         Request request = new Request.Builder()
                 .url("https://test.nextdns.io")
@@ -157,11 +189,15 @@ public class VisualIndicator {
                     String nextdnsProtocol = testResponse.getAsJsonPrimitive(nextDnsProtocolKey).getAsString();
                     boolean isSecure = Arrays.asList(secureProtocols).contains(nextdnsProtocol);
                     // Update connection status based on protocol
-                    ImageView connectionStatus = activity.findViewById(R.id.connectionStatus);
-                    if (connectionStatus != null) {
-                        connectionStatus.setImageResource(isSecure ? R.drawable.success : R.drawable.failure);
-                        connectionStatus.setColorFilter(ContextCompat.getColor(context, isSecure ? R.color.green : R.color.orange));
-                    }
+                    activity.runOnUiThread(() -> {
+                        if (!activity.isFinishing() && !activity.isDestroyed()) {
+                            ImageView connectionStatus = activity.findViewById(R.id.connectionStatus);
+                            if (connectionStatus != null) {
+                                connectionStatus.setImageResource(isSecure ? R.drawable.success : R.drawable.failure);
+                                connectionStatus.setColorFilter(ContextCompat.getColor(context, isSecure ? R.color.green : R.color.orange));
+                            }
+                        }
+                    });
                     response.close();
                 } catch (Exception e) {
                     // Catch network errors
@@ -179,6 +215,10 @@ public class VisualIndicator {
 
     // Method to set connection status drawable and color
     private void setConnectionStatus(ImageView connectionStatus, int drawableResId, int colorResId, Context context) {
+        if (connectionStatus == null || context == null) {
+            sentryManager.captureMessage("Attempted to update null ImageView or Context");
+            return;
+        }
         connectionStatus.setImageResource(drawableResId);
         connectionStatus.setColorFilter(ContextCompat.getColor(context, colorResId));
     }
