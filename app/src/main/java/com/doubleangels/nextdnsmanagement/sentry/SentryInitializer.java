@@ -22,6 +22,9 @@ public class SentryInitializer {
             options.setEnableFramesTracking(true);
             options.setEnableAppStartProfiling(true);
             options.setEnableRootCheck(true);
+            options.setAttachScreenshot(true);
+            options.setAttachAnrThreadDump(true);
+            options.setAttachViewHierarchy(true);
         })).start();
     }
 }
