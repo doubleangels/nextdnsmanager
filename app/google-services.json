@@ -7,9 +7,9 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:187296133409:android:205250af25265215790e60",
+        "mobilesdk_app_id": "1:187296133409:android:a8418fa28e074d90790e60",
         "android_client_info": {
-          "package_name": "com.doubleangels.nextdnsmanagement"
+          "package_name": "com.doubleangels.nextdnsmanagement.gms"
         }
       },
       "oauth_client": [],
