@@ -22,8 +22,8 @@ public class CustomFirebaseMessagingService extends FirebaseMessagingService {
         super.onMessageReceived(remoteMessage);
 
         // Extract data from the message payload
-        String title = "Default Title";
-        String messageBody = "Default message";
+        String title = "This notification did not include a title.";
+        String messageBody = "This notification did not include a message body.";
 
         if (remoteMessage.getNotification() != null) {
             // If a notification payload is provided
