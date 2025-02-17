@@ -80,13 +80,10 @@ jobs:
       - name: Build bundle for Google Play release
         run: ./gradlew bundleGmsRelease
 
-      - name: Find aab
-        run: find . -name "*.aab"
-
       - name: Sign bundle for Google Play release
         uses: r0adkll/sign-android-release@v1
         with:
-          releaseDirectory: app/build/outputs/bundle/gms/release
+          releaseDirectory: app/build/outputs/bundle/gmsRelease
           signingKeyBase64: ${{ secrets.SIGNING_KEY }}
           alias: ${{ secrets.ALIAS }}
           keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
