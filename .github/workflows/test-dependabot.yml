@@ -29,7 +29,7 @@ jobs:
         run: ./gradlew lint
         continue-on-error: false
 
-  build-debug:
+  build-gms-flavor-debug:
     needs: lint
     runs-on: ubuntu-latest
     steps:
@@ -55,13 +55,13 @@ jobs:
         run: chmod +x gradlew
 
       - name: Build debug APK with Gradle
-        run: ./gradlew assembleDebug
+        run: ./gradlew assembleGmsDebug
 
       - name: Build debug bundle with Gradle
-        run: ./gradlew bundleDebug
+        run: ./gradlew bundleGmsDebug
 
-  build-release:
-    needs: ["build-debug", "lint"]
+  build-gms-flavor-release:
+    needs: ["build-gms-flavor-debug", "lint"]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -86,7 +86,7 @@ jobs:
         run: chmod +x gradlew
 
       - name: Build release APK with Gradle
-        run: ./gradlew assembleRelease
+        run: ./gradlew assembleGmsRelease
 
       - name: Build release bundle with Gradle
-        run: ./gradlew bundleRelease
+        run: ./gradlew bundleGmsRelease

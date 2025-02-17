@@ -1,6 +1,7 @@
 plugins {
     id "com.android.application"
-    id "io.sentry.android.gradle" version "4.14.1"
+    id "io.sentry.android.gradle" version "5.2.0"
+    id "com.google.gms.google-services"
 }
 
 android {
@@ -10,8 +11,23 @@ android {
         minSdkVersion 32
         targetSdk 35
         versionCode 244
-        versionName '5.5.0'
+        versionName "5.5.0"
         resourceConfigurations += ["en", "zh", "nl", "fi", "fr", "de", "in", "it", "ja", "pl", "pt", "es", "sv", "tr"]
+    }
+
+    // Define a flavor dimension and two product flavors
+    productFlavors {
+        flavorDimensions "version"
+        gms {
+            dimension "version"
+            applicationIdSuffix ".gms"
+            versionNameSuffix "-gms"
+        }
+        foss {
+            dimension "version"
+            applicationIdSuffix ".foss"
+            versionNameSuffix "-foss"
+        }
     }
 
     buildTypes {
@@ -20,8 +36,6 @@ android {
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             debuggable false
-        }
-        debugSentryOn {
         }
     }
     namespace 'com.doubleangels.nextdnsmanagement'
@@ -57,9 +71,13 @@ dependencies {
     implementation 'androidx.preference:preference:1.2.1'
     implementation 'androidx.webkit:webkit:1.12.1'
     implementation 'com.google.android.material:material:1.12.0'
+
+    // Only include Firebase Messaging in the gms flavor:
+    gmsImplementation 'com.google.firebase:firebase-messaging:24.1.0'
+
     implementation 'com.squareup.retrofit2:converter-gson:2.11.0'
     implementation 'de.hdodenhof:circleimageview:3.1.0'
-    implementation 'io.sentry:sentry-android:8.0.0'
+    implementation 'io.sentry:sentry-android:8.2.0'
     debugImplementation 'com.squareup.leakcanary:leakcanary-android:2.14'
 }
 
@@ -71,4 +89,12 @@ sentry {
     autoUploadNativeSymbols = true
     includeNativeSources = true
     includeSourceContext = true
+}
+
+afterEvaluate {
+    tasks.matching { task ->
+        task.name.startsWith("processFoss") && task.name.endsWith("GoogleServices")
+    }.configureEach { task ->
+        task.enabled = false
+    }
 }
