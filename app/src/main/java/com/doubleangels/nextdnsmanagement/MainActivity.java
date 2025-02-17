@@ -37,6 +37,7 @@ import androidx.lifecycle.LifecycleOwner;
 import androidx.webkit.WebSettingsCompat;
 import androidx.webkit.WebViewFeature;
 
+import com.doubleangels.nextdnsmanagement.firebasemessaging.MessagingInitializer;
 import com.doubleangels.nextdnsmanagement.protocol.VisualIndicator;
 import com.doubleangels.nextdnsmanagement.sentry.SentryInitializer;
 import com.doubleangels.nextdnsmanagement.sentry.SentryManager;
@@ -72,6 +73,7 @@ public class MainActivity extends AppCompatActivity {
         }
         setContentView(R.layout.activity_main);
         SentryManager sentryManager = new SentryManager(this);
+        MessagingInitializer.initialize(this);
         SharedPreferencesManager.init(this);
         try {
             if (ContextCompat.checkSelfPermission(this, POST_NOTIFICATIONS) == PackageManager.PERMISSION_DENIED) {
