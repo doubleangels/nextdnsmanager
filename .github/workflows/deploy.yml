@@ -80,13 +80,8 @@ jobs:
       - name: Build bundle for Google Play release
         run: ./gradlew bundleGmsRelease
 
-      - name: Install tree
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y tree
-
-      - name: Show directory tree
-        run: tree app/
+      - name: Find aab
+        run: find . -name "*.aab"
 
       - name: Sign bundle for Google Play release
         uses: r0adkll/sign-android-release@v1
