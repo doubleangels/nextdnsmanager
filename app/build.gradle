@@ -5,14 +5,6 @@ plugins {
 }
 
 android {
-    signingConfigs {
-        release {
-            storeFile file('C:\\Users\\mattv\\AndroidStudioProjects\\NextDNSManagement_Key.jks')
-            storePassword 'LagfFt%79.'
-            keyPassword 'LagfFt%79.'
-            keyAlias 'key0'
-        }
-    }
     compileSdk 35
     defaultConfig {
         applicationId "com.doubleangels.nextdnsmanagement"
