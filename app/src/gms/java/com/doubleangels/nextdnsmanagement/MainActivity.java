@@ -1,6 +1,5 @@
 package com.doubleangels.nextdnsmanagement;
 
-
 import static android.Manifest.permission.POST_NOTIFICATIONS;
 
 import android.annotation.SuppressLint;
@@ -50,7 +49,7 @@ public class MainActivity extends AppCompatActivity {
     private Boolean darkModeEnabled = false;
     private Boolean isWebViewInitialized = false;
     private Bundle webViewState = null;
-    
+
     @Override
     protected void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);

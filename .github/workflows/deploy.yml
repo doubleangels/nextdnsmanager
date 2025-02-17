@@ -24,7 +24,7 @@ jobs:
         run: ./gradlew lint
         continue-on-error: false
 
-  build-for-github:
+  build-gms-flavor-for-github:
     needs: lint
     runs-on: ubuntu-latest
     steps:
@@ -51,7 +51,7 @@ jobs:
         run: chmod +x gradlew
 
       - name: Build APK for Github release
-        run: ./gradlew assembleRelease
+        run: ./gradlew assembleGmsRelease
 
       - name: Sign APK for Github release
         uses: r0adkll/sign-android-release@v1
@@ -73,7 +73,7 @@ jobs:
           name: github-release-apk
           path: app/build/outputs/apk/release/app-release.apk
 
-  build-for-google-play:
+  build-gms-flavor-for-google-play:
     needs: lint
     runs-on: ubuntu-latest
     steps:
@@ -100,7 +100,7 @@ jobs:
         run: chmod +x gradlew
 
       - name: Build bundle for Google Play release
-        run: ./gradlew bundleRelease
+        run: ./gradlew bundleGmsRelease
 
       - name: Sign bundle for Google Play release
         uses: r0adkll/sign-android-release@v1
@@ -118,7 +118,7 @@ jobs:
           path: app/build/outputs/bundle/release/app-release.aab
 
   publish-built-files:
-    needs: ["build-for-github", "build-for-google-play"]
+    needs: ["build-gms-flavor-for-github", "build-gms-flavor-for-google-play"]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -182,7 +182,7 @@ jobs:
           whatsNewDirectory: whatsnew
 
   appsweep-scan:
-    needs: ["build-for-github", "build-for-google-play"]
+    needs: ["build-gms-flavor-for-github", "build-gms-flavor-for-google-play"]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -201,7 +201,13 @@ jobs:
           commit_hash: ${{ github.sha }}
 
   delete-workflow-runs:
-    needs: ["build-for-github", "build-for-google-play", "publish-built-files", "appsweep-scan"]
+    needs:
+      [
+        "build-gms-flavor-for-github",
+        "build-gms-flavor-for-google-play",
+        "publish-built-files",
+        "appsweep-scan",
+      ]
     runs-on: ubuntu-latest
     steps:
       - name: Delete workflow runs

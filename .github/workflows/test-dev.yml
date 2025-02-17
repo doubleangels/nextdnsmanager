@@ -26,4 +26,3 @@ jobs:
       - name: Run Lint
         run: ./gradlew lint
         continue-on-error: false
-        
