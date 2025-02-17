@@ -102,6 +102,12 @@ jobs:
       - name: Build bundle for Google Play release
         run: ./gradlew bundleGmsRelease
 
+      - name: PWD
+        run: pwd
+
+      - name: LS
+        run: ls -la .
+
       - name: Sign bundle for Google Play release
         uses: r0adkll/sign-android-release@v1
         with:
