@@ -157,7 +157,7 @@ jobs:
         uses: r0adkll/upload-google-play@v1
         with:
           serviceAccountJson: service_account.json
-          packageName: com.doubleangels.nextdnsmanagement.gms
+          packageName: com.doubleangels.nextdnsmanagement
           releaseFiles: app-release.aab
           track: production
           whatsNewDirectory: whatsnew
