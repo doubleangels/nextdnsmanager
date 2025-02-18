@@ -93,7 +93,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: google-play-bundle
-          path: app/build/outputs/bundle/release/app-release.aab
+          path: app/build/outputs/bundle/gmsRelease/app-gms-release.aab
 
   publish-built-files:
     needs: ["build-gms-flavor-for-github", "build-gms-flavor-for-google-play"]
@@ -155,7 +155,7 @@ jobs:
         with:
           serviceAccountJson: service_account.json
           packageName: com.doubleangels.nextdnsmanagement
-          releaseFiles: app-release.aab
+          releaseFiles: app-gms-release.aab
           track: production
           whatsNewDirectory: whatsnew
 
