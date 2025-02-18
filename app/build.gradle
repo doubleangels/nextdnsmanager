@@ -24,7 +24,6 @@ android {
         }
         foss {
             dimension "version"
-            versionNameSuffix "-foss"
             applicationId "com.doubleangels.nextdnsmanagement"
         }
     }
