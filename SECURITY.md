@@ -2,12 +2,18 @@
 
 ## Reporting a Vulnerability
 
-I take security seriously. If you discover a vulnerability, I appreciate your help in disclosing it to me in a responsible manner. Please follow these guidelines when reporting security vulnerabilities:
+I take security seriously, and I appreciate your assistance in responsibly disclosing any vulnerabilities. If you discover a security issue, please follow these guidelines when reporting it:
 
-1. **Privately Disclose**: Please avoid publicly disclosing the vulnerability until I have had a chance to address it. Instead, report it to me privately. You can do this via email or by reporting a vulnerability in the issues section of this repository.
+1. **Privately Disclose:**  
+   Do not publicly disclose the vulnerability until I have had a chance to address it. Instead, report it privately via email or by opening a confidential issue in the repository.
 
-2. **Provide Details**: When reporting a vulnerability, please provide me with sufficient details to understand and reproduce the issue. Include information such as the device you're running the app on, the version of Android you're using, the version of the app you're using, and a detailed description of the vulnerability.
+2. **Provide Sufficient Details:**  
+   Include all relevant information needed to understand and reproduce the issue. This should include details such as:
+   - The device and Android version you are using.
+   - The version of NextDNS Manager.
+   - A detailed description of the vulnerability.
 
-3. **Responsible Disclosure**: Allow me a reasonable amount of time to address the vulnerability before disclosing it publicly.
+3. **Responsible Disclosure:**  
+   Allow a reasonable period for me to fix the vulnerability before any public disclosure.
 
-We appreciate your efforts in helping me maintain the security of NextDNS Manager. Thank you for your cooperation.
+Thank you for helping me maintain the security of NextDNS Manager.
