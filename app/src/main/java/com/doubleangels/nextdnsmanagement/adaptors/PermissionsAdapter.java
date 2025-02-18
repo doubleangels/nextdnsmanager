@@ -15,43 +15,9 @@ import com.doubleangels.nextdnsmanagement.R;
 
 import java.util.List;
 
-public class PermissionsAdapter extends RecyclerView.Adapter<PermissionsAdapter.PermissionViewHolder> {
-
-    private final List<PermissionInfo> permissions;
-
-    public PermissionsAdapter(List<PermissionInfo> permissions) {
-        this.permissions = permissions;
-    }
-
-    @NonNull
-    @Override
-    public PermissionViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View itemView = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.permission_item, parent, false);
-        return new PermissionViewHolder(itemView);
-    }
-
-    @SuppressLint("SetTextI18n")
-    @Overridepackage com.doubleangels.nextdnsmanagement.adaptors;
-
-import android.annotation.SuppressLint;
-import android.content.pm.PackageManager;
-import android.content.pm.PermissionInfo;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.TextView;
-
-import androidx.annotation.NonNull;
-import androidx.recyclerview.widget.RecyclerView;
-
-import com.doubleangels.nextdnsmanagement.R;
-
-import java.util.List;
-
 /**
  * A RecyclerView Adapter for displaying a list of PermissionInfo objects.
- * Each item shows the permission name and a short description, along with 
+ * Each item shows the permission name and a short description, along with
  * whether the permission is currently granted or not (when applicable).
  */
 public class PermissionsAdapter extends RecyclerView.Adapter<PermissionsAdapter.PermissionViewHolder> {
@@ -62,7 +28,7 @@ public class PermissionsAdapter extends RecyclerView.Adapter<PermissionsAdapter.
     /**
      * Constructor for the PermissionsAdapter.
      *
-     * @param permissions A list of PermissionInfo objects (from PackageManager) 
+     * @param permissions A list of PermissionInfo objects (from PackageManager)
      *                    that should be displayed in the RecyclerView.
      */
     public PermissionsAdapter(List<PermissionInfo> permissions) {
@@ -70,7 +36,7 @@ public class PermissionsAdapter extends RecyclerView.Adapter<PermissionsAdapter.
     }
 
     /**
-     * Called when the RecyclerView needs a new ViewHolder. Inflates the layout 
+     * Called when the RecyclerView needs a new ViewHolder. Inflates the layout
      * resource (permission_item) for each item in the list.
      *
      * @param parent   The parent ViewGroup into which the new view will be added.
@@ -164,52 +130,6 @@ public class PermissionsAdapter extends RecyclerView.Adapter<PermissionsAdapter.
          *
          * @param itemView The inflated layout view for this item.
          */
-        @SuppressLint("SetTextI18n")
-        public PermissionViewHolder(View itemView) {
-            super(itemView);
-            permissionName = itemView.findViewById(R.id.permissionName);
-            permissionDescription = itemView.findViewById(R.id.permissionDescription);
-        }
-    }
-}
-
-    public void onBindViewHolder(@NonNull PermissionViewHolder holder, int position) {
-        PermissionInfo permissionInfo = permissions.get(position);
-
-        boolean isGranted = true;
-        if (permissionInfo.name.equals(android.Manifest.permission.POST_NOTIFICATIONS)) {
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
-                isGranted = holder.itemView.getContext().checkSelfPermission(permissionInfo.name)
-                        == PackageManager.PERMISSION_GRANTED;
-            }
-        }
-        holder.permissionName.setText(permissionInfo
-                .loadLabel(holder.itemView.getContext().getPackageManager())
-                .toString()
-                .toUpperCase());
-        CharSequence description = permissionInfo.loadDescription(holder.itemView.getContext().getPackageManager());
-        String displayText;
-        if (description == null) {
-            displayText = "";
-        } else {
-            displayText = description.toString();
-            if (!displayText.endsWith(".")) {
-                displayText += ".";
-            }
-            displayText = displayText + (isGranted ? " (GRANTED)" : " (NOT GRANTED)");
-        }
-        holder.permissionDescription.setText(displayText);
-    }
-
-    @Override
-    public int getItemCount() {
-        return permissions.size();
-    }
-
-    public static class PermissionViewHolder extends RecyclerView.ViewHolder {
-        TextView permissionName;
-        TextView permissionDescription;
-
         @SuppressLint("SetTextI18n")
         public PermissionViewHolder(View itemView) {
             super(itemView);

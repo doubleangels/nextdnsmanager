@@ -31,6 +31,7 @@ import androidx.lifecycle.LifecycleOwner;
 import androidx.webkit.WebSettingsCompat;
 import androidx.webkit.WebViewFeature;
 
+import com.doubleangels.nextdnsmanagement.firebasemessaging.MessagingInitializer;
 import com.doubleangels.nextdnsmanagement.protocol.VisualIndicator;
 import com.doubleangels.nextdnsmanagement.sentry.SentryInitializer;
 import com.doubleangels.nextdnsmanagement.sentry.SentryManager;
