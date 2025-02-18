@@ -1,4 +1,3 @@
-<!--suppress ALL -->
 <p align="center">
   <img src="https://img.shields.io/github/release/doubleangels/NextDNSManager.svg?logo=github&label=GitHub%20Build&style=for-the-badge" alt="GitHub Build">
   <img src="https://img.shields.io/f-droid/v/com.doubleangels.nextdnsmanagement.svg?logo=F-Droid&label=F-Droid%20Build&style=for-the-badge" alt="F-Droid Build">
@@ -10,94 +9,143 @@
 </p>
 
 <p align="center">
-  <img src="icons/web/icon-192.png" alt="Icon">
+  <img src="icons/web/icon-192.png" alt="NextDNS Manager Icon" width="96">
+  <br>
   <a href="https://play.google.com/store/apps/details?id=com.doubleangels.nextdnsmanagement">
-    <img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" alt="Google Play">
+    <img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" alt="Get it on Google Play" height="48">
   </a>
   <a href="https://f-droid.org/en/packages/com.doubleangels.nextdnsmanagement">
-    <img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png" alt="F-Droid">
+    <img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png" alt="Get it on F-Droid" height="48">
   </a>
 </p>
 
-<p align="center"> 
-  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/1.png" alt="Screenshot">
+<p align="center">
+  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/1.png" alt="Screenshot of NextDNS Manager" width="250">
 </p>
 
-# About
+# NextDNS Manager
 
-NextDNS Manager is an Android application that simplifies the management of your [NextDNS](https://nextdns.io) configuration. NextDNS is a cloud-based DNS filter and firewall that protects your home, family, and privacy online. With NextDNS Manager, you can easily control your NextDNS settings and ensure a safer and more secure online experience.
+NextDNS Manager is an Android application that simplifies managing your [NextDNS](https://nextdns.io) configuration. NextDNS is a cloud-based DNS filter and firewall designed to protect your home, family, and online privacy. With NextDNS Manager, you can effortlessly control your NextDNS settings to ensure a safer and more secure digital experience.
 
-NextDNS Manager can be installed on any Android phone or tablet running Android 12L+
+**Compatible with any Android device running Android 12L or later.**
 
-**NextDNS Manager is a completely open-source project with no official ties to NextDNS.**
+> **Note:** NextDNS Manager is a completely open-source project and is not officially affiliated with NextDNS.
 
-# Features:
+---
 
-- **Intuitive Interface**: NextDNS Manager provides a user-friendly interface that allows you to manage your NextDNS settings with ease. The interface also includes Material You styling, automatic dark mode, as well as a dynamic/themed icon. The application also supports 14 languages!
+## Table of Contents
 
-- **Configuration Management**: You can configure your NextDNS settings, including filtering modes, blocklists, and whitelists.
+- [Features](#features)
+- [Installation](#installation)
+  - [Which installation method should I use?](#which-installation-method-should-i-use)
+  - [Google Play Store](#google-play-store)
+  - [F-Droid Installation](#f-droid-installation)
+  - [Manual Installation](#manual-installation)
+- [Reporting Issues & Feedback](#reporting-issues--feedback)
+- [Contributing](#contributing)
+- [Security Policy](#security-policy)
+- [Privacy & Terms](#privacy--terms)
+- [Donations](#donations)
+- [License](#license)
 
-- **Real-time Statistics**: Get insights into your DNS queries, blocked requests, and security events in real-time.
+---
 
-- **Security and Privacy**: Enhance your online security and privacy by leveraging NextDNS' filtering capabilities.
+## Features
 
-- **Easy Installation**: You can download and install NextDNS Manager from the Google Play Store, F-Droid, or directly from GitHub, providing multiple installation options.
+- **Intuitive Interface:**  
+  Enjoy a user-friendly experience enhanced with Material You styling, automatic dark mode, dynamic/themed icons, and support for 14 languages.
 
-# Installation
+- **Comprehensive Configuration Management:**  
+  Easily manage your NextDNS settings including filtering modes, blocklists, and whitelists.
 
-## Which installation method should I use?
+- **Real-Time Statistics:**  
+  Monitor DNS queries, blocked requests, and security events as they happen.
 
-Which app you should use depends on your privacy preferences and how often you wish to receive updates:
+- **Enhanced Security and Privacy:**  
+  Benefit from NextDNS' robust filtering capabilities to safeguard your online activities.
 
-- If you are able to use Google Play, use it.
-- If you're not able to use Google Play, sideload an APK from this repository.
-- If neither of these options work for you, install the app from F-Droid.
+- **Multiple Installation Options:**  
+  Download and install NextDNS Manager via the Google Play Store, F-Droid, or directly from GitHub.
 
-Note: Notifications through FCM is removed in F-Droid builds. There is no notification support for any builds prior to 5.5.0.
+---
 
-For each build ("version") of the app, there are timelines for when the build will be available, so methods with longer timelines will result in longer wait times for updates.
+## Installation
 
-|                  | Google Play   | Sideloaded APK | F-Droid       |
-|------------------|---------------|----------------|---------------|
-| **Availability** | A few minutes | A few minutes  | Up to 14 days |
+### Which installation method should I use?
 
-F-Droid takes much longer than any of the other methods because they have a human involved in the process, each app is signed by a human on a computer that is air-gapped (not connected to the internet).
+Your choice depends on your privacy preferences and update frequency needs:
 
-## Google Play Store
+- **Google Play Store:** Best for those who prefer automatic updates.
+- **Manual APK Sideload:** Ideal if you cannot access Google Play.
+- **F-Droid:** Suitable for users prioritizing open-source purity, though updates may take longer.
 
-NextDNS Manager is available on the Google Play Store [here](https://play.google.com/store/apps/details?id=com.doubleangels.nextdnsmanagement).
+> **Note:**  
+> - FCM notifications are removed in F-Droid builds.
+> - Builds prior to version 5.5.0 do not support notifications.
 
-## F-Droid Installation
+| Method             | Availability         |
+|--------------------|----------------------|
+| **Google Play**    | A few minutes        |
+| **Sideloaded APK** | A few minutes        |
+| **F-Droid**        | Up to 14 days        |
 
-NextDNS Manager is available on F-Droid [here](https://f-droid.org/en/packages/com.doubleangels.nextdnsmanagement).
+*F-Droid builds take longer because each update is manually signed in a secure, air-gapped environment.*
 
-## Manual Installation
+### Google Play Store
 
-The most recent APK is available for download [here](https://github.com/doubleangels/NextDNSManager/releases).
+Download NextDNS Manager from the [Google Play Store](https://play.google.com/store/apps/details?id=com.doubleangels.nextdnsmanagement).
 
-# Reporting Issues/Suggestions and Feedback
+### F-Droid Installation
 
-If you encounter any issues while using NextDNS Manager, I encourage you to report them to me. Please read the [FAQ's](FAQ.md) and then open an [issue](https://github.com/doubleangels/NextDNSManager/issues/new/choose). Please note that I work on this project in my free time, so issue responses may be delayed.
-Your suggestions and feedback are valuable to me as they help me improve NextDNS Manager. If you have any ideas for enhancements or feedback to share, please do so by opening a new issue as outlined above. Be sure to provide a detailed description of your suggestion or feedback.
+Get NextDNS Manager on F-Droid from the [official page](https://f-droid.org/en/packages/com.doubleangels.nextdnsmanagement).
 
-# Contributing
+### Manual Installation
 
-Please learn how to contribute to this project [here](CONTRIBUTING.md).
+Download the latest APK directly from the [GitHub Releases page](https://github.com/doubleangels/NextDNSManager/releases).
 
-# Security Policy
+---
 
-Learn about this application's security policy [here](SECURITY.md).
+## Reporting Issues & Feedback
 
-# Terms & Conditions/Privacy Policy
+If you encounter any issues or have suggestions to enhance NextDNS Manager, please take the following steps:
+
+1. Check the [FAQ](FAQ.md) for common questions.
+2. Open a new [GitHub Issue](https://github.com/doubleangels/NextDNSManager/issues/new/choose) with a detailed description.
+
+*Please note that contributions and responses may take time as this project is maintained in my free time.*
+
+---
+
+## Contributing
+
+Interested in contributing? Please review the [Contributing Guidelines](CONTRIBUTING.md) to learn how you can help improve NextDNS Manager.
+
+---
+
+## Security Policy
+
+Learn about my [Security Policy](SECURITY.md) for reporting vulnerabilities and keeping your data safe.
+
+---
+
+## Privacy & Terms
 
 - [Privacy Policy](https://doubleangels.github.io/privacyPolicy/nextdns.html)
 - [Terms and Conditions](https://doubleangels.github.io/privacyPolicy/nextdns_terms.html)
 
-# Donations
+---
 
-- Donations are always optional.
-- [Donate Here](https://donate.stripe.com/4gw8yhbvH0mg6SQ7ss)
+## Donations
 
-# License
+Donations are completely optional but always appreciated.  
+[Donate Here](https://donate.stripe.com/4gw8yhbvH0mg6SQ7ss)
 
-NextDNS Manager is open-source and released under the [GPLv3](LICENSE).
+---
+
+## License
+
+NextDNS Manager is released under the [GPLv3 License](LICENSE).
+
+---
+
+I hope you enjoy using NextDNS Manager. Happy managing!
