@@ -20,7 +20,6 @@ android {
         flavorDimensions "version"
         gms {
             dimension "version"
-            applicationIdSuffix ".gms"
             versionNameSuffix "-gms"
         }
         foss {
