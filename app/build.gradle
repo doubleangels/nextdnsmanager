@@ -15,7 +15,6 @@ android {
         resourceConfigurations += ["en", "zh", "nl", "fi", "fr", "de", "in", "it", "ja", "pl", "pt", "es", "sv", "tr"]
     }
 
-    // Define a flavor dimension and two product flavors
     productFlavors {
         flavorDimensions "version"
         gms {
@@ -25,8 +24,8 @@ android {
         }
         foss {
             dimension "version"
-            applicationIdSuffix ".foss"
             versionNameSuffix "-foss"
+            applicationId "com.doubleangels.nextdnsmanagement"
         }
     }
 
