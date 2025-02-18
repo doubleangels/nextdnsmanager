@@ -130,8 +130,8 @@ Learn about my [Security Policy](SECURITY.md) for reporting vulnerabilities and 
 
 ## Privacy & Terms
 
-- [Privacy Policy](https://doubleangels.github.io/privacyPolicy/nextdns.html)
-- [Terms and Conditions](https://doubleangels.github.io/privacyPolicy/nextdns_terms.html)
+- [Privacy Policy](https://doubleangels.github.io/privacypolicy/nextdns.html)
+- [Terms and Conditions](https://doubleangels.github.io/privacypolicy/nextdns_terms.html)
 
 ---
 
