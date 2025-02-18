@@ -53,6 +53,8 @@ Which app you should use depends on your privacy preferences and how often you w
 - If you're not able to use Google Play, sideload an APK from this repository.
 - If neither of these options work for you, install the app from F-Droid.
 
+Note: Notifications through FCM is removed in F-Droid builds. There is no notification support for any builds prior to 5.5.0.
+
 For each build ("version") of the app, there are timelines for when the build will be available, so methods with longer timelines will result in longer wait times for updates.
 
 |                  | Google Play   | Sideloaded APK | F-Droid       |
