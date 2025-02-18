@@ -19,7 +19,6 @@ android {
         flavorDimensions "version"
         gms {
             dimension "version"
-            versionNameSuffix "-gms"
             applicationId "com.doubleangels.nextdnsmanagement"
         }
         foss {
