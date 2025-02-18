@@ -10,8 +10,8 @@ android {
         applicationId "com.doubleangels.nextdnsmanagement"
         minSdkVersion 32
         targetSdk = 35
-        versionCode 250
-        versionName "5.5.1"
+        versionCode 251
+        versionName "5.5.2"
         resourceConfigurations += ["en", "zh", "nl", "fi", "fr", "de", "in", "it", "ja", "pl", "pt", "es", "sv", "tr"]
     }
 
@@ -19,7 +19,6 @@ android {
         flavorDimensions "version"
         gms {
             dimension "version"
-            versionNameSuffix "-gms"
             applicationId "com.doubleangels.nextdnsmanagement"
         }
         foss {
