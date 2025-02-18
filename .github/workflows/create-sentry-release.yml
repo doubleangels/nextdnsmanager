@@ -19,6 +19,6 @@ jobs:
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: doubleangels
-          SENTRY_PROJECT: nextdnsmanager
+          SENTRY_PROJECT: nextdns-manager
         with:
           environment: production
