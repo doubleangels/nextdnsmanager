@@ -16,15 +16,14 @@
         android:theme="@style/ToolbarTheme"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="1.0">
+        app:layout_constraintEnd_toEndOf="parent">
 
         <ImageView
             android:layout_width="55dp"
             android:layout_height="55dp"
             android:paddingHorizontal="10dp"
             android:contentDescription="@string/generic_content_description"
-            app:srcCompat="@drawable/nextdns_logo"/>
+            app:srcCompat="@drawable/nextdns_logo" />
 
         <ImageView
             android:id="@+id/connectionStatus"
@@ -37,14 +36,20 @@
             tools:layout_editor_absoluteY="17dp"/>
     </androidx.appcompat.widget.Toolbar>
 
-    <WebView
-        android:id="@+id/webView"
-        android:layout_width="match_parent"
-        android:layout_height="@+id/toolbar"
+    <!-- SwipeRefreshLayout wrapping the WebView -->
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+        android:id="@+id/swipeRefreshLayout"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
         app:layout_constraintTop_toBottomOf="@+id/toolbar"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintHorizontal_bias="0.5" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <WebView
+            android:id="@+id/webView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
