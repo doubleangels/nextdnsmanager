@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Locale;
 
 /**
- * An activity that displays a list of requested permissions and handles the 
+ * An activity that displays a list of requested permissions and handles the
  * POST_NOTIFICATIONS permission request flow on Android Tiramisu and above.
  */
 @RequiresApi(api = Build.VERSION_CODES.TIRAMISU)
@@ -43,7 +43,7 @@ public class PermissionActivity extends AppCompatActivity {
      * applies the locale configuration, and checks for notification permission needs.
      * It also sets up the RecyclerView for displaying permission info.
      *
-     * @param savedInstanceState The saved instance state, if any.  
+     * @param savedInstanceState The saved instance state, if any.
      */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,11 +64,6 @@ public class PermissionActivity extends AppCompatActivity {
             // Apply the locale settings (language preferences) and log which language is being used
             String appLocale = setupLanguageForActivity();
             sentryManager.captureMessage("Using locale: " + appLocale);
-
-            // Check if we need to prompt the user for notification permission
-            if (needsNotificationPermission()) {
-                requestNotificationPermission();
-            }
         } catch (Exception e) {
             // Capture any exceptions with Sentry (if enabled) or log them locally
             sentryManager.captureException(e);
@@ -84,22 +79,6 @@ public class PermissionActivity extends AppCompatActivity {
     }
 
     /**
-     * Determines if the POST_NOTIFICATIONS permission has been granted or not.
-     *
-     * @return true if the permission is not granted, false otherwise.
-     */
-    private boolean needsNotificationPermission() {
-        return checkSelfPermission(POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED;
-    }
-
-    /**
-     * Requests the POST_NOTIFICATIONS permission from the user with the designated request code.
-     */
-    private void requestNotificationPermission() {
-        requestPermissions(new String[]{POST_NOTIFICATIONS}, REQUEST_POST_NOTIFICATIONS);
-    }
-
-    /**
      * Callback for the result from requesting permissions.
      * If the request code matches, we refresh the permission list to reflect any changes.
      *
@@ -109,8 +88,8 @@ public class PermissionActivity extends AppCompatActivity {
      */
     @Override
     public void onRequestPermissionsResult(int requestCode,
-                                          @NonNull String[] permissions,
-                                          @NonNull int[] grantResults) {
+                                           @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == REQUEST_POST_NOTIFICATIONS) {
             // Refresh the displayed permission list in the RecyclerView

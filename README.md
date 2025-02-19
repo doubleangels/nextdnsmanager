@@ -79,17 +79,20 @@ Your choice depends on your privacy preferences and update frequency needs:
 - **Manual APK Sideload:** Ideal if you cannot access Google Play.
 - **F-Droid:** Suitable for users prioritizing open-source purity, though updates may take longer.
 
-> **Note:**  
-> - FCM notifications are removed in F-Droid builds.
+> **Note:**
+>
+> - FCM support (push notifications) are removed in F-Droid builds.
+> - FCM support is enabled in Google Play builds.
 > - Builds prior to version 5.5.0 do not support notifications.
+> - If you have multiple versions on your device after the 5.5.0 update and have questions, [read this](https://github.com/doubleangels/nextdnsmanager/issues/430).
 
-| Method             | Availability         |
-|--------------------|----------------------|
-| **Google Play**    | A few minutes        |
-| **Sideloaded APK** | A few minutes        |
-| **F-Droid**        | Up to 14 days        |
+| Method             | Availability  |
+| ------------------ | ------------- |
+| **Google Play**    | A few minutes |
+| **Sideloaded APK** | A few minutes |
+| **F-Droid**        | Up to 14 days |
 
-*F-Droid builds take longer because each update is manually signed in a secure, air-gapped environment.*
+_F-Droid builds take longer because each update is manually signed in a secure, air-gapped environment._
 
 ### Google Play Store
 
@@ -112,7 +115,7 @@ If you encounter any issues or have suggestions to enhance NextDNS Manager, plea
 1. Check the [FAQ](FAQ.md) for common questions.
 2. Open a new [GitHub Issue](https://github.com/doubleangels/NextDNSManager/issues/new/choose) with a detailed description.
 
-*Please note that contributions and responses may take time as this project is maintained in my free time.*
+_Please note that contributions and responses may take time as this project is maintained in my free time._
 
 ---
 
