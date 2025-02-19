@@ -2,7 +2,6 @@ package com.doubleangels.nextdnsmanagement;
 
 import android.annotation.SuppressLint;
 import android.app.DownloadManager;
-import android.content.ComponentCallbacks2;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.net.Uri;
@@ -15,6 +14,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.Window;
 import android.webkit.CookieManager;
+import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -28,6 +28,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.appcompat.widget.Toolbar;
 import androidx.lifecycle.LifecycleOwner;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import androidx.webkit.WebSettingsCompat;
 import androidx.webkit.WebViewFeature;
 
@@ -35,6 +36,7 @@ import com.doubleangels.nextdnsmanagement.protocol.VisualIndicator;
 import com.doubleangels.nextdnsmanagement.sentry.SentryInitializer;
 import com.doubleangels.nextdnsmanagement.sentry.SentryManager;
 import com.doubleangels.nextdnsmanagement.sharedpreferences.SharedPreferencesManager;
+import com.doubleangels.nextdnsmanagement.webview.WebAppInterface;
 
 import java.util.Locale;
 
@@ -47,6 +49,8 @@ public class MainActivity extends AppCompatActivity {
 
     // Main WebView for displaying content
     private WebView webView;
+    // SwipeRefreshLayout for handling pull-to-refresh
+    private SwipeRefreshLayout swipeRefreshLayout;
     // Indicates whether dark mode is currently enabled
     private Boolean darkModeEnabled = false;
     // Indicates if the WebView is initialized to avoid re-initialization
@@ -120,6 +124,9 @@ public class MainActivity extends AppCompatActivity {
 
             // Set up any additional UI indicators
             setupVisualIndicatorForActivity(sentryManager, this);
+
+            // Set up swipe to refresh
+            setupSwipeToRefreshForActivity();
 
             // Initialize the WebView, load the main URL
             setupWebViewForActivity(getString(R.string.main_url));
@@ -324,8 +331,26 @@ public class MainActivity extends AppCompatActivity {
                 CookieManager.getInstance().acceptCookie();
                 // Flush cookies to ensure persistence
                 CookieManager.getInstance().flush();
+                // Inject JavaScript to enable swipe-to-refresh
+                String js =
+                        "setInterval(function() {" +
+                                "   var modal = document.querySelector('.modal-dialog.modal-lg.modal-dialog-scrollable');" +
+                                "   if (modal) {" +
+                                "       if (!modal.getAttribute('data-listeners-attached')) {" +
+                                "           modal.setAttribute('data-listeners-attached', 'true');" +
+                                "           modal.addEventListener('touchstart', function(){" +
+                                "               AndroidInterface.setSwipeRefreshEnabled(false);" +
+                                "           });" +
+                                "           modal.addEventListener('touchend', function(){" +
+                                "               AndroidInterface.setSwipeRefreshEnabled(true);" +
+                                "           });" +
+                                "       }" +
+                                "   }" +
+                                "}, 500);";
+                webView.evaluateJavascript(js, null);
             }
         });
+        webView.setWebChromeClient(new WebChromeClient());
 
         // Enable or disable algorithmic darkening for WebView if dark mode is active
         if (Boolean.TRUE.equals(darkModeEnabled)) {
@@ -342,6 +367,27 @@ public class MainActivity extends AppCompatActivity {
 
         // Mark that the WebView is fully initialized
         isWebViewInitialized = true;
+    }
+
+    /**
+     * Initializes and configures the SwipeRefreshLayout and WebView. This method enables JavaScript,
+     * attaches a JavaScript interface for native-to-JS communication, and sets up a refresh listener
+     * that reloads the WebView when a swipe-to-refresh gesture is detected.
+     */
+    @SuppressLint("SetJavaScriptEnabled")
+    private void setupSwipeToRefreshForActivity() {
+        swipeRefreshLayout = findViewById(R.id.swipeRefreshLayout);
+        webView = findViewById(R.id.webView);
+
+        // Enable JavaScript and add our JS interface.
+        webView.getSettings().setJavaScriptEnabled(true);
+        webView.addJavascriptInterface(new WebAppInterface(this, swipeRefreshLayout), "AndroidInterface");
+
+        // Setup refresh listener (if pull-to-refresh should work elsewhere)
+        swipeRefreshLayout.setOnRefreshListener(() -> {
+            webView.reload();
+            swipeRefreshLayout.setRefreshing(false);
+        });
     }
 
     /**
