@@ -104,6 +104,9 @@ public class MainActivity extends AppCompatActivity {
         // Set the content view for this activity
         setContentView(R.layout.activity_main);
 
+        // Apply the blurry overlay immediately
+        showBlurryOverlay();
+
         // Initialize Sentry manager for error tracking and logging
         SentryManager sentryManager = new SentryManager(this);
 
@@ -191,7 +194,6 @@ public class MainActivity extends AppCompatActivity {
             if (biometricLock.canAuthenticate()) {
                 // Show a blurry overlay until the user authenticates
                 showBlurryOverlay();
-                // Use custom text for the authentication prompt here:
                 biometricLock.showPrompt(
                         "Unlock",
                         "Authenticate to access and change your settings.",
@@ -199,17 +201,19 @@ public class MainActivity extends AppCompatActivity {
                         new BiometricLock.BiometricLockCallback() {
                             @Override
                             public void onAuthenticationSucceeded() {
-                                // Remove the overlay and record authentication time
+                                // Remove the blur overlay
                                 removeBlurryOverlay();
+                                // Animate the WebView to full opacity (revealing its content)
+                                if (webView != null) {
+                                    webView.animate().alpha(1f).setDuration(300).start();
+                                }
                                 lastAuthenticatedTime = System.currentTimeMillis();
                             }
-
                             @Override
                             public void onAuthenticationError(String error) {
                                 removeBlurryOverlay();
                                 Toast.makeText(MainActivity.this, "Authentication error!", Toast.LENGTH_SHORT).show();
                             }
-
                             @Override
                             public void onAuthenticationFailed() {
                                 Toast.makeText(MainActivity.this, "Authentication failed. Please try again.", Toast.LENGTH_SHORT).show();
@@ -399,6 +403,9 @@ public class MainActivity extends AppCompatActivity {
     public void setupWebViewForActivity(String url) {
         // Find the WebView in the layout
         webView = findViewById(R.id.webView);
+
+        // Hide the WebView until authentication is complete.
+        webView.setAlpha(0f);
 
         // Restore any previously saved state
         if (webViewState != null) {
