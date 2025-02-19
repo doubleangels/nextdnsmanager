@@ -36,7 +36,6 @@
             tools:layout_editor_absoluteY="17dp"/>
     </androidx.appcompat.widget.Toolbar>
 
-    <!-- SwipeRefreshLayout wrapping the WebView -->
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
         android:id="@+id/swipeRefreshLayout"
         android:layout_width="0dp"

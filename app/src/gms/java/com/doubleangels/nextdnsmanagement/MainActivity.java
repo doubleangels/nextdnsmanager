@@ -9,9 +9,11 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.Settings;
+import android.util.Log;
 import android.view.ContextThemeWrapper;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.ViewGroup;
 import android.view.Window;
 import android.webkit.CookieManager;
 import android.webkit.WebChromeClient;
@@ -27,11 +29,13 @@ import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.content.ContextCompat;
 import androidx.lifecycle.LifecycleOwner;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import androidx.webkit.WebSettingsCompat;
 import androidx.webkit.WebViewFeature;
 
+import com.doubleangels.nextdnsmanagement.biometriclock.BiometricLock;
 import com.doubleangels.nextdnsmanagement.firebasemessaging.MessagingInitializer;
 import com.doubleangels.nextdnsmanagement.protocol.VisualIndicator;
 import com.doubleangels.nextdnsmanagement.sentry.SentryInitializer;
@@ -41,10 +45,12 @@ import com.doubleangels.nextdnsmanagement.webview.WebAppInterface;
 
 import java.util.Locale;
 
+import jp.wasabeef.blurry.Blurry;
+
 /**
  * Main Activity class that handles initialization of the UI, WebView, and various settings
- * like dark mode, locale, etc. Also contains logic for handling low-memory events
- * and navigation from the options menu.
+ * like dark mode, locale, etc. Also contains logic for handling low-memory events,
+ * biometric re‑authentication with a timeout, and a blurry overlay until authentication.
  */
 public class MainActivity extends AppCompatActivity {
 
@@ -58,6 +64,10 @@ public class MainActivity extends AppCompatActivity {
     private Boolean isWebViewInitialized = false;
     // Used to save/restore WebView state across configuration changes
     private Bundle webViewState = null;
+
+    // Biometric authentication timeout (2 minutes) and timestamp of last successful authentication
+    private static final long AUTH_TIMEOUT_MS = 2 * 60 * 1000; // 2 minutes
+    private long lastAuthenticatedTime = 0;
 
     /**
      * Saves the current state of the activity, including the WebView state and dark mode setting.
@@ -94,6 +104,9 @@ public class MainActivity extends AppCompatActivity {
         // Set the content view for this activity
         setContentView(R.layout.activity_main);
 
+        // Apply the blurry overlay immediately
+        showBlurryOverlay();
+
         // Initialize Sentry manager for error tracking and logging
         SentryManager sentryManager = new SentryManager(this);
 
@@ -122,8 +135,8 @@ public class MainActivity extends AppCompatActivity {
 
             // Determine and apply dark mode preference
             setupDarkModeForActivity(
-                sentryManager,
-                SharedPreferencesManager.getString("dark_mode", "match")
+                    sentryManager,
+                    SharedPreferencesManager.getString("dark_mode", "match")
             );
 
             // Set up any additional UI indicators
@@ -163,7 +176,8 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * Called when the activity is resumed. Resumes the WebView if it was previously initialized.
-     * If not initialized, sets up a new WebView instance.
+     * If not initialized, sets up a new WebView instance. Also handles biometric authentication
+     * with a timeout so that switching activities doesn't authenticate too frequently.
      */
     @Override
     protected void onResume() {
@@ -173,6 +187,93 @@ public class MainActivity extends AppCompatActivity {
         } else if (!isWebViewInitialized) {
             setupWebViewForActivity(getString(R.string.main_url));
         }
+
+        // Hide toolbar buttons and menu items until authenticated.
+        hideToolbarButtons();
+        invalidateOptionsMenu(); // This will update the menu visibility via onPrepareOptionsMenu()
+
+        // Only prompt for biometric authentication if the timeout has passed.
+        if (shouldAuthenticate()) {
+            final BiometricLock biometricLock = new BiometricLock(this);
+            if (biometricLock.canAuthenticate()) {
+                showBlurryOverlay();
+                biometricLock.showPrompt(
+                        "Unlock",
+                        "Authenticate to access and change your settings.",
+                        "",
+                        new BiometricLock.BiometricLockCallback() {
+                            @Override
+                            public void onAuthenticationSucceeded() {
+                                removeBlurryOverlay();
+                                if (webView != null) {
+                                    webView.animate().alpha(1f).setDuration(300).start();
+                                }
+                                lastAuthenticatedTime = System.currentTimeMillis();
+                                // Reveal the toolbar buttons and menu items.
+                                showToolbarButtons();
+                                invalidateOptionsMenu();
+                            }
+
+                            @Override
+                            public void onAuthenticationError(String error) {
+                                removeBlurryOverlay();
+                                Toast.makeText(MainActivity.this, "Authentication error!", Toast.LENGTH_SHORT).show();
+                            }
+
+                            @Override
+                            public void onAuthenticationFailed() {
+                                Toast.makeText(MainActivity.this, "Authentication failed. Please try again.", Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                );
+            } else {
+                lastAuthenticatedTime = System.currentTimeMillis();
+                showToolbarButtons();
+                invalidateOptionsMenu();
+            }
+        }
+    }
+
+    /**
+     * Determines if biometric authentication is required based on the timeout.
+     *
+     * @return true if the user should authenticate.
+     */
+    private boolean shouldAuthenticate() {
+        return System.currentTimeMillis() - lastAuthenticatedTime > AUTH_TIMEOUT_MS;
+    }
+
+    /**
+     * Applies a blurry overlay over the entire content using the Blurry library.
+     * This method first checks that the root view has been laid out. If not, it posts a
+     * runnable to try again later.
+     */
+    private void showBlurryOverlay() {
+        final ViewGroup container = findViewById(R.id.swipeRefreshLayout);
+        if (container.getWidth() == 0 || container.getHeight() == 0) {
+            // The container hasn't been laid out yet; try again on the next layout pass.
+            container.post(this::showBlurryOverlay);
+            return;
+        }
+        try {
+            int tintColor = ContextCompat.getColor(this, R.color.blur_tint);
+            Blurry.with(this)
+                    .radius(10)
+                    .sampling(2)
+                    .color(tintColor)
+                    .onto(container);
+        } catch (NullPointerException e) {
+            // Catch and log any exceptions from the Blurry library to avoid crashes.
+            Log.d("Blurry", "There was an error while applying a blur effect: " + e);
+        }
+    }
+
+    /**
+     * Removes the blurry overlay.
+     */
+    private void removeBlurryOverlay() {
+        ViewGroup container = findViewById(R.id.swipeRefreshLayout);
+        Blurry.delete(container);
     }
 
     /**
@@ -309,6 +410,9 @@ public class MainActivity extends AppCompatActivity {
         // Find the WebView in the layout
         webView = findViewById(R.id.webView);
 
+        // Hide the WebView until authentication is complete.
+        webView.setAlpha(0f);
+
         // Restore any previously saved state
         if (webViewState != null) {
             webView.restoreState(webViewState);
@@ -405,9 +509,9 @@ public class MainActivity extends AppCompatActivity {
             request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
             // Set download destination to external files directory (Downloads)
             request.setDestinationInExternalFilesDir(
-                this,
-                Environment.DIRECTORY_DOWNLOADS,
-                "NextDNS-Configuration.mobileconfig"
+                    this,
+                    Environment.DIRECTORY_DOWNLOADS,
+                    "NextDNS-Configuration.mobileconfig"
             );
 
             // Enqueue the download request
@@ -428,6 +532,51 @@ public class MainActivity extends AppCompatActivity {
     private void startIntent(Class<?> targetClass) {
         Intent intent = new Intent(this, targetClass);
         startActivity(intent);
+    }
+
+    /**
+     * Hides all child views (such as buttons) within the toolbar.
+     */
+    private void hideToolbarButtons() {
+        // Get the toolbar by its ID.
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        // Loop through all the child views in the toolbar.
+        for (int i = 0; i < toolbar.getChildCount(); i++) {
+            // Hide each child view.
+            toolbar.getChildAt(i).setVisibility(android.view.View.GONE);
+        }
+    }
+
+    /**
+     * Shows all child views (such as buttons) within the toolbar.
+     */
+    private void showToolbarButtons() {
+        // Get the toolbar by its ID.
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        // Loop through all the child views in the toolbar.
+        for (int i = 0; i < toolbar.getChildCount(); i++) {
+            // Make each child view visible.
+            toolbar.getChildAt(i).setVisibility(android.view.View.VISIBLE);
+        }
+    }
+
+    /**
+     * Prepares the options menu by updating the visibility of menu items based on the authentication status.
+     *
+     * @param menu The options menu to be prepared.
+     * @return true after the menu has been prepared.
+     */
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        // Determine if the user is authenticated by checking if the elapsed time since the last authentication
+        // is within the allowed authentication timeout.
+        boolean isAuthenticated = System.currentTimeMillis() - lastAuthenticatedTime <= AUTH_TIMEOUT_MS;
+
+        // Loop through each menu item and set its visibility based on the authentication status.
+        for (int i = 0; i < menu.size(); i++) {
+            menu.getItem(i).setVisible(isAuthenticated);
+        }
+        return super.onPrepareOptionsMenu(menu);
     }
 
     /**
