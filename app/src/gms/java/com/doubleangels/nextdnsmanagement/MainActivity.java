@@ -452,20 +452,35 @@ public class MainActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.back:
-                // Go back in the WebView history
-                webView.goBack();
+                if (webView == null) {
+                    // Re-set up the WebView if it's null
+                    setupWebViewForActivity(getString(R.string.main_url));
+                } else {
+                    // Go back in the WebView history
+                    webView.goBack();
+                }
                 break;
             case R.id.refreshNextDNS:
-                // Reload the current WebView page
-                webView.reload();
+                if (webView == null) {
+                    // Re-set up the WebView if it's null
+                    setupWebViewForActivity(getString(R.string.main_url));
+                } else {
+                    // Reload the current WebView page
+                    webView.reload();
+                }
                 break;
             case R.id.pingNextDNS:
                 // Start PingActivity
                 startIntent(PingActivity.class);
                 break;
             case R.id.returnHome:
-                // Navigate to the main URL in the WebView
-                webView.loadUrl(getString(R.string.main_url));
+                if (webView == null) {
+                    // Re-set up the WebView if it's null
+                    setupWebViewForActivity(getString(R.string.main_url));
+                } else {
+                    // Navigate to the main URL in the WebView
+                    webView.loadUrl(getString(R.string.main_url));
+                }
                 break;
             case R.id.privateDNS:
                 // Launch system settings for Private DNS
