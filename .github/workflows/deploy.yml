@@ -83,7 +83,7 @@ jobs:
       - name: Sign APK for Github release
         uses: r0adkll/sign-android-release@v1
         with:
-          releaseDirectory: app/build/outputs/apk/gms/release
+          releaseDirectory: app/build/outputs/apk/foss/release
           signingKeyBase64: ${{ secrets.SIGNING_KEY }}
           alias: ${{ secrets.ALIAS }}
           keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
@@ -92,13 +92,13 @@ jobs:
           BUILD_TOOLS_VERSION: "34.0.0"
 
       - name: Rename Github APK file
-        run: mv app/build/outputs/apk/gms/release/app-gms-release-unsigned-signed.apk app/build/outputs/apk/gms/release/app-release-foss.apk
+        run: mv app/build/outputs/apk/foss/release/app-gms-release-unsigned-signed.apk app/build/outputs/apk/foss/release/app-release-foss.apk
 
       - name: Upload APK to Github release artifacts
         uses: actions/upload-artifact@v4
         with:
           name: github-foss-release-apk
-          path: app/build/outputs/apk/gms/release/app-release-foss.apk
+          path: app/build/outputs/apk/foss/release/app-release-foss.apk
 
   build-gms-flavor-for-google-play:
     runs-on: ubuntu-latest
