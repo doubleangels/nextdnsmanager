@@ -9,9 +9,11 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.Settings;
+import android.util.Log;
 import android.view.ContextThemeWrapper;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.ViewGroup;
 import android.view.Window;
 import android.webkit.CookieManager;
 import android.webkit.WebChromeClient;
@@ -27,11 +29,13 @@ import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.content.ContextCompat;
 import androidx.lifecycle.LifecycleOwner;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import androidx.webkit.WebSettingsCompat;
 import androidx.webkit.WebViewFeature;
 
+import com.doubleangels.nextdnsmanagement.biometriclock.BiometricLock;
 import com.doubleangels.nextdnsmanagement.protocol.VisualIndicator;
 import com.doubleangels.nextdnsmanagement.sentry.SentryInitializer;
 import com.doubleangels.nextdnsmanagement.sentry.SentryManager;
@@ -40,10 +44,12 @@ import com.doubleangels.nextdnsmanagement.webview.WebAppInterface;
 
 import java.util.Locale;
 
+import jp.wasabeef.blurry.Blurry;
+
 /**
  * Main Activity class that handles initialization of the UI, WebView, and various settings
- * like dark mode, locale, etc. Also contains logic for handling low-memory events
- * and navigation from the options menu.
+ * like dark mode, locale, etc. Also contains logic for handling low-memory events,
+ * biometric re‑authentication with a timeout, and a blurry overlay until authentication.
  */
 public class MainActivity extends AppCompatActivity {
 
@@ -57,6 +63,10 @@ public class MainActivity extends AppCompatActivity {
     private Boolean isWebViewInitialized = false;
     // Used to save/restore WebView state across configuration changes
     private Bundle webViewState = null;
+
+    // Biometric authentication timeout (2 minutes) and timestamp of last successful authentication
+    private static final long AUTH_TIMEOUT_MS = 2 * 60 * 1000; // 2 minutes
+    private long lastAuthenticatedTime = 0;
 
     /**
      * Saves the current state of the activity, including the WebView state and dark mode setting.
@@ -78,7 +88,7 @@ public class MainActivity extends AppCompatActivity {
      * Called when the activity is first created. Restores saved state if available,
      * initializes necessary components, and sets up the UI (toolbar, WebView, dark mode, etc).
      */
-    @SuppressLint("WrongThread")
+    @SuppressLint({"WrongThread", "SetJavaScriptEnabled"})
     @RequiresApi(api = Build.VERSION_CODES.TIRAMISU)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -118,8 +128,8 @@ public class MainActivity extends AppCompatActivity {
 
             // Determine and apply dark mode preference
             setupDarkModeForActivity(
-                sentryManager,
-                SharedPreferencesManager.getString("dark_mode", "match")
+                    sentryManager,
+                    SharedPreferencesManager.getString("dark_mode", "match")
             );
 
             // Set up any additional UI indicators
@@ -159,7 +169,8 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * Called when the activity is resumed. Resumes the WebView if it was previously initialized.
-     * If not initialized, sets up a new WebView instance.
+     * If not initialized, sets up a new WebView instance. Also handles biometric authentication
+     * with a timeout so that switching activities doesn't authenticate too frequently.
      */
     @Override
     protected void onResume() {
@@ -169,6 +180,86 @@ public class MainActivity extends AppCompatActivity {
         } else if (!isWebViewInitialized) {
             setupWebViewForActivity(getString(R.string.main_url));
         }
+
+        // Only prompt for authentication if enough time has passed
+        if (shouldAuthenticate()) {
+            final BiometricLock biometricLock = new BiometricLock(this);
+            if (biometricLock.canAuthenticate()) {
+                // Show a blurry overlay until the user authenticates
+                showBlurryOverlay();
+                // Use custom text for the authentication prompt here:
+                biometricLock.showPrompt(
+                        "Unlock",
+                        "Authenticate to access and change your settings.",
+                        "",
+                        new BiometricLock.BiometricLockCallback() {
+                            @Override
+                            public void onAuthenticationSucceeded() {
+                                // Remove the overlay and record authentication time
+                                removeBlurryOverlay();
+                                lastAuthenticatedTime = System.currentTimeMillis();
+                            }
+
+                            @Override
+                            public void onAuthenticationError(String error) {
+                                removeBlurryOverlay();
+                                Toast.makeText(MainActivity.this, "Authentication error!", Toast.LENGTH_SHORT).show();
+                            }
+
+                            @Override
+                            public void onAuthenticationFailed() {
+                                Toast.makeText(MainActivity.this, "Authentication failed. Please try again.", Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                );
+            } else {
+                // If device cannot authenticate, update the last authentication time so that
+                // we don't prompt again immediately.
+                lastAuthenticatedTime = System.currentTimeMillis();
+            }
+        }
+    }
+
+    /**
+     * Determines if biometric authentication is required based on the timeout.
+     *
+     * @return true if the user should authenticate.
+     */
+    private boolean shouldAuthenticate() {
+        return System.currentTimeMillis() - lastAuthenticatedTime > AUTH_TIMEOUT_MS;
+    }
+
+    /**
+     * Applies a blurry overlay over the entire content using the Blurry library.
+     * This method first checks that the root view has been laid out. If not, it posts a
+     * runnable to try again later.
+     */
+    private void showBlurryOverlay() {
+        final ViewGroup rootView = findViewById(android.R.id.content);
+        if (rootView.getWidth() == 0 || rootView.getHeight() == 0) {
+            // The view hasn't been laid out yet; try again on the next layout pass.
+            rootView.post(this::showBlurryOverlay);
+            return;
+        }
+        try {
+            int tintColor = ContextCompat.getColor(this, R.color.blur_tint);
+            Blurry.with(this)
+                    .radius(10)
+                    .sampling(2)
+                    .color(tintColor)
+                    .onto(rootView);
+        } catch (NullPointerException e) {
+            // Catch and log any exceptions from the Blurry library to avoid crashes.
+            Log.d("Blurry", "There was an error while applying a blur effect: " + e);
+        }
+    }
+
+    /**
+     * Removes the blurry overlay.
+     */
+    private void removeBlurryOverlay() {
+        ViewGroup rootView = findViewById(android.R.id.content);
+        Blurry.delete(rootView);
     }
 
     /**
@@ -398,12 +489,11 @@ public class MainActivity extends AppCompatActivity {
         webView.setDownloadListener((url, userAgent, contentDisposition, mimetype, contentLength) -> {
             // Create a DownloadManager request for the file URL
             DownloadManager.Request request = new DownloadManager.Request(Uri.parse(url.trim()));
-            request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
             // Set download destination to external files directory (Downloads)
             request.setDestinationInExternalFilesDir(
-                this,
-                Environment.DIRECTORY_DOWNLOADS,
-                "NextDNS-Configuration.mobileconfig"
+                    this,
+                    Environment.DIRECTORY_DOWNLOADS,
+                    "NextDNS-Configuration.mobileconfig"
             );
 
             // Enqueue the download request
