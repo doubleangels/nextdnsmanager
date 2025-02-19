@@ -20,19 +20,13 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 import java.io.IOException;
-import java.net.SocketException;
-import java.net.SocketTimeoutException;
-import java.net.UnknownHostException;
 import java.util.Arrays;
-
-import javax.net.ssl.SSLException;
 
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
-import okhttp3.internal.http2.ConnectionShutdownException;
 
 /**
  * A class that monitors and visually indicates the network status, specifically
@@ -268,22 +262,11 @@ public class VisualIndicator {
     }
 
     /**
-     * Handles various network-related exceptions, capturing them in Sentry 
-     * with either a message-level log or a full exception report.
+     * Handles various network-related exceptions, capturing them in Sentry.
      *
      * @param e The caught exception.
      */
     private void catchNetworkErrors(@NonNull Exception e) {
-        // These exceptions are considered network-related and not always critical.
-        if (e instanceof UnknownHostException ||
-            e instanceof SocketTimeoutException ||
-            e instanceof SocketException ||
-            e instanceof SSLException ||
-            e instanceof ConnectionShutdownException) {
-            sentryManager.captureMessage("Network exception captured: " + e);
-        } else {
-            // For unexpected exceptions, capture a full stack trace
-            sentryManager.captureException(e);
-        }
+        sentryManager.captureException(e);
     }
 }
