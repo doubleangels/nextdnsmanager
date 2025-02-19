@@ -1,19 +1,19 @@
 # Contributing
 
-I welcome contributions to NextDNS Manager from the community. Whether it's bug fixes, new features, or improvements to documentation, your contributions make a significant difference.
+I welcome contributions to NextDNS Manager. Whether it's bug fixes, new features, or improvements to documentation, your input helps make this project better.
 
 ## How Can You Contribute?
 
-You can contribute to NextDNS Manager in various ways:
+There are several ways you can contribute:
 
 ### Documentation
 
-Improvements to the project's documentation are always welcome. You can suggest edits, updates, or new sections to make it more informative and user-friendly.
+Improving the documentation is always valuable. You can suggest edits, propose updates, or add new sections to make the project more informative and user-friendly.
 
 ### Translations
 
-If you notice inaccuracies in translations, please open an issue to report them or contribute to the [translation project](https://poeditor.com/join/project/EupqZ3cGCJ).
+If you find any inaccuracies in translations, please open an issue to report them or contribute directly to the [translation project](https://poeditor.com/join/project/EupqZ3cGCJ).
 
 ### Code Contributions
 
-For those interested in making code contributions, please open a pull request with your proposed changes. Automated tests must pass for your pull request to be merged
+If you'd like to contribute code, please open a pull request with your changes. Make sure that all automated tests pass before submitting your pull request.
