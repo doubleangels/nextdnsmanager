@@ -135,35 +135,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        cleanupWebView();
-    }
-
-    /**
-     * Called when the app is running low on memory. If the WebView is initialized,
-     * destroy it to free resources.
-     */
-    @Override
-    public void onLowMemory() {
-        super.onLowMemory();
-        if (!isWebViewInitialized) {
-            return;
-        }
-        cleanupWebView();
-    }
-
-    /**
-     * Called when the app should trim memory. If the trim level is high enough,
-     * the WebView is destroyed to free up resources.
-     */
-    @Override
-    public void onTrimMemory(int level) {
-        super.onTrimMemory(level);
-        if (level >= ComponentCallbacks2.TRIM_MEMORY_MODERATE) {
-            if (!isWebViewInitialized) {
-                return;
-            }
-            cleanupWebView();
-        }
+        webView.destroy();
     }
 
     /**
@@ -312,23 +284,6 @@ public class MainActivity extends AppCompatActivity {
         } catch (Exception e) {
             // Capture any initialization errors
             sentryManager.captureException(e);
-        }
-    }
-
-    /**
-     * Cleans up the WebView by loading a blank page, removing all views, and destroying the WebView.
-     * This frees up memory and resources.
-     */
-    private void cleanupWebView() {
-        if (webView != null) {
-            try {
-                webView.loadUrl("about:blank");
-                webView.removeAllViews();
-                webView.destroy();
-            } finally {
-                webView = null;
-                isWebViewInitialized = false;
-            }
         }
     }
 
