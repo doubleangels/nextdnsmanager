@@ -184,11 +184,14 @@ public class MainActivity extends AppCompatActivity {
             setupWebViewForActivity(getString(R.string.main_url));
         }
 
-        // Only prompt for authentication if enough time has passed
+        // Hide toolbar buttons and menu items until authenticated.
+        hideToolbarButtons();
+        invalidateOptionsMenu(); // This will update the menu visibility via onPrepareOptionsMenu()
+
+        // Only prompt for biometric authentication if the timeout has passed.
         if (shouldAuthenticate()) {
             final BiometricLock biometricLock = new BiometricLock(this);
             if (biometricLock.canAuthenticate()) {
-                // Show a blurry overlay until the user authenticates
                 showBlurryOverlay();
                 biometricLock.showPrompt(
                         "Unlock",
@@ -197,19 +200,22 @@ public class MainActivity extends AppCompatActivity {
                         new BiometricLock.BiometricLockCallback() {
                             @Override
                             public void onAuthenticationSucceeded() {
-                                // Remove the blur overlay
                                 removeBlurryOverlay();
-                                // Animate the WebView to full opacity (revealing its content)
                                 if (webView != null) {
                                     webView.animate().alpha(1f).setDuration(300).start();
                                 }
                                 lastAuthenticatedTime = System.currentTimeMillis();
+                                // Reveal the toolbar buttons and menu items.
+                                showToolbarButtons();
+                                invalidateOptionsMenu();
                             }
+
                             @Override
                             public void onAuthenticationError(String error) {
                                 removeBlurryOverlay();
                                 Toast.makeText(MainActivity.this, "Authentication error!", Toast.LENGTH_SHORT).show();
                             }
+
                             @Override
                             public void onAuthenticationFailed() {
                                 Toast.makeText(MainActivity.this, "Authentication failed. Please try again.", Toast.LENGTH_SHORT).show();
@@ -217,9 +223,9 @@ public class MainActivity extends AppCompatActivity {
                         }
                 );
             } else {
-                // If device cannot authenticate, update the last authentication time so that
-                // we don't prompt again immediately.
                 lastAuthenticatedTime = System.currentTimeMillis();
+                showToolbarButtons();
+                invalidateOptionsMenu();
             }
         }
     }
@@ -239,10 +245,10 @@ public class MainActivity extends AppCompatActivity {
      * runnable to try again later.
      */
     private void showBlurryOverlay() {
-        final ViewGroup rootView = findViewById(android.R.id.content);
-        if (rootView.getWidth() == 0 || rootView.getHeight() == 0) {
-            // The view hasn't been laid out yet; try again on the next layout pass.
-            rootView.post(this::showBlurryOverlay);
+        final ViewGroup container = findViewById(R.id.swipeRefreshLayout);
+        if (container.getWidth() == 0 || container.getHeight() == 0) {
+            // The container hasn't been laid out yet; try again on the next layout pass.
+            container.post(this::showBlurryOverlay);
             return;
         }
         try {
@@ -251,7 +257,7 @@ public class MainActivity extends AppCompatActivity {
                     .radius(10)
                     .sampling(2)
                     .color(tintColor)
-                    .onto(rootView);
+                    .onto(container);
         } catch (NullPointerException e) {
             // Catch and log any exceptions from the Blurry library to avoid crashes.
             Log.d("Blurry", "There was an error while applying a blur effect: " + e);
@@ -262,8 +268,8 @@ public class MainActivity extends AppCompatActivity {
      * Removes the blurry overlay.
      */
     private void removeBlurryOverlay() {
-        ViewGroup rootView = findViewById(android.R.id.content);
-        Blurry.delete(rootView);
+        ViewGroup container = findViewById(R.id.swipeRefreshLayout);
+        Blurry.delete(container);
     }
 
     /**
@@ -496,6 +502,7 @@ public class MainActivity extends AppCompatActivity {
         webView.setDownloadListener((url, userAgent, contentDisposition, mimetype, contentLength) -> {
             // Create a DownloadManager request for the file URL
             DownloadManager.Request request = new DownloadManager.Request(Uri.parse(url.trim()));
+            request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
             // Set download destination to external files directory (Downloads)
             request.setDestinationInExternalFilesDir(
                     this,
@@ -521,6 +528,51 @@ public class MainActivity extends AppCompatActivity {
     private void startIntent(Class<?> targetClass) {
         Intent intent = new Intent(this, targetClass);
         startActivity(intent);
+    }
+
+    /**
+     * Hides all child views (such as buttons) within the toolbar.
+     */
+    private void hideToolbarButtons() {
+        // Get the toolbar by its ID.
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        // Loop through all the child views in the toolbar.
+        for (int i = 0; i < toolbar.getChildCount(); i++) {
+            // Hide each child view.
+            toolbar.getChildAt(i).setVisibility(android.view.View.GONE);
+        }
+    }
+
+    /**
+     * Shows all child views (such as buttons) within the toolbar.
+     */
+    private void showToolbarButtons() {
+        // Get the toolbar by its ID.
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        // Loop through all the child views in the toolbar.
+        for (int i = 0; i < toolbar.getChildCount(); i++) {
+            // Make each child view visible.
+            toolbar.getChildAt(i).setVisibility(android.view.View.VISIBLE);
+        }
+    }
+
+    /**
+     * Prepares the options menu by updating the visibility of menu items based on the authentication status.
+     *
+     * @param menu The options menu to be prepared.
+     * @return true after the menu has been prepared.
+     */
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        // Determine if the user is authenticated by checking if the elapsed time since the last authentication
+        // is within the allowed authentication timeout.
+        boolean isAuthenticated = System.currentTimeMillis() - lastAuthenticatedTime <= AUTH_TIMEOUT_MS;
+
+        // Loop through each menu item and set its visibility based on the authentication status.
+        for (int i = 0; i < menu.size(); i++) {
+            menu.getItem(i).setVisible(isAuthenticated);
+        }
+        return super.onPrepareOptionsMenu(menu);
     }
 
     /**
