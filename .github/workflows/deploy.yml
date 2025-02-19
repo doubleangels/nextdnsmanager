@@ -92,7 +92,7 @@ jobs:
           BUILD_TOOLS_VERSION: "34.0.0"
 
       - name: Rename Github APK file
-        run: mv app/build/outputs/apk/foss/release/app-gms-release-unsigned-signed.apk app/build/outputs/apk/foss/release/app-release-foss.apk
+        run: mv app/build/outputs/apk/foss/release/app-foss-release-unsigned-signed.apk app/build/outputs/apk/foss/release/app-release-foss.apk
 
       - name: Upload APK to Github release artifacts
         uses: actions/upload-artifact@v4
