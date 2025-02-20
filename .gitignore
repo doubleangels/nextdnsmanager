@@ -32,11 +32,7 @@ local.properties
 .iml/
 
 # Miscellaneous files
-*.txt
 .iml/
-
-# Miscellaneous files
-*.txt
 *.log
 *.swp
 *.DS_Store

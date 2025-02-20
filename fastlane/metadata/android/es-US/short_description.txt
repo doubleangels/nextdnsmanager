@@ -1,0 +1,2 @@
+NextDNS Manager: app Android que facilita la configuración de NextDNS.
+

@@ -1,0 +1,10 @@
+NextDNS Manager é uma aplicação Android que simplifica a gestão da configuração NextDNS. NextDNS é um filtro DNS baseado na cloud e um firewall concebido para proteger a sua casa, a sua família e a sua privacidade online. Com o NextDNS Manager, pode controlar facilmente as suas definições NextDNS para garantir uma experiência digital mais segura. NextDNS Manager é compatível com qualquer dispositivo Android que execute o Android 12L ou posterior.
+
+Funcionalidades:
+- Interface Intuitiva: Desfrute de uma experiência amigável com modo escuro, ícones dinâmicos/temáticos e suporte para 14 línguas.
+- Gestão Abrangente de Configurações: Gerencie facilmente as suas definições NextDNS, incluindo modos de filtragem, listas de bloqueio e listas de permissões.
+- Estatísticas em Tempo Real: Monitorize as consultas DNS, os pedidos bloqueados e os eventos de segurança em tempo real.
+- Segurança e Privacidade Aprimoradas: Beneficie das robustas capacidades de filtragem do NextDNS para proteger as suas atividades online. Um bloqueio com biometria ou código PIN protege as suas definições.
+- Múltiplas Opções de Instalação: Descarregue e instale o NextDNS Manager através da Google Play Store, F-Droid ou diretamente a partir do GitHub.
+
+<b><u>NextDNS Manager é um projeto completamente open-source e não está oficialmente afiliado ao NextDNS.</u></b>

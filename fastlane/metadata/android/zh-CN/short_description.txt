@@ -1,0 +1,2 @@
+NextDNS Manager：简化NextDNS配置管理的Android应用.
+

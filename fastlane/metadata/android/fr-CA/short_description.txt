@@ -1,0 +1,2 @@
+NextDNS Manager : appli Android pour gérer facilement NextDNS.
+
