@@ -33,9 +33,6 @@ local.properties
 
 # Miscellaneous files
 .iml/
-
-# Miscellaneous files
-*.txt
 *.log
 *.swp
 *.DS_Store
