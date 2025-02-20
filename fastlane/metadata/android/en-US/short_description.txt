@@ -1,1 +1,2 @@
-NextDNS Manager is an Android app that simplifies managing your NextDNS configuration.
+NextDNS Manager: Android app for easy NextDNS configuration management.
+
