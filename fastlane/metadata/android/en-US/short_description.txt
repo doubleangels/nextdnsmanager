@@ -1,1 +1,2 @@
-Manage your NextDNS settings quickly and easily!
+NextDNS Manager: Android app for easy NextDNS configuration management.
+
