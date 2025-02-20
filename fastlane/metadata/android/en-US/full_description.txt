@@ -2,7 +2,7 @@ NextDNS Manager is an Android application that simplifies managing your NextDNS 
 
 Features:
 
-- Intuitive Interface: Enjoy a user-friendly experience enhanced with Material You styling, automatic dark mode, dynamic/themed icons, and support for 14 languages.
+- Intuitive Interface: Enjoy a user-friendly experience enhanced with dark mode, dynamic/themed icons, and support for 14 languages.
 - Comprehensive Configuration Management: Easily manage your NextDNS settings including filtering modes, blocklists, and whitelists.
 - Real-Time Statistics: Monitor DNS queries, blocked requests, and security events as they happen.
 - Enhanced Security and Privacy: Benefit from NextDNS' robust filtering capabilities to safeguard your online activities. An app lock using biometrics or PIN code secures your NextDNS settings and configuration from prying eyes.
