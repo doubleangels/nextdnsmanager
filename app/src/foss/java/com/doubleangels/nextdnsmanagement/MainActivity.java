@@ -174,6 +174,7 @@ public class MainActivity extends AppCompatActivity {
     /**
      * Called when the activity is resumed. Resumes the WebView if previously initialized, and handles
      * biometric authentication with a timeout to determine if the user needs to re-authenticate.
+     * Also includes a fallback reload if the WebView fails to load.
      */
     @Override
     protected void onResume() {
@@ -224,7 +225,7 @@ public class MainActivity extends AppCompatActivity {
 
                             @Override
                             public void onAuthenticationFailed() {
-                                // Show a message if authentication fails.
+                                // Inform the user of a failed authentication attempt.
                                 Toast.makeText(MainActivity.this, "Authentication failed. Please try again.", Toast.LENGTH_SHORT).show();
                             }
                         }
@@ -240,6 +241,16 @@ public class MainActivity extends AppCompatActivity {
             // If no authentication is needed, ensure toolbar buttons and menu items are visible.
             showToolbarButtons();
             invalidateOptionsMenu();
+        }
+
+        // Fallback: If the WebView's progress is still 0 after a delay, attempt a reload.
+        if (webView != null && webView.getProgress() == 0) {
+            webView.postDelayed(() -> {
+                if (webView.getProgress() == 0) {
+                    Log.d("WebView", "Fallback reload initiated");
+                    webView.reload();
+                }
+            }, 300);
         }
     }
 
@@ -294,7 +305,7 @@ public class MainActivity extends AppCompatActivity {
      * This method may be updated to handle newer Android versions as needed.
      */
     private void setupStatusBarForActivity() {
-        // Check if the Android version is higher than a placeholder version (UPSIDE_DOWN_CAKE).
+        // Check if the Android version is higher than a placeholder version.
         if (Build.VERSION.SDK_INT > Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             Window window = getWindow();
             // Set a listener to apply window insets and modify the background color.
@@ -435,6 +446,7 @@ public class MainActivity extends AppCompatActivity {
         if (webViewState != null) {
             webView.restoreState(webViewState);
         } else {
+            // Load the URL only once if no saved state exists.
             webView.loadUrl(url);
         }
 
@@ -487,9 +499,7 @@ public class MainActivity extends AppCompatActivity {
         // Set up the Download Manager for file downloads in the WebView.
         setupDownloadManagerForActivity();
 
-        // If there is no saved state, reload the URL after setting up.
-        webView.loadUrl(url);
-
+        // Do not call loadUrl(url) again here since the URL is already loaded above.
         // Mark the WebView as fully initialized.
         isWebViewInitialized = true;
     }
@@ -526,7 +536,6 @@ public class MainActivity extends AppCompatActivity {
             // Create a DownloadManager request for the file URL.
             DownloadManager.Request request = new DownloadManager.Request(Uri.parse(url.trim()));
             request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
-
             // Set the download destination to the external files directory.
             request.setDestinationInExternalFilesDir(this, Environment.DIRECTORY_DOWNLOADS, "NextDNS-Configuration.mobileconfig");
 
