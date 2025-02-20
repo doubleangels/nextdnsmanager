@@ -13,6 +13,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import javax.net.ssl.SSLException;
+import javax.net.ssl.SSLHandshakeException;
 
 import io.sentry.Sentry;
 import okhttp3.internal.http2.ConnectionShutdownException;
@@ -38,6 +39,7 @@ public class SentryManager {
             SocketTimeoutException.class,
             SocketException.class,
             SSLException.class,
+            SSLHandshakeException.class,
             ConnectionShutdownException.class
     );
 
