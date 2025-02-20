@@ -1,8 +1,11 @@
 package com.doubleangels.nextdnsmanagement;
 
+import static android.Manifest.permission.POST_NOTIFICATIONS;
+
 import android.annotation.SuppressLint;
 import android.app.DownloadManager;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.net.Uri;
 import android.os.Build;
@@ -29,6 +32,7 @@ import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.lifecycle.LifecycleOwner;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
@@ -100,7 +104,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Restore saved state if available (e.g., after rotation)
+        // Restore saved state if available (e.g., after rotation).
         if (savedInstanceState != null) {
             webViewState = savedInstanceState.getBundle("webViewState");
             darkModeEnabled = savedInstanceState.getBoolean("darkModeEnabled");
@@ -146,6 +150,11 @@ public class MainActivity extends AppCompatActivity {
 
             // Set up swipe-to-refresh functionality.
             setupSwipeToRefreshForActivity();
+
+            // Request POST_NOTIFICATIONS permission if not granted already.
+            if (ContextCompat.checkSelfPermission(this, POST_NOTIFICATIONS) == PackageManager.PERMISSION_DENIED) {
+                ActivityCompat.requestPermissions(this, new String[]{POST_NOTIFICATIONS}, 1);
+            }
 
             // Initialize the WebView and load the main URL.
             setupWebViewForActivity(getString(R.string.main_url));
