@@ -1,1 +1,1 @@
-Manage your NextDNS settings quickly and easily!
+NextDNS Manager is an open-source Android app that simplifies managing your NextDNS configuration with an intuitive interface, real-time statistics, and robust security for a safer digital experience.
