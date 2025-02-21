@@ -1,6 +1,5 @@
 package com.doubleangels.nextdnsmanagement;
 
-import android.annotation.SuppressLint;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
@@ -156,11 +155,15 @@ public class SettingsActivity extends AppCompatActivity {
 
             // Retrieve references to specific preferences
             SwitchPreference sentryEnablePreference = findPreference("sentry_enable");
+            SwitchPreference appLockPreference = findPreference("app_lock_enable");
             ListPreference darkModePreference = findPreference("dark_mode");
 
             // Attach listeners to handle changes in Sentry or dark mode settings
             if (sentryEnablePreference != null) {
                 setupSentryChangeListener(sentryEnablePreference);
+            }
+            if (appLockPreference != null) {
+                setupAppLockChangeListener(appLockPreference);
             }
             if (darkModePreference != null) {
                 setupDarkModeChangeListener(darkModePreference);
@@ -266,6 +269,21 @@ public class SettingsActivity extends AppCompatActivity {
                 return true;
             });
         }
+
+        /**
+         * Sets up a change listener for the "app_lock" ListPreference. When a user picks
+         * a new value, it logs the choice to Sentry and persists the setting with SharedPreferences.
+         *
+         * @param setting The ListPreference that allows users to choose a app lock setting.
+         */
+        private void setupAppLockChangeListener(SwitchPreference setting) {
+            setting.setOnPreferenceChangeListener((preference, newValue) -> {
+                new SentryManager(requireContext()).captureMessage("App lock set to " + newValue.toString() + ".");
+                SharedPreferencesManager.putBoolean("app_lock_enable", (Boolean) newValue);
+                return true;
+            });
+        }
+
 
         /**
          * Sets up a change listener for the Sentry enable/disable SwitchPreference. This 

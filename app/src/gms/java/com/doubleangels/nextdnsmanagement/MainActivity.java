@@ -192,78 +192,78 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        // Resume the WebView if it exists; otherwise, initialize it.
         if (webView != null) {
             webView.onResume();
         } else if (!isWebViewInitialized) {
             setupWebViewForActivity(getString(R.string.main_url));
         }
 
-        // Check if the authentication timeout has expired.
-        if (shouldAuthenticate()) {
-            // Hide toolbar buttons and menu items until the user authenticates.
-            hideToolbarButtons();
-            invalidateOptionsMenu(); // Update menu visibility based on authentication status.
+        SharedPreferencesManager.init(this);
 
-            final BiometricLock biometricLock = new BiometricLock(this);
-            if (biometricLock.canAuthenticate()) {
-                // Apply the blur overlay and prompt for biometric authentication.
-                showBlurryOverlay();
-                biometricLock.showPrompt(
-                        "Unlock",
-                        "Authenticate to access and change your settings.",
-                        "",
-                        new BiometricLock.BiometricLockCallback() {
-                            @Override
-                            public void onAuthenticationSucceeded() {
-                                // On successful authentication, remove the blur overlay.
-                                removeBlurryOverlay();
-                                // Animate the WebView to full opacity to reveal its content.
-                                if (webView != null) {
-                                    webView.animate().alpha(1f).setDuration(300).start();
+        if (SharedPreferencesManager.getBoolean("app_lock_enable", true)) {
+            // App lock enabled, so proceed with biometric authentication
+            if (shouldAuthenticate()) {
+                hideToolbarButtons();
+                invalidateOptionsMenu();
+
+                final BiometricLock biometricLock = new BiometricLock(this);
+                if (biometricLock.canAuthenticate()) {
+                    showBlurryOverlay();
+                    biometricLock.showPrompt(
+                            "Unlock",
+                            "Authenticate to access and change your settings.",
+                            "",
+                            new BiometricLock.BiometricLockCallback() {
+                                @Override
+                                public void onAuthenticationSucceeded() {
+                                    removeBlurryOverlay();
+                                    if (webView != null) {
+                                        webView.animate().alpha(1f).setDuration(300).start();
+                                    }
+                                    lastAuthenticatedTime = System.currentTimeMillis();
+                                    showToolbarButtons();
+                                    invalidateOptionsMenu();
                                 }
-                                // Update the last authentication timestamp.
-                                lastAuthenticatedTime = System.currentTimeMillis();
-                                // Reveal the toolbar buttons and menu items.
-                                showToolbarButtons();
-                                invalidateOptionsMenu();
-                            }
 
-                            @Override
-                            public void onAuthenticationError(String error) {
-                                // Remove the blur overlay and show an error message.
-                                removeBlurryOverlay();
-                                Toast.makeText(MainActivity.this, "Authentication error!", Toast.LENGTH_SHORT).show();
-                            }
+                                @Override
+                                public void onAuthenticationError(String error) {
+                                    removeBlurryOverlay();
+                                    Toast.makeText(MainActivity.this, "Authentication error!", Toast.LENGTH_SHORT).show();
+                                }
 
-                            @Override
-                            public void onAuthenticationFailed() {
-                                // Inform the user of a failed authentication attempt.
-                                Toast.makeText(MainActivity.this, "Authentication failed. Please try again.", Toast.LENGTH_SHORT).show();
+                                @Override
+                                public void onAuthenticationFailed() {
+                                    Toast.makeText(MainActivity.this, "Authentication failed. Please try again.", Toast.LENGTH_SHORT).show();
+                                }
                             }
-                        }
-                );
+                    );
+                } else {
+                    lastAuthenticatedTime = System.currentTimeMillis();
+                    showToolbarButtons();
+                    invalidateOptionsMenu();
+                }
             } else {
-                // If biometric authentication is not available, update the authentication timestamp,
-                // and reveal toolbar buttons and menu items.
-                lastAuthenticatedTime = System.currentTimeMillis();
                 showToolbarButtons();
                 invalidateOptionsMenu();
             }
+
+            if (webView != null && webView.getProgress() == 0) {
+                webView.postDelayed(() -> {
+                    if (webView.getProgress() == 0) {
+                        Log.d("WebView", "Fallback reload initiated");
+                        webView.reload();
+                    }
+                }, 300);
+            }
         } else {
-            // If no authentication is needed, ensure toolbar buttons and menu items are visible.
+            // App lock is disabled, so bypass biometric authentication.
+            // Immediately reveal the UI and remove any overlays.
+            removeBlurryOverlay();
+            if (webView != null) {
+                webView.setAlpha(1f);
+            }
             showToolbarButtons();
             invalidateOptionsMenu();
-        }
-
-        // Fallback: If the WebView's progress is still 0 after a delay, attempt a reload.
-        if (webView != null && webView.getProgress() == 0) {
-            webView.postDelayed(() -> {
-                if (webView.getProgress() == 0) {
-                    Log.d("WebView", "Fallback reload initiated");
-                    webView.reload();
-                }
-            }, 300);
         }
     }
 
