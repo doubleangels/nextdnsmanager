@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="app_lock">App-Sperre</string>
+    <string name="app_lock_instructions">Biometrie oder PIN erforderlich, um auf diese App zuzugreifen.</string>
     <string name="app_name">"NextDNS Manager"</string>
     <string name="author">"Autor"</string>
     <string name="back_title">"Zurück"</string>

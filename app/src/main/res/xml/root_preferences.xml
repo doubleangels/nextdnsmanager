@@ -11,6 +11,14 @@
             app:defaultValue="match" />
     </PreferenceCategory>
     <PreferenceCategory
+        app:key="applock"
+        app:title="@string/app_lock">
+        <SwitchPreference
+            app:key="app_lock_enable"
+            app:title="@string/app_lock_instructions"
+            app:defaultValue="true" />
+    </PreferenceCategory>
+    <PreferenceCategory
         app:key="sentry"
         app:title="@string/sentry"
         app:selectable="false">

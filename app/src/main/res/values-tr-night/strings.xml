@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="app_lock">Uygulama Kilidi</string>
+    <string name="app_lock_instructions">Bu uygulamaya erişmek için biyometrik doğrulama veya PIN gereklidir.</string>
     <string name="app_name">"NextDNS Manager"</string>
     <string name="author">"Yazar"</string>
     <string name="back_title">"Geri"</string>

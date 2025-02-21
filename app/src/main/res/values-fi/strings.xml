@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="app_lock">Sovelluksen lukitus</string>
+    <string name="app_lock_instructions">Sovelluksen avaamiseen vaaditaan biometria tai PIN-koodi.</string>
     <string name="app_name">"NextDNS Manager"</string>
     <string name="author">"Kirjoittaja"</string>
     <string name="back_title">"Takaisin"</string>
