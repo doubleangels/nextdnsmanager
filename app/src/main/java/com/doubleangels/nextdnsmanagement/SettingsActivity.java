@@ -18,6 +18,7 @@ import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.SwitchPreference;
 
+import com.doubleangels.nextdnsmanagement.biometriclock.BiometricLock;
 import com.doubleangels.nextdnsmanagement.sentry.SentryInitializer;
 import com.doubleangels.nextdnsmanagement.sentry.SentryManager;
 import com.doubleangels.nextdnsmanagement.sharedpreferences.SharedPreferencesManager;
@@ -157,6 +158,13 @@ public class SettingsActivity extends AppCompatActivity {
             SwitchPreference sentryEnablePreference = findPreference("sentry_enable");
             SwitchPreference appLockPreference = findPreference("app_lock_enable");
             ListPreference darkModePreference = findPreference("dark_mode");
+
+            // Make sure users can't turn on app lock if they don't have a device lock set up
+            final BiometricLock biometricLock = new BiometricLock((AppCompatActivity) requireContext());
+            if (!biometricLock.canAuthenticate()) {
+                setPreferenceVisibility("applock", false);
+            }
+
 
             // Attach listeners to handle changes in Sentry or dark mode settings
             if (sentryEnablePreference != null) {

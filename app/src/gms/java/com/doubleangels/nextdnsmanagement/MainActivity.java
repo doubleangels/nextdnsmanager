@@ -12,11 +12,9 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.Settings;
-import android.util.Log;
 import android.view.ContextThemeWrapper;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.ViewGroup;
 import android.view.Window;
 import android.webkit.CookieManager;
 import android.webkit.WebChromeClient;
@@ -49,8 +47,6 @@ import com.doubleangels.nextdnsmanagement.webview.WebAppInterface;
 
 import java.util.Locale;
 
-import jp.wasabeef.blurry.Blurry;
-
 /**
  * Main Activity class that handles initialization of the UI, WebView, and various settings
  * such as dark mode and locale. It also includes logic for handling low-memory events,
@@ -70,7 +66,9 @@ public class MainActivity extends AppCompatActivity {
     private Bundle webViewState = null;
 
     // Biometric authentication timeout in milliseconds (2 minutes)
-    private static final long AUTH_TIMEOUT_MS = 2 * 60 * 1000;
+    //private static final long AUTH_TIMEOUT_MS = 2 * 60 * 1000;
+    private static final long AUTH_TIMEOUT_MS = 15;
+
     // Timestamp (in ms) of the last successful authentication.
     private long lastAuthenticatedTime = 0;
 
@@ -112,9 +110,6 @@ public class MainActivity extends AppCompatActivity {
 
         // Set the content view for this activity.
         setContentView(R.layout.activity_main);
-
-        // Apply the blurry overlay immediately to the SwipeRefreshLayout (web content container)
-        showBlurryOverlay();
 
         // Initialize Sentry manager for error tracking and logging.
         SentryManager sentryManager = new SentryManager(this);
@@ -201,14 +196,10 @@ public class MainActivity extends AppCompatActivity {
         SharedPreferencesManager.init(this);
 
         if (SharedPreferencesManager.getBoolean("app_lock_enable", true)) {
-            // App lock enabled, so proceed with biometric authentication
             if (shouldAuthenticate()) {
-                hideToolbarButtons();
-                invalidateOptionsMenu();
 
                 final BiometricLock biometricLock = new BiometricLock(this);
                 if (biometricLock.canAuthenticate()) {
-                    showBlurryOverlay();
                     biometricLock.showPrompt(
                             "Unlock",
                             "Authenticate to access and change your settings.",
@@ -216,56 +207,29 @@ public class MainActivity extends AppCompatActivity {
                             new BiometricLock.BiometricLockCallback() {
                                 @Override
                                 public void onAuthenticationSucceeded() {
-                                    removeBlurryOverlay();
                                     if (webView != null) {
                                         webView.animate().alpha(1f).setDuration(300).start();
                                     }
                                     lastAuthenticatedTime = System.currentTimeMillis();
-                                    showToolbarButtons();
                                     invalidateOptionsMenu();
                                 }
 
                                 @Override
                                 public void onAuthenticationError(String error) {
-                                    removeBlurryOverlay();
-                                    Toast.makeText(MainActivity.this, "Authentication error!", Toast.LENGTH_SHORT).show();
+                                    finish();
                                 }
 
                                 @Override
                                 public void onAuthenticationFailed() {
-                                    Toast.makeText(MainActivity.this, "Authentication failed. Please try again.", Toast.LENGTH_SHORT).show();
+                                    finish();
                                 }
                             }
                     );
-                } else {
-                    lastAuthenticatedTime = System.currentTimeMillis();
-                    showToolbarButtons();
-                    invalidateOptionsMenu();
                 }
-            } else {
-                showToolbarButtons();
-                invalidateOptionsMenu();
             }
-
-            if (webView != null && webView.getProgress() == 0) {
-                webView.postDelayed(() -> {
-                    if (webView.getProgress() == 0) {
-                        Log.d("WebView", "Fallback reload initiated");
-                        webView.reload();
-                    }
-                }, 300);
-            }
-        } else {
-            // App lock is disabled, so bypass biometric authentication.
-            // Immediately reveal the UI and remove any overlays.
-            removeBlurryOverlay();
-            if (webView != null) {
-                webView.setAlpha(1f);
-            }
-            showToolbarButtons();
-            invalidateOptionsMenu();
         }
     }
+
 
     /**
      * Determines whether biometric authentication is required based on the timeout.
@@ -274,43 +238,6 @@ public class MainActivity extends AppCompatActivity {
      */
     private boolean shouldAuthenticate() {
         return System.currentTimeMillis() - lastAuthenticatedTime > AUTH_TIMEOUT_MS;
-    }
-
-    /**
-     * Applies a blurry overlay over the SwipeRefreshLayout containing the WebView.
-     * If the container's dimensions are not available yet, delays and retries.
-     */
-    private void showBlurryOverlay() {
-        final ViewGroup container = findViewById(R.id.swipeRefreshLayout);
-        // Post a runnable to execute after the layout pass.
-        container.post(() -> {
-            // If the container has no valid dimensions, try again after a short delay.
-            if (container.getWidth() == 0 || container.getHeight() == 0) {
-                container.postDelayed(this::showBlurryOverlay, 100);
-                return;
-            }
-            try {
-                // Get the tint color from resources.
-                int tintColor = ContextCompat.getColor(this, R.color.blur_tint);
-                // Apply the blur with the specified radius, sampling, and tint color.
-                Blurry.with(this)
-                        .radius(10)
-                        .sampling(2)
-                        .color(tintColor)
-                        .onto(container);
-            } catch (NullPointerException e) {
-                // Log any exceptions that occur while applying the blur.
-                Log.d("Blurry", "There was an error while applying a blur effect: " + e);
-            }
-        });
-    }
-
-    /**
-     * Removes the blurry overlay from the SwipeRefreshLayout.
-     */
-    private void removeBlurryOverlay() {
-        ViewGroup container = findViewById(R.id.swipeRefreshLayout);
-        Blurry.delete(container);
     }
 
     /**
@@ -452,9 +379,6 @@ public class MainActivity extends AppCompatActivity {
         // Find the WebView in the layout.
         webView = findViewById(R.id.webView);
 
-        // Hide the WebView until authentication is complete.
-        webView.setAlpha(0f);
-
         // Restore the saved WebView state if available; otherwise, load the provided URL.
         if (webViewState != null) {
             webView.restoreState(webViewState);
@@ -570,50 +494,6 @@ public class MainActivity extends AppCompatActivity {
     private void startIntent(Class<?> targetClass) {
         Intent intent = new Intent(this, targetClass);
         startActivity(intent);
-    }
-
-    /**
-     * Hides all child views (such as buttons) within the toolbar.
-     */
-    private void hideToolbarButtons() {
-        // Get the toolbar by its ID.
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        // Loop through all the child views in the toolbar.
-        for (int i = 0; i < toolbar.getChildCount(); i++) {
-            // Hide each child view.
-            toolbar.getChildAt(i).setVisibility(android.view.View.GONE);
-        }
-    }
-
-    /**
-     * Shows all child views (such as buttons) within the toolbar.
-     */
-    private void showToolbarButtons() {
-        // Get the toolbar by its ID.
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        // Loop through all the child views in the toolbar.
-        for (int i = 0; i < toolbar.getChildCount(); i++) {
-            // Make each child view visible.
-            toolbar.getChildAt(i).setVisibility(android.view.View.VISIBLE);
-        }
-    }
-
-    /**
-     * Prepares the options menu by updating the visibility of menu items based on the authentication status.
-     *
-     * @param menu The options menu to be prepared.
-     * @return true after the menu has been prepared.
-     */
-    @Override
-    public boolean onPrepareOptionsMenu(Menu menu) {
-        // Determine if the user is authenticated by checking if the elapsed time since the last authentication
-        // is within the allowed authentication timeout.
-        boolean isAuthenticated = System.currentTimeMillis() - lastAuthenticatedTime <= AUTH_TIMEOUT_MS;
-        // Loop through each menu item and set its visibility accordingly.
-        for (int i = 0; i < menu.size(); i++) {
-            menu.getItem(i).setVisible(isAuthenticated);
-        }
-        return super.onPrepareOptionsMenu(menu);
     }
 
     /**
