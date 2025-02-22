@@ -63,11 +63,8 @@ public class MainActivity extends AppCompatActivity {
     private Boolean isWebViewInitialized = false;
     // Bundle to store and restore the WebView state across configuration changes.
     private Bundle webViewState = null;
-
     // Biometric authentication timeout in milliseconds (2 minutes)
-    //private static final long AUTH_TIMEOUT_MS = 2 * 60 * 1000;
-    private static final long AUTH_TIMEOUT_MS = 15;
-
+    private static final long AUTH_TIMEOUT_MS = 2 * 60 * 1000;
     // Timestamp (in ms) of the last successful authentication.
     private long lastAuthenticatedTime = 0;
 
