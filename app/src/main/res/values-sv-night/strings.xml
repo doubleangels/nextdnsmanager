@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="app_lock">App-lås</string>
+    <string name="app_lock_instructions">Kräver biometrik eller PIN för att få åtkomst till denna app.</string>
     <string name="app_name">"NextDNS Manager"</string>
     <string name="author">"Författaren"</string>
     <string name="back_title">"Tillbaka"</string>

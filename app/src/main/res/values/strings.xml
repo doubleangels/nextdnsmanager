@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="app_lock">App Lock</string>
+    <string name="app_lock_instructions">Require biometrics or PIN to access this app.</string>
     <string name="app_name">"NextDNS Manager"</string>
     <string name="author">"Author"</string>
     <string name="back_title">"Back"</string>

@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="app_lock">Verrouillage de l\'application</string>
+    <string name="app_lock_instructions">Nécessite la biométrie ou un code PIN pour accéder à cette application.</string>
     <string name="app_name">"NextDNS Manager"</string>
     <string name="author">"Auteur"</string>
     <string name="back_title">"Retour"</string>

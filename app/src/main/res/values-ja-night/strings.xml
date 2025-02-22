@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="app_lock">アプリロック</string>
+    <string name="app_lock_instructions">このアプリにアクセスするには生体認証またはPINコードが必要です。</string>
     <string name="app_name">"NextDNS Manager"</string>
     <string name="author">"著者"</string>
     <string name="back_title">"戻る"</string>

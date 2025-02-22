@@ -10,8 +10,8 @@ android {
         applicationId "com.doubleangels.nextdnsmanagement"
         minSdkVersion 32
         targetSdk = 35
-        versionCode 256
-        versionName "5.5.7"
+        versionCode 257
+        versionName "5.5.8"
         resourceConfigurations += ["en", "zh", "nl", "fi", "fr", "de", "in", "it", "ja", "pl", "pt", "es", "sv", "tr"]
     }
 
@@ -65,7 +65,7 @@ android {
 dependencies {
     implementation "androidx.activity:activity:1.10.0"
     implementation 'androidx.appcompat:appcompat:1.7.0'
-    implementation "androidx.biometric:biometric:1.2.0-alpha05"
+    implementation "androidx.biometric:biometric:1.4.0-alpha02"
     implementation 'androidx.preference:preference:1.2.1'
     implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0'
     implementation 'androidx.webkit:webkit:1.12.1'
@@ -77,7 +77,6 @@ dependencies {
     implementation 'com.squareup.retrofit2:converter-gson:2.11.0'
     implementation 'de.hdodenhof:circleimageview:3.1.0'
     implementation 'io.sentry:sentry-android:8.2.0'
-    implementation 'jp.wasabeef:blurry:4.0.0'
     debugImplementation 'com.squareup.leakcanary:leakcanary-android:2.14'
 }
 

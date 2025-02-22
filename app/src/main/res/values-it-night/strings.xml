@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="app_lock">Blocco app</string>
+    <string name="app_lock_instructions">Richiede l\'uso di biometria o PIN per accedere a questa app.</string>
     <string name="app_name">"NextDNS Manager"</string>
     <string name="author">"Autore"</string>
     <string name="back_title">"Indietro"</string>

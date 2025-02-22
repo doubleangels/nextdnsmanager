@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="app_lock">应用锁</string>
+    <string name="app_lock_instructions">访问此应用需要生物识别或 PIN 码。</string>
     <string name="app_name">"NextDNS Manager"</string>
     <string name="author">"作者"</string>
     <string name="back_title">"返回"</string>

@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="app_lock">Kunci Aplikasi</string>
+    <string name="app_lock_instructions">Memerlukan biometrik atau PIN untuk mengakses aplikasi ini.</string>
     <string name="app_name">"NextDNS Manager"</string>
     <string name="author">"Penulis"</string>
     <string name="back_title">"Kembali"</string>
