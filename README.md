@@ -37,16 +37,21 @@ NextDNS Manager is an Android application that simplifies managing your [NextDNS
 
 - [Features](#features)
 - [Installation](#installation)
+
   - [Which installation method should I use?](#which-installation-method-should-i-use)
   - [Google Play Store](#google-play-store)
   - [F-Droid Installation](#f-droid-installation)
   - [Manual Installation](#manual-installation)
+
 - [FAQ](#faq)
+
   - [I have multiple versions of NextDNS Manager on my phone after the 5.5.0 update!](#i-have-multiple-versions-of-nextdns-manager-on-my-phone-after-the-550-update)
   - [What is Sentry, are you tracking me?](#what-is-sentry-and-why-are-you-tracking-me)
   - [Why does F-Droid show an antifeature warning about Sentry?](#why-does-f-droid-show-an-antifeature-warning-about-sentry)
   - [Why doesn’t the app support Android versions before 12L?](#why-doesnt-the-app-support-android-versions-before-12l)
   - [Will you bring back support for older Android versions?](#will-you-bring-back-support-for-older-android-versions)
+  - [What is FCM, and why is it disabled in F-Droid builds?](#what-is-fcm-and-why-is-it-disabled-in-f-droid-builds)
+
 - [Reporting Issues & Feedback](#reporting-issues--feedback)
 - [Contributing](#contributing)
 - [Security Policy](#security-policy)
@@ -79,25 +84,27 @@ NextDNS Manager is an Android application that simplifies managing your [NextDNS
 
 ### Which installation method should I use?
 
-Your choice depends on your privacy preferences and update frequency needs:
+Your choice depends on your privacy preferences and how frequently you want to receive updates:
 
-- **Google Play Store:** Best for those who prefer automatic updates.
-- **Manual APK Sideload:** Ideal if you cannot access Google Play.
-- **F-Droid:** Suitable for users prioritizing open-source purity, though updates may take longer.
+- **Google Play Store:** Best for users who prefer automatic updates and seamless access to new features.
+- **Manual APK Sideload:** Ideal for those who cannot use Google Play or prefer full control over updates.
+- **F-Droid:** Suitable for users who prioritize open-source purity, though updates may take longer to become available.
 
-> **Note:**
+> **Important Notes:**
 >
-> - FCM support (push notifications) are removed in F-Droid builds.
-> - FCM support is enabled in Google Play builds.
-> - Builds prior to version 5.5.0 do not support notifications.
+> - F-Droid builds **do not** support FCM (push notifications).
+> - FCM is enabled in Google Play builds for update and issue notifications.
+> - Versions **before 5.5.0** do not support push notifications.
 
-| Method             | Availability  |
-| ------------------ | ------------- |
-| **Google Play**    | A few minutes |
-| **Sideloaded APK** | A few minutes |
-| **F-Droid**        | Up to 14 days |
+### Update Availability Comparison
 
-_F-Droid builds take longer because each update is manually signed in a secure, air-gapped environment._
+| Method             | Update Availability |
+| ------------------ | ------------------- |
+| **Google Play**    | Within minutes      |
+| **Sideloaded APK** | Within minutes      |
+| **F-Droid**        | Up to 14 days       |
+
+_F-Droid updates take longer because each release is manually signed in a secure, air-gapped environment._
 
 ### Google Play Store
 
@@ -121,7 +128,7 @@ If you see multiple versions of the app on your device after updating to 5.5.0 a
 
 ### What is Sentry, and Why is It Tracking Me?
 
-If you're wondering about Sentry, [read this](https://github.com/doubleangels/nextdnsmanager/issues/445). Sentry is completely opt-in (both via a manual toggle and DNS whitelisting) and only collects anonymized data to help diagnose issues. The information I receive includes:
+If you're wondering about Sentry, [check this](https://github.com/doubleangels/nextdnsmanager/issues/445). Sentry is completely opt-in (both via a manual toggle and DNS whitelisting) and only collects anonymized data to help diagnose issues. The information I receive includes:
 
 - **Device model and type**
 - **Operating system version**
@@ -136,7 +143,7 @@ This data is solely used to improve app stability by fixing bugs and errors. It 
 
 ### Why Does F-Droid Show an Antifeature Warning About Sentry?
 
-This warning is misleading. Sentry is fully opt-in in multiple ways. I’m working with the F-Droid team to address and resolve this.
+This warning is misleading. Sentry is fully opt-in in multiple ways and does not collect any personal or identifiable information. I’m working with the F-Droid team to address and resolve this.
 
 ### Why Doesn’t the App Support Android Versions Before 12L?
 
@@ -145,6 +152,12 @@ Android apps rely on API calls to interact with the operating system. Each new A
 ### Will You Bring Back Support for Older Android Versions?
 
 No. The app is moving forward, not backward.
+
+### What is FCM, and why is it disabled in F-Droid builds?
+
+FCM (Firebase Cloud Messaging) is used for push notifications. Currently, it is only utilized to send updates, important information, and known error/fix notifications from me, though it may be expanded in the future.
+
+This feature is removed from F-Droid builds because it relies on Google's services, which are not permitted in F-Droid apps. **If you have de-Googled your device, the standard Google Play version may not function correctly. In that case, try using the `foss` build from the latest GitHub release or the F-Droid version.**
 
 ---
 
