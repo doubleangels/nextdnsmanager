@@ -41,6 +41,12 @@ NextDNS Manager is an Android application that simplifies managing your [NextDNS
   - [Google Play Store](#google-play-store)
   - [F-Droid Installation](#f-droid-installation)
   - [Manual Installation](#manual-installation)
+- [FAQ](#faq)
+  - [I have multiple versions of NextDNS Manager on my phone after the 5.5.0 update!](#i-have-multiple-versions-of-nextdns-manager-on-my-phone-after-the-550-update)
+  - [What is Sentry, are you tracking me?](#what-is-sentry-and-why-are-you-tracking-me)
+  - [Why does F-Droid show an antifeature warning about Sentry?](#why-does-f-droid-show-an-antifeature-warning-about-sentry)
+  - [Why doesn’t the app support Android versions before 12L?](#why-doesnt-the-app-support-android-versions-before-12l)
+  - [Will you bring back support for older Android versions?](#will-you-bring-back-support-for-older-android-versions)
 - [Reporting Issues & Feedback](#reporting-issues--feedback)
 - [Contributing](#contributing)
 - [Security Policy](#security-policy)
@@ -84,7 +90,6 @@ Your choice depends on your privacy preferences and update frequency needs:
 > - FCM support (push notifications) are removed in F-Droid builds.
 > - FCM support is enabled in Google Play builds.
 > - Builds prior to version 5.5.0 do not support notifications.
-> - If you have multiple versions on your device after the 5.5.0 update and have questions, [read this](https://github.com/doubleangels/nextdnsmanager/issues/430).
 
 | Method             | Availability  |
 | ------------------ | ------------- |
@@ -105,6 +110,41 @@ Get NextDNS Manager on F-Droid from the [official page](https://f-droid.org/en/p
 ### Manual Installation
 
 Download the latest APK directly from the [GitHub Releases page](https://github.com/doubleangels/NextDNSManager/releases).
+
+---
+
+## FAQ
+
+### Multiple Versions of NextDNS Manager After the 5.5.0 Update
+
+If you see multiple versions of the app on your device after updating to 5.5.0 and have questions, [check this](https://github.com/doubleangels/nextdnsmanager/issues/430).
+
+### What is Sentry, and Why is It Tracking Me?
+
+If you're wondering about Sentry, [read this](https://github.com/doubleangels/nextdnsmanager/issues/445). Sentry is completely opt-in (both via a manual toggle and DNS whitelisting) and only collects anonymized data to help diagnose issues. The information I receive includes:
+
+- **Device model and type**
+- **Operating system version**
+- **App version and build flavor**
+- **Battery life, memory usage, and storage status when an error occurs**
+- **Connection type (Wi-Fi/cellular) and VPN status at the time of an error** (No IP addresses are collected or logged)
+- **App settings you have enabled** (dark mode, app lock, etc.)
+- **Detailed crash reports and error logs**
+- **Performance metrics for specific code sections**
+
+This data is solely used to improve app stability by fixing bugs and errors. It remains anonymous, isn't shared with anyone else, and is not used for analytics.
+
+### Why Does F-Droid Show an Antifeature Warning About Sentry?
+
+This warning is misleading. Sentry is fully opt-in in multiple ways. I’m working with the F-Droid team to address and resolve this.
+
+### Why Doesn’t the App Support Android Versions Before 12L?
+
+Android apps rely on API calls to interact with the operating system. Each new Android release introduces additional capabilities, which the app takes advantage of to enhance functionality, privacy, and security. Older Android versions lack support for these improvements, making them incompatible with the app’s implementation.
+
+### Will You Bring Back Support for Older Android Versions?
+
+No. The app is moving forward, not backward.
 
 ---
 
