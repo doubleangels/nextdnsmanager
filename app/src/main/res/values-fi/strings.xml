@@ -36,7 +36,6 @@
     <string name="ping_long">"Tarkista nopeasti ping-ajat NextDNS-palvelimille."</string>
     <string name="ping_short">"Ping"</string>
     <string name="ping_title">"Ping-testi"</string>
-    <string name="poeditor">"POEditor"</string>
     <string name="privacy">"Yksityisyys"</string>
     <string name="privacy_policy">"NextDNS Managerin tietosuojakäytäntö"</string>
     <string name="private_dns">"Yksityinen DNS"</string>

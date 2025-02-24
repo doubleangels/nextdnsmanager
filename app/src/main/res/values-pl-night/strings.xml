@@ -36,7 +36,6 @@
     <string name="ping_long">"Szybko sprawdź czasy ping na serwerach NextDNS."</string>
     <string name="ping_short">"Ping"</string>
     <string name="ping_title">"Test ping"</string>
-    <string name="poeditor">"POEditor"</string>
     <string name="privacy">"Prywatność"</string>
     <string name="privacy_policy">"NextDNS Manager Polityka prywatności"</string>
     <string name="private_dns">"Prywatny DNS"</string>

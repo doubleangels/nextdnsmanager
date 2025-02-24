@@ -36,7 +36,6 @@
     <string name="ping_long">"NextDNSサーバーへのPING時間をすばやく確認できます。"</string>
     <string name="ping_short">"ping"</string>
     <string name="ping_title">"ピングテスト"</string>
-    <string name="poeditor">"POEditor"</string>
     <string name="privacy">"プライバシー"</string>
     <string name="privacy_policy">"NextDNSマネージャープライバシーポリシー"</string>
     <string name="private_dns">"プライベート DNS"</string>

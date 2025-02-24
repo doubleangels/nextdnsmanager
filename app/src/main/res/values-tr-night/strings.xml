@@ -36,7 +36,6 @@
     <string name="ping_long">"NextDNS sunucularına ping sürelerini hızla kontrol edin."</string>
     <string name="ping_short">"Ping"</string>
     <string name="ping_title">"Ping Testi"</string>
-    <string name="poeditor">"POEditor"</string>
     <string name="privacy">"Gizlilik"</string>
     <string name="privacy_policy">"NextDNS Yöneticisi Gizlilik Politikası"</string>
     <string name="private_dns">"Özel DNS"</string>
