@@ -1,10 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_lock">App Lock</string>
-    <string name="app_lock_instructions">Require biometrics or PIN to access this app.</string>
     <string name="app_name">"NextDNS Manager"</string>
     <string name="author">"Author"</string>
     <string name="back_title">"Back"</string>
+    <string name="crowdin">"Crowdin"</string>
     <string name="dark_mode">"Dark Mode"</string>
     <string name="dark_mode_instructions">"Dark Mode Setting"</string>
     <string name="developer">"Developer"</string>
@@ -13,8 +12,6 @@
     <string name="donation">"Donate"</string>
     <string name="donation_name">"If you enjoy this app and wish to donate, you can do so here. Please note, this is completely optional. Thanks for your support!"</string>
     <string name="sentry">"Sentry"</string>
-    <string name="feedback">If you wish, please fill out a quick survey to help me improve the app.</string>
-    <string name="feedback_title">Feedback</string>
     <string name="generic_content_description">"This is a generic content description."</string>
     <string name="github">"Github"</string>
     <string name="github_summary">"Tap to view this app's Github repository."</string>
@@ -36,7 +33,6 @@
     <string name="ping_long">"Quickly check ping times to NextDNS servers."</string>
     <string name="ping_short">"Ping"</string>
     <string name="ping_title">"Ping Test"</string>
-    <string name="poeditor">"POEditor"</string>
     <string name="privacy">"Privacy"</string>
     <string name="privacy_policy">"NextDNS Manager Privacy Policy"</string>
     <string name="private_dns">"Private DNS"</string>
@@ -52,9 +48,13 @@
     <string name="version">"Version"</string>
     <string name="whitelist_domains">"If you enable Sentry, please whitelist these domains in your NextDNS configuration."</string>
     <string name="whitelist_instructions">"Please consider opting in to Sentry error tracking. This doesn't collect any personal information and helps me make the app better."</string>
-    <string-array name="dark_mode_entries">
-        <item>Match System</item>
-        <item>On</item>
-        <item>Off</item>
-    </string-array>
+    <string name="poeditor">"POEditor"</string>
+    <string name="feedback">"If you wish, please fill out a quick survey to help me improve the app."</string>
+    <string name="feedback_title">"Feedback"</string>
+    <string name="app_lock">"App Lock"</string>
+    <string name="app_lock_instructions">"Require biometrics or PIN to access this app."</string>
+    <string name="unlock_title">"Unlock"</string>
+
+    <!-- Fuzzy -->
+    <string name="unlock_description">"Authenticate to access and change your settings."</string>
 </resources>
