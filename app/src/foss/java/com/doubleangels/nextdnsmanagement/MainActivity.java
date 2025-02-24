@@ -1,11 +1,8 @@
 package com.doubleangels.nextdnsmanagement;
 
-import static android.Manifest.permission.POST_NOTIFICATIONS;
-
 import android.annotation.SuppressLint;
 import android.app.DownloadManager;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.net.Uri;
 import android.os.Build;
@@ -33,8 +30,6 @@ import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.appcompat.widget.Toolbar;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 import androidx.lifecycle.LifecycleOwner;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import androidx.webkit.WebSettingsCompat;
@@ -101,7 +96,7 @@ public class MainActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_main);
 
-        // Initialize Sentry manager
+        // Initialize Sentry manager.
         final SentryManager sentryManager = new SentryManager(this);
         SharedPreferencesManager.init(this);
 
@@ -146,16 +141,10 @@ public class MainActivity extends AppCompatActivity {
             sentryManager.captureException(e);
         }
 
-        // Request POST_NOTIFICATIONS permission if not granted.
-        if (ContextCompat.checkSelfPermission(this, POST_NOTIFICATIONS) == PackageManager.PERMISSION_DENIED) {
-            ActivityCompat.requestPermissions(this, new String[]{POST_NOTIFICATIONS}, 1);
-        }
-
         try {
             setupWebViewForActivity(getString(R.string.main_url));
         } catch (Exception e) {
             sentryManager.captureException(e);
-            Toast.makeText(this, "Error initializing WebView", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -212,15 +201,13 @@ public class MainActivity extends AppCompatActivity {
 
                                 @Override
                                 public void onAuthenticationError(String error) {
-                                    SentryManager.captureStaticException(new Exception("Biometric auth error: " + error));
-                                    Toast.makeText(MainActivity.this, "Authentication error", Toast.LENGTH_SHORT).show();
+                                    SentryManager.captureStaticException(new Exception("Biometric authentication error: " + error));
                                     finish();
                                 }
 
                                 @Override
                                 public void onAuthenticationFailed() {
-                                    SentryManager.captureStaticException(new Exception("Biometric auth failed"));
-                                    Toast.makeText(MainActivity.this, "Authentication failed", Toast.LENGTH_SHORT).show();
+                                    SentryManager.captureStaticException(new Exception("Biometric authentication failed!"));
                                     finish();
                                 }
                             }
@@ -315,7 +302,6 @@ public class MainActivity extends AppCompatActivity {
             }
         } catch (Exception e) {
             SentryManager.captureStaticException(e);
-            Toast.makeText(this, "Error restoring WebView state", Toast.LENGTH_SHORT).show();
         }
 
         WebSettings webViewSettings = webView.getSettings();
@@ -356,14 +342,12 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
                 SentryManager.captureStaticException(new Exception("WebView error: " + error.getDescription()));
-                Toast.makeText(MainActivity.this, "Error loading page", Toast.LENGTH_SHORT).show();
                 super.onReceivedError(view, request, error);
             }
 
             @Override
             public void onReceivedHttpError(WebView view, WebResourceRequest request, WebResourceResponse errorResponse) {
                 SentryManager.captureStaticException(new Exception("HTTP error: " + errorResponse.getStatusCode()));
-                Toast.makeText(MainActivity.this, "HTTP error loading page", Toast.LENGTH_SHORT).show();
                 super.onReceivedHttpError(view, request, errorResponse);
             }
         });
