@@ -1,10 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_lock">Sovelluksen lukitus</string>
-    <string name="app_lock_instructions">Sovelluksen avaamiseen vaaditaan biometria tai PIN-koodi.</string>
     <string name="app_name">"NextDNS Manager"</string>
     <string name="author">"Kirjoittaja"</string>
     <string name="back_title">"Takaisin"</string>
+    <string name="crowdin">"Crowdiini"</string>
     <string name="dark_mode">"Tumma Tila"</string>
     <string name="dark_mode_instructions">"Tumma Tilan Asetus"</string>
     <string name="developer">"Kehittäjä"</string>
@@ -13,8 +12,6 @@
     <string name="donation">"Lahjoita"</string>
     <string name="donation_name">"Jos pidät tästä sovelluksesta ja haluat lahjoittaa, voit tehdä sen tässä. Huomaa, että tämä on täysin valinnainen. Kiitos tuestasi!"</string>
     <string name="sentry">"Paikka"</string>
-    <string name="feedback">Jos haluat, täytä nopea kysely auttaaksesi minua parantamaan sovellusta.</string>
-    <string name="feedback_title">Palaute</string>
     <string name="generic_content_description">"Tämä on yleinen sisällönkuvaus."</string>
     <string name="github">"Github"</string>
     <string name="github_summary">"Napauta nähdäksesi tämän sovelluksen Github repository."</string>
@@ -36,7 +33,6 @@
     <string name="ping_long">"Tarkista nopeasti ping-ajat NextDNS-palvelimille."</string>
     <string name="ping_short">"Ping"</string>
     <string name="ping_title">"Ping-testi"</string>
-    <string name="poeditor">"POEditor"</string>
     <string name="privacy">"Yksityisyys"</string>
     <string name="privacy_policy">"NextDNS Managerin tietosuojakäytäntö"</string>
     <string name="private_dns">"Yksityinen DNS"</string>
@@ -51,9 +47,14 @@
     <string name="user_agreement">"Käyttäjäsopimus"</string>
     <string name="version">"Versio"</string>
     <string name="whitelist_domains">"Jos otat Sentryn käyttöön, ole hyvä ja salli nämä verkkotunnukset NextDNS-asetuksessasi."</string>
-    <string name="whitelist_instructions">"Harkitse valintaa Etsintävirheiden seurantaan. Tämä ei kerää henkilökohtaisia tietoja ja auttaa minua tekemään sovelluksesta paremman."</string>  <string-array name="dark_mode_entries">
-    <item>Sovita Järjestelmä</item>
-    <item>Päällä</item>
-    <item>Pois</item>
-</string-array>
+    <string name="whitelist_instructions">"Harkitse valintaa Etsintävirheiden seurantaan. Tämä ei kerää henkilökohtaisia tietoja ja auttaa minua tekemään sovelluksesta paremman."</string>
+    <string name="poeditor">"POEditor"</string>
+    <string name="feedback">"Jos haluat, täytä nopea kysely auttaaksesi minua parantamaan sovellusta."</string>
+    <string name="feedback_title">"Palaute"</string>
+    <string name="app_lock">"Sovelluksen lukitus"</string>
+    <string name="app_lock_instructions">"Sovelluksen avaamiseen vaaditaan biometria tai PIN-koodi."</string>
+    <string name="unlock_title">"Avaa"</string>
+
+    <!-- Fuzzy -->
+    <string name="unlock_description">"Tunnistaudu päästäksesi käsiksi ja muuttaaksesi asetuksiasi."</string>
 </resources>
