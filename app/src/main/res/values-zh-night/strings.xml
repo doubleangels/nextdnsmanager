@@ -46,6 +46,7 @@
     <string name="sentry_info_instructions">"点击了解更多关于Sentry的信息。"</string>
     <string name="settings">"设置"</string>
     <string name="settings_activity_title">"设置"</string>
+    <string name="tally_issues">如果您没有 GitHub 账户，您可以在此报告问题。</string>
     <string name="translate">"翻译"</string>
     <string name="translate_summary">"如果您看到任何不正确的翻译，请帮助我修复这些翻译。"</string>
     <string name="unlock_description">请验证身份以访问并更改您的设置</string>

@@ -46,6 +46,7 @@
     <string name="sentry_info_instructions">"項目の詳細については、タップしてください。"</string>
     <string name="settings">"[設定]"</string>
     <string name="settings_activity_title">"[設定]"</string>
+    <string name="tally_issues">GitHubアカウントをお持ちでない場合は、ここから問題を報告できます。</string>
     <string name="translate">"[翻訳]"</string>
     <string name="translate_summary">"間違った翻訳が表示された場合は、こちらで修正してください。"</string>
     <string name="unlock_description">設定にアクセスし、変更するには認証してください</string>

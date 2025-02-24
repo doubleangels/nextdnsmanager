@@ -46,6 +46,7 @@
     <string name="sentry_info_instructions">"Pulsa para aprender más sobre Sentry."</string>
     <string name="settings">"Ajustes"</string>
     <string name="settings_activity_title">"Ajustes"</string>
+    <string name="tally_issues">Si no tienes una cuenta de GitHub, puedes reportar un problema aquí.</string>
     <string name="translate">"Traducir"</string>
     <string name="translate_summary">"Si ves alguna traducción incorrecta, por favor ayúdame a arreglarlas aquí."</string>
     <string name="unlock_description">Autentícate para acceder y cambiar tus configuraciones</string>

@@ -46,6 +46,7 @@
     <string name="sentry_info_instructions">"Tik voor meer informatie over Sentry."</string>
     <string name="settings">"Instellingen"</string>
     <string name="settings_activity_title">"Instellingen"</string>
+    <string name="tally_issues">Als je geen GitHub-account hebt, kun je hier een probleem melden.</string>
     <string name="translate">"Vertaal"</string>
     <string name="translate_summary">"Als je een onjuiste vertaling ziet, help me dan deze hier op te lossen."</string>
     <string name="unlock_description">Verifieer je identiteit om toegang te krijgen tot en wijzigingen aan te brengen in je instellingen</string>

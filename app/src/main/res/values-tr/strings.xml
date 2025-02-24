@@ -46,6 +46,7 @@
     <string name="sentry_info_instructions">"Sentry hakkında daha fazla bilgi edinmek için dokunun."</string>
     <string name="settings">"Ayarlar"</string>
     <string name="settings_activity_title">"Ayarlar"</string>
+    <string name="tally_issues">Eğer bir GitHub hesabın yoksa, buradan bir sorun bildirebilirsin.</string>
     <string name="translate">"Çevirmek"</string>
     <string name="translate_summary">"Eğer yanlış çeviriler görürseniz, lütfen burada düzeltmem için yardımcı olun."</string>
     <string name="unlock_description">Ayarlarınıza erişmek ve değiştirmek için kimlik doğrulaması yapın</string>

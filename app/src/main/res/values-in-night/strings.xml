@@ -46,6 +46,7 @@
     <string name="sentry_info_instructions">"Ketuk untuk mempelajari lebih lanjut tentang Sentry."</string>
     <string name="settings">"Pengaturan"</string>
     <string name="settings_activity_title">"Pengaturan"</string>
+    <string name="tally_issues">Jika Anda tidak memiliki akun GitHub, Anda dapat melaporkan masalah di sini.</string>
     <string name="translate">"Terjemahkan"</string>
     <string name="translate_summary">"Jika Anda menemukan terjemahan yang tidak tepat, tolong bantu saya memperbaikinya di sini."</string>
     <string name="unlock_description">Otentikasi untuk mengakses dan mengubah pengaturan Anda</string>
