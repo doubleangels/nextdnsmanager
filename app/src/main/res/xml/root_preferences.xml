@@ -63,8 +63,8 @@
             app:summary="@string/github_issues_summary"
             app:title="@string/github_issues" />
         <Preference
-            app:key="tally_issue_button"
-            app:summary="@string/issue_url"
+            app:key="tally_issues_button"
+            app:summary="@string/tally_issues_url"
             app:title="@string/tally_issues" />
         <Preference
             app:key="donation_button"

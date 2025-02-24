@@ -186,6 +186,7 @@ public class SettingsActivity extends AppCompatActivity {
             setupButton("github_button", R.string.github_url);
             setupButton("github_issue_button", R.string.github_issues_url);
             setupButton("donation_button", R.string.donation_url);
+            setupButton("tally_issues_button", R.string.tally_issues_url);
             setupButton("translate_button", R.string.translate_url);
             setupButton("privacy_policy_button", R.string.privacy_policy_url);
             setupButton("nextdns_privacy_policy_button", R.string.nextdns_privacy_policy_url);
