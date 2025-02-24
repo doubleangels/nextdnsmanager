@@ -48,7 +48,7 @@
     <string name="settings_activity_title">"Asetukset"</string>
     <string name="translate">"Kääntää"</string>
     <string name="translate_summary">"Jos näet virheellisiä käännöksiä, auta minua korjaamaan ne täällä."</string>
-    <string name="unlock_description">Tunnistaudu päästäksesi käsiksi ja muuttaaksesi asetuksiasi.</string>
+    <string name="unlock_description">Tunnistaudu päästäksesi käsiksi ja muuttaaksesi asetuksiasi</string>
     <string name="unlock_title">Avaa</string>
     <string name="user_agreement">"Käyttäjäsopimus"</string>
     <string name="version">"Versio"</string>

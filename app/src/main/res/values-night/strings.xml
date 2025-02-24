@@ -48,7 +48,7 @@
     <string name="settings_activity_title">"Settings"</string>
     <string name="translate">"Translate"</string>
     <string name="translate_summary">"If you see any incorrect translations, please help me fix them here."</string>
-    <string name="unlock_description">Authenticate to access and change your settings.</string>
+    <string name="unlock_description">Authenticate to access and change your settings</string>
     <string name="unlock_title">Unlock</string>
     <string name="user_agreement">"User Agreement"</string>
     <string name="version">"Version"</string>

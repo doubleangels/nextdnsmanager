@@ -48,7 +48,7 @@
     <string name="settings_activity_title">"设置"</string>
     <string name="translate">"翻译"</string>
     <string name="translate_summary">"如果您看到任何不正确的翻译，请帮助我修复这些翻译。"</string>
-    <string name="unlock_description">请验证身份以访问并更改您的设置。</string>
+    <string name="unlock_description">请验证身份以访问并更改您的设置</string>
     <string name="unlock_title">解锁</string>
     <string name="user_agreement">"用户协议"</string>
     <string name="version">"版本"</string>

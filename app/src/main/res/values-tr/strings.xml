@@ -48,7 +48,7 @@
     <string name="settings_activity_title">"Ayarlar"</string>
     <string name="translate">"Çevirmek"</string>
     <string name="translate_summary">"Eğer yanlış çeviriler görürseniz, lütfen burada düzeltmem için yardımcı olun."</string>
-    <string name="unlock_description">Ayarlarınıza erişmek ve değiştirmek için kimlik doğrulaması yapın.</string>
+    <string name="unlock_description">Ayarlarınıza erişmek ve değiştirmek için kimlik doğrulaması yapın</string>
     <string name="unlock_title">Kilidi aç</string>
     <string name="user_agreement">"Kullanıcı Sözleşmesi"</string>
     <string name="version">"Versiyon"</string>

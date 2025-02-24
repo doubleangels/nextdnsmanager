@@ -48,7 +48,7 @@
     <string name="settings_activity_title">"Inställningar"</string>
     <string name="translate">"Översätt"</string>
     <string name="translate_summary">"Om du ser några felaktiga översättningar, var snäll och hjälp mig att fixa dem här."</string>
-    <string name="unlock_description">Autentisera dig för att komma åt och ändra dina inställningar.</string>
+    <string name="unlock_description">Autentisera dig för att komma åt och ändra dina inställningar</string>
     <string name="unlock_title">Lås upp</string>
     <string name="user_agreement">"Användaravtal"</string>
     <string name="version">"Versionen"</string>
