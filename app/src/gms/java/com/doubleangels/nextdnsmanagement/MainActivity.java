@@ -157,7 +157,6 @@ public class MainActivity extends AppCompatActivity {
             setupWebViewForActivity(getString(R.string.main_url));
         } catch (Exception e) {
             sentryManager.captureException(e);
-            Toast.makeText(this, "Error initializing WebView", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -214,15 +213,13 @@ public class MainActivity extends AppCompatActivity {
 
                                 @Override
                                 public void onAuthenticationError(String error) {
-                                    SentryManager.captureStaticException(new Exception("Biometric auth error: " + error));
-                                    Toast.makeText(MainActivity.this, "Authentication error", Toast.LENGTH_SHORT).show();
+                                    SentryManager.captureStaticException(new Exception("Biometric authentication error: " + error));
                                     finish();
                                 }
 
                                 @Override
                                 public void onAuthenticationFailed() {
-                                    SentryManager.captureStaticException(new Exception("Biometric auth failed"));
-                                    Toast.makeText(MainActivity.this, "Authentication failed", Toast.LENGTH_SHORT).show();
+                                    SentryManager.captureStaticException(new Exception("Biometric authentication failed!"));
                                     finish();
                                 }
                             }
@@ -317,7 +314,6 @@ public class MainActivity extends AppCompatActivity {
             }
         } catch (Exception e) {
             SentryManager.captureStaticException(e);
-            Toast.makeText(this, "Error restoring WebView state", Toast.LENGTH_SHORT).show();
         }
 
         WebSettings webViewSettings = webView.getSettings();
@@ -358,14 +354,12 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
                 SentryManager.captureStaticException(new Exception("WebView error: " + error.getDescription()));
-                Toast.makeText(MainActivity.this, "Error loading page", Toast.LENGTH_SHORT).show();
                 super.onReceivedError(view, request, error);
             }
 
             @Override
             public void onReceivedHttpError(WebView view, WebResourceRequest request, WebResourceResponse errorResponse) {
                 SentryManager.captureStaticException(new Exception("HTTP error: " + errorResponse.getStatusCode()));
-                Toast.makeText(MainActivity.this, "HTTP error loading page", Toast.LENGTH_SHORT).show();
                 super.onReceivedHttpError(view, request, errorResponse);
             }
         });
