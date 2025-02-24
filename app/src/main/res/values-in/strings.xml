@@ -1,10 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_lock">Kunci Aplikasi</string>
-    <string name="app_lock_instructions">Memerlukan biometrik atau PIN untuk mengakses aplikasi ini.</string>
     <string name="app_name">"NextDNS Manager"</string>
     <string name="author">"Penulis"</string>
     <string name="back_title">"Kembali"</string>
+    <string name="crowdin">"Crowdin"</string>
     <string name="dark_mode">"Mode Gelap"</string>
     <string name="dark_mode_instructions">"Pengaturan Mode Gelap"</string>
     <string name="developer">"Pengembang"</string>
@@ -13,8 +12,6 @@
     <string name="donation">"Donasi"</string>
     <string name="donation_name">"Jika Anda menikmati aplikasi ini dan ingin menyumbang, Anda bisa melakukannya di sini. Harap dicatat, ini sepenuhnya bersifat sukarela. Terima kasih atas dukungan Anda!"</string>
     <string name="sentry">"Sentry"</string>
-    <string name="feedback">Jika Anda bersedia, silakan isi survei singkat untuk membantu saya meningkatkan aplikasi.</string>
-    <string name="feedback_title">Umpan Balik</string>
     <string name="generic_content_description">"Ini adalah deskripsi konten generik."</string>
     <string name="github">"Github"</string>
     <string name="github_summary">"Ketuk untuk melihat repositori Github aplikasi ini."</string>
@@ -36,7 +33,6 @@
     <string name="ping_long">"Cepat periksa waktu ping ke server NextDNS."</string>
     <string name="ping_short">"Ping"</string>
     <string name="ping_title">"Tes Ping"</string>
-    <string name="poeditor">"POEditor"</string>
     <string name="privacy">"Privasi"</string>
     <string name="privacy_policy">"Kebijakan Privasi Manajer NextDNS"</string>
     <string name="private_dns">"DNS Pribadi"</string>
@@ -52,9 +48,11 @@
     <string name="version">"Versi"</string>
     <string name="whitelist_domains">"Jika Anda mengaktifkan Sentry, harap masukkan domain-domain berikut ke dalam konfigurasi NextDNS Anda."</string>
     <string name="whitelist_instructions">"Harap pertimbangkan untuk mengaktifkan pelacakan kesalahan Sentry. Ini tidak mengumpulkan informasi pribadi dan membantu saya membuat aplikasi menjadi lebih baik."</string>
-    <string-array name="dark_mode_entries">
-        <item>Sistem Pencocokan</item>
-        <item>Dihidupkan</item>
-        <item>Dimatikan</item>
-    </string-array>
+    <string name="poeditor">"POEditor"</string>
+    <string name="feedback">"Jika Anda bersedia, silakan isi survei singkat untuk membantu saya meningkatkan aplikasi."</string>
+    <string name="feedback_title">"Umpan Balik"</string>
+    <string name="app_lock">"Kunci Aplikasi"</string>
+    <string name="app_lock_instructions">"Memerlukan biometrik atau PIN untuk mengakses aplikasi ini."</string>
+    <string name="unlock_title">"Buka kunci"</string>
+    <string name="unlock_description">"Otentikasi untuk mengakses dan mengubah pengaturan Anda."</string>
 </resources>
