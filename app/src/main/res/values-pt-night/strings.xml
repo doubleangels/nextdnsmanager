@@ -1,10 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_lock">Bloqueio da aplicação</string>
-    <string name="app_lock_instructions">É necessário utilizar biometria ou um PIN para aceder a esta aplicação.</string>
     <string name="app_name">"NextDNS Manager"</string>
     <string name="author">"Autor"</string>
     <string name="back_title">"Voltar"</string>
+    <string name="crowdin">"Crowdin"</string>
     <string name="dark_mode">"Modo Escuro"</string>
     <string name="dark_mode_instructions">"Configuração do Modo Escuro"</string>
     <string name="developer">"Desenvolvedor"</string>
@@ -13,8 +12,6 @@
     <string name="donation">"Doe"</string>
     <string name="donation_name">"Se você gosta deste aplicativo e deseja fazer uma doação, você pode fazê-lo aqui. Por favor, note que isso é completamente opcional. Obrigado pelo seu apoio!"</string>
     <string name="sentry">"Sentry"</string>
-    <string name="feedback">Se desejar, preencha uma rápida pesquisa para me ajudar a melhorar o aplicativo.</string>
-    <string name="feedback_title">Feedback</string>
     <string name="generic_content_description">"Essa é uma descrição genérica do conteúdo."</string>
     <string name="github">"Github"</string>
     <string name="github_summary">"Toque para ver o repositório Github deste aplicativo."</string>
@@ -36,7 +33,6 @@
     <string name="ping_long">"Verifique rapidamente os tempos de ping nos servidores NextDNS."</string>
     <string name="ping_short">"Latência"</string>
     <string name="ping_title">"Teste de ping"</string>
-    <string name="poeditor">"POEditor"</string>
     <string name="privacy">"Privacidade"</string>
     <string name="privacy_policy">"Política de privacidade do NextDNS Manager"</string>
     <string name="private_dns">"DNS Particular"</string>
@@ -52,9 +48,11 @@
     <string name="version">"Versão"</string>
     <string name="whitelist_domains">"Se você habilitar o Sentry, por favor whitelist esses domínios na sua configuração de NextDNS."</string>
     <string name="whitelist_instructions">"Por favor, considere optar pelo rastreamento de erros de entrada. Isso não coleta nenhuma informação pessoal e me ajuda a melhorar o aplicativo."</string>
-    <string-array name="dark_mode_entries">
-        <item>Sistema de Correspondência</item>
-        <item>Ligado</item>
-        <item>Desligado</item>
-    </string-array>
+    <string name="poeditor">"POEditor"</string>
+    <string name="feedback">"Se desejar, preencha uma rápida pesquisa para me ajudar a melhorar o aplicativo."</string>
+    <string name="feedback_title">"Feedback"</string>
+    <string name="app_lock">"Bloqueio da aplicação"</string>
+    <string name="app_lock_instructions">"É necessário utilizar biometria ou um PIN para aceder a esta aplicação."</string>
+    <string name="unlock_title">"Desbloquear"</string>
+    <string name="unlock_description">"Autentique-se para aceder e alterar as suas definições."</string>
 </resources>
