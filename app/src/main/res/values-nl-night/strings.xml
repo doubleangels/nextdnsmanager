@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="app_lock">App-vergrendeling</string>
+    <string name="app_lock_instructions">Biometrie of PIN vereist om toegang te krijgen tot deze app.</string>
     <string name="app_name">"NextDNS Manager"</string>
     <string name="author">"Auteur"</string>
     <string name="back_title">"Terug"</string>
-    <string name="crowdin">"Crowdin"</string>
     <string name="dark_mode">"Donkere Modus"</string>
     <string name="dark_mode_instructions">"Donkere Modus Instelling"</string>
     <string name="developer">"Ontwikkelaar"</string>
@@ -12,6 +13,8 @@
     <string name="donation">"Doneer"</string>
     <string name="donation_name">"Als u deze app leuk vindt en wilt doneren, kunt u dit hier doen. Let op, dit is volledig optioneel. Bedankt voor uw steun!"</string>
     <string name="sentry">"Sentry"</string>
+    <string name="feedback">Als je wilt, vul dan een korte enquête in om me te helpen de app te verbeteren.</string>
+    <string name="feedback_title">Feedback</string>
     <string name="generic_content_description">"Dit is een algemene inhoudsbeschrijving."</string>
     <string name="github">"Github"</string>
     <string name="github_summary">"Tik om de Github repository van deze app te bekijken."</string>
@@ -33,6 +36,7 @@
     <string name="ping_long">"Controleer snel de ping-tijden naar NextDNS-servers."</string>
     <string name="ping_short">"Ping"</string>
     <string name="ping_title">"Ping-test"</string>
+    <string name="poeditor">"POEditor"</string>
     <string name="privacy">"Privacy"</string>
     <string name="privacy_policy">"Privacybeleid van NextDNS Manager"</string>
     <string name="private_dns">"Privé DNS"</string>
@@ -48,11 +52,9 @@
     <string name="version">"Versie"</string>
     <string name="whitelist_domains">"Als u Sentry inschakelt, kunt u deze domeinen in uw NextDNS configuratie uitsluiten."</string>
     <string name="whitelist_instructions">"Overweeg een opting in to Sentry error tracking. Dit verzamelt geen persoonlijke informatie en helpt mij de app beter te maken."</string>
-    <string name="poeditor">"POEditor"</string>
-    <string name="feedback">"Als je wilt, vul dan een korte enquête in om me te helpen de app te verbeteren."</string>
-    <string name="feedback_title">"Feedback"</string>
-    <string name="app_lock">"App-vergrendeling"</string>
-    <string name="app_lock_instructions">"Biometrie of PIN vereist om toegang te krijgen tot deze app."</string>
-    <string name="unlock_title">"Ontgrendel"</string>
-    <string name="unlock_description">"Verifieer je identiteit om toegang te krijgen tot en wijzigingen aan te brengen in je instellingen."</string>
+    <string-array name="dark_mode_entries">
+        <item>Overeenkomen met Systeem</item>
+        <item>Op</item>
+        <item>Uit</item>
+    </string-array>
 </resources>

@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="app_lock">Bloqueo de la aplicación</string>
+    <string name="app_lock_instructions">Se requiere biometría o PIN para acceder a esta aplicación.</string>
     <string name="app_name">"NextDNS Manager"</string>
     <string name="author">"Autor"</string>
     <string name="back_title">"Atrás"</string>
-    <string name="crowdin">"Crowdin"</string>
     <string name="dark_mode">"Modo Oscuro"</string>
     <string name="dark_mode_instructions">"Ajustes del Modo Oscuro"</string>
     <string name="developer">"Desarrollador"</string>
@@ -12,6 +13,8 @@
     <string name="donation">"Donar"</string>
     <string name="donation_name">"Si te gusta esta aplicación y deseas donar, puedes hacerlo aquí. Ten en cuenta que esto es completamente opcional. ¡Gracias por tu apoyo!"</string>
     <string name="sentry">"Sentry"</string>
+    <string name="feedback">Si lo deseas, completa una breve encuesta para ayudarme a mejorar la aplicación.</string>
+    <string name="feedback_title">Comentarios</string>
     <string name="generic_content_description">"Se trata de una descripción de contenido genérica."</string>
     <string name="github">"Github"</string>
     <string name="github_summary">"Pulse para ver el repositorio Github de esta aplicación."</string>
@@ -33,6 +36,7 @@
     <string name="ping_long">"Comprueba rápidamente los tiempos de ping en los servidores de NextDNS."</string>
     <string name="ping_short">"Ping"</string>
     <string name="ping_title">"Prueba de ping"</string>
+    <string name="poeditor">"POEditor"</string>
     <string name="privacy">"Privacidad"</string>
     <string name="privacy_policy">"Política de privacidad de NextDNS Manager"</string>
     <string name="private_dns">"DNS Privado"</string>
@@ -48,13 +52,9 @@
     <string name="version">"Versión"</string>
     <string name="whitelist_domains">"Si activa Sentry, por favor incluya estos dominios en su configuración NextDNS."</string>
     <string name="whitelist_instructions">"Por favor, considere optar por el seguimiento de errores de Sentry. Esto no recopila ninguna información personal y me ayuda a mejorar la aplicación."</string>
-    <string name="poeditor">"POEditor"</string>
-    <string name="feedback">"Si lo deseas, completa una breve encuesta para ayudarme a mejorar la aplicación."</string>
-    <string name="feedback_title">"Comentarios"</string>
-    <string name="app_lock">"Bloqueo de la aplicación"</string>
-    <string name="app_lock_instructions">"Se requiere biometría o PIN para acceder a esta aplicación."</string>
-    <string name="unlock_title">"Desbloquear"</string>
-
-    <!-- Fuzzy -->
-    <string name="unlock_description">"Autentícate para acceder y cambiar tus configuraciones."</string>
+    <string-array name="dark_mode_entries">
+        <item>Coincidir Sistema</item>
+        <item>En</item>
+        <item>Apagado</item>
+    </string-array>
 </resources>

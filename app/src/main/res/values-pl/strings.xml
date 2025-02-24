@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="app_lock">Blokada aplikacji</string>
+    <string name="app_lock_instructions">Wymagane są dane biometryczne lub PIN, aby uzyskać dostęp do tej aplikacji.</string>
     <string name="app_name">"NextDNS Manager"</string>
     <string name="author">"Autor"</string>
     <string name="back_title">"Wstecz"</string>
-    <string name="crowdin">"Crowdin"</string>
     <string name="dark_mode">"Tryb Ciemny"</string>
     <string name="dark_mode_instructions">"Ustawienia trybu Ciemnego"</string>
     <string name="developer">"Deweloper"</string>
@@ -12,6 +13,8 @@
     <string name="donation">"Wpłać"</string>
     <string name="donation_name">"Jeśli podoba Ci się ta aplikacja i chcesz ją wesprzeć, możesz to zrobić tutaj. Pamiętaj, że jest to całkowicie opcjonalne. Dziękujemy za wsparcie!"</string>
     <string name="sentry">"Sentry"</string>
+    <string name="feedback">Jeśli chcesz, wypełnij krótką ankietę, aby pomóc mi ulepszyć aplikację.</string>
+    <string name="feedback_title">Opinie</string>
     <string name="generic_content_description">"Jest to ogólny opis treści."</string>
     <string name="github">"Github"</string>
     <string name="github_summary">"Dotknij, aby wyświetlić repozytorium Github tej aplikacji."</string>
@@ -33,6 +36,7 @@
     <string name="ping_long">"Szybko sprawdź czasy ping na serwerach NextDNS."</string>
     <string name="ping_short">"Ping"</string>
     <string name="ping_title">"Test ping"</string>
+    <string name="poeditor">"POEditor"</string>
     <string name="privacy">"Prywatność"</string>
     <string name="privacy_policy">"NextDNS Manager Polityka prywatności"</string>
     <string name="private_dns">"Prywatny DNS"</string>
@@ -48,11 +52,9 @@
     <string name="version">"Wersja"</string>
     <string name="whitelist_domains">"Jeśli włączysz Sentry proszę dodać te domeny do konfiguracji NextDNS."</string>
     <string name="whitelist_instructions">"Proszę zastanowić się nad opcją śledzenia błędów Sentry . To nie zbiera żadnych danych osobowych i pomaga mi ulepszyć aplikację."</string>
-    <string name="poeditor">"POEditor"</string>
-    <string name="feedback">"Jeśli chcesz, wypełnij krótką ankietę, aby pomóc mi ulepszyć aplikację."</string>
-    <string name="feedback_title">"Opinie"</string>
-    <string name="app_lock">"Blokada aplikacji"</string>
-    <string name="app_lock_instructions">"Wymagane są dane biometryczne lub PIN, aby uzyskać dostęp do tej aplikacji."</string>
-    <string name="unlock_title">"Odblokuj"</string>
-    <string name="unlock_description">"Uwierzytelnij się, aby uzyskać dostęp do ustawień i je zmienić"</string>
+    <string-array name="dark_mode_entries">
+        <item>Dopasuj System</item>
+        <item>Włączone</item>
+        <item>Wyłączony</item>
+    </string-array>
 </resources>
