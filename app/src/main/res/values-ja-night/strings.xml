@@ -1,10 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_lock">アプリロック</string>
-    <string name="app_lock_instructions">このアプリにアクセスするには生体認証またはPINコードが必要です。</string>
     <string name="app_name">"NextDNS Manager"</string>
     <string name="author">"著者"</string>
     <string name="back_title">"戻る"</string>
+    <string name="crowdin">"Crowdin"</string>
     <string name="dark_mode">"ダークモード"</string>
     <string name="dark_mode_instructions">"ダークモードの設定"</string>
     <string name="developer">"開発者"</string>
@@ -13,8 +12,6 @@
     <string name="donation">"寄付"</string>
     <string name="donation_name">"このアプリを楽しんで寄付したい場合は、こちらで行うことができます。ご注意ください。これは完全に任意です。ご支援ありがとうございます！"</string>
     <string name="sentry">"Sentry"</string>
-    <string name="feedback">よろしければ、アプリを改善するための簡単なアンケートにご記入ください。</string>
-    <string name="feedback_title">フィードバック</string>
     <string name="generic_content_description">"これは一般的な内容説明です。"</string>
     <string name="github">"Github"</string>
     <string name="github_summary">"このアプリの Github リポジトリを表示するにはタップします。"</string>
@@ -36,7 +33,6 @@
     <string name="ping_long">"NextDNSサーバーへのPING時間をすばやく確認できます。"</string>
     <string name="ping_short">"ping"</string>
     <string name="ping_title">"ピングテスト"</string>
-    <string name="poeditor">"POEditor"</string>
     <string name="privacy">"プライバシー"</string>
     <string name="privacy_policy">"NextDNSマネージャープライバシーポリシー"</string>
     <string name="private_dns">"プライベート DNS"</string>
@@ -52,9 +48,11 @@
     <string name="version">"[バージョン]"</string>
     <string name="whitelist_domains">"Sentryを有効にする場合は、NextDNS設定でこれらのドメインをホワイトリストに登録してください。"</string>
     <string name="whitelist_instructions">"Sentry error trackingへの参加を検討してください。これは個人情報を収集するものではなく、アプリを改善するのに役立ちます。"</string>
-    <string-array name="dark_mode_entries">
-        <item>システムに一致</item>
-        <item>オン</item>
-        <item>オフ</item>
-    </string-array>
+    <string name="poeditor">"POEditor"</string>
+    <string name="feedback">"よろしければ、アプリを改善するための簡単なアンケートにご記入ください。"</string>
+    <string name="feedback_title">"フィードバック"</string>
+    <string name="app_lock">"アプリロック"</string>
+    <string name="app_lock_instructions">"このアプリにアクセスするには生体認証またはPINコードが必要です。"</string>
+    <string name="unlock_title">"解除"</string>
+    <string name="unlock_description">"設定にアクセスし、変更するには認証してください。"</string>
 </resources>
