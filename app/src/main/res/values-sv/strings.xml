@@ -1,10 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_lock">App-lås</string>
-    <string name="app_lock_instructions">Kräver biometrik eller PIN för att få åtkomst till denna app.</string>
     <string name="app_name">"NextDNS Manager"</string>
     <string name="author">"Författaren"</string>
     <string name="back_title">"Tillbaka"</string>
+    <string name="crowdin">"Crowdin"</string>
     <string name="dark_mode">"Mörkt Läge"</string>
     <string name="dark_mode_instructions">"Mörkt läge Inställning"</string>
     <string name="developer">"Utvecklare"</string>
@@ -13,8 +12,6 @@
     <string name="donation">"Donera"</string>
     <string name="donation_name">"Om du gillar denna app och vill donera, kan du göra det här. Observera att detta är helt frivilligt. Tack för ditt stöd!"</string>
     <string name="sentry">"Sentry"</string>
-    <string name="feedback">Om du vill, fyll i en snabb undersökning för att hjälpa mig att förbättra appen.</string>
-    <string name="feedback_title">Feedback</string>
     <string name="generic_content_description">"Detta är en generisk innehållsbeskrivning."</string>
     <string name="github">"Github"</string>
     <string name="github_summary">"Tryck för att visa appens Github förråd."</string>
@@ -36,7 +33,6 @@
     <string name="ping_long">"Kontrollera snabbt pingtider till NextDNS-servrar."</string>
     <string name="ping_short">"Ping"</string>
     <string name="ping_title">"Ping-test"</string>
-    <string name="poeditor">"POEditor"</string>
     <string name="privacy">"Integritet"</string>
     <string name="privacy_policy">"Sekretesspolicy för NextDNS Manager"</string>
     <string name="private_dns">"Privat DNS"</string>
@@ -52,9 +48,11 @@
     <string name="version">"Versionen"</string>
     <string name="whitelist_domains">"Om du aktiverar Sentry, vänligen vitlista dessa domäner i din NextDNS-konfiguration."</string>
     <string name="whitelist_instructions">"Vänligen överväg att välja till Sentry felspårning. Detta samlar inte in någon personlig information och hjälper mig att göra appen bättre."</string>
-    <string-array name="dark_mode_entries">
-        <item>Matcha Systemet</item>
-        <item>På</item>
-        <item>Av</item>
-    </string-array>
+    <string name="poeditor">"POEditor"</string>
+    <string name="feedback">"Om du vill, fyll i en snabb undersökning för att hjälpa mig att förbättra appen."</string>
+    <string name="feedback_title">"Feedback"</string>
+    <string name="app_lock">"App-lås"</string>
+    <string name="app_lock_instructions">"Kräver biometrik eller PIN för att få åtkomst till denna app."</string>
+    <string name="unlock_title">"Lås upp"</string>
+    <string name="unlock_description">"Autentisera dig för att komma åt och ändra dina inställningar."</string>
 </resources>
