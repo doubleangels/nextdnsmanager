@@ -17,77 +17,79 @@ import com.doubleangels.nextdnsmanagement.sentry.SentryManager;
 
 import java.util.Locale;
 
-/**
- * An Activity that loads two WebViews with specified URLs (e.g., for ping tests).
- * It also integrates Sentry error tracking, applies language settings, and 
- * adjusts system bar appearance for light/dark modes.
- */
 public class PingActivity extends AppCompatActivity {
 
-    // SentryManager instance for capturing logs and errors (if enabled by user preference)
     public SentryManager sentryManager;
-
-    // Two separate WebView components for displaying different URLs simultaneously
     public WebView webView;
     public WebView webView2;
 
-    /**
-     * Called when the activity is first created. Sets up layout, initializes Sentry if enabled,
-     * applies system bar styling and language settings, and configures two WebViews for loading URLs.
-     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_ping);
 
-        // Initialize a SentryManager for handling logs/exceptions
         sentryManager = new SentryManager(this);
 
+        // Initialize Sentry separately.
         try {
-            // If Sentry is enabled (based on user preference), initialize the Sentry SDK
             if (sentryManager.isEnabled()) {
                 SentryInitializer.initialize(this);
             }
+        } catch (Exception e) {
+            sentryManager.captureException(e);
+        }
 
-            // Customize status bar icons (light/dark) for newer Android versions
+        // Setup status bar appearance.
+        try {
             setupStatusBarForActivity();
+        } catch (Exception e) {
+            sentryManager.captureException(e);
+        }
 
-            // Apply and capture the current locale setting
-            String appLocale = setupLanguageForActivity();
+        // Apply language configuration.
+        String appLocale;
+        try {
+            appLocale = setupLanguageForActivity();
             sentryManager.captureMessage("Using locale: " + appLocale);
+        } catch (Exception e) {
+            sentryManager.captureException(e);
+        }
 
-            // Configure two WebViews with designated URLs
+        // Configure the WebViews with the designated URLs.
+        try {
             setupWebViewForActivity(getString(R.string.ping_url), getString(R.string.test_url));
         } catch (Exception e) {
-            // Capture any exceptions in Sentry (if enabled) or log them
             sentryManager.captureException(e);
         }
     }
 
-    /**
-     * Called when the activity is destroyed. Removes views from the WebView and destroys it 
-     * to free resources and avoid memory leaks.
-     */
     @Override
     protected void onDestroy() {
+        try {
+            if (webView != null) {
+                webView.removeAllViews();
+                webView.destroy();
+            }
+            if (webView2 != null) {
+                webView2.removeAllViews();
+                webView2.destroy();
+            }
+        } catch (Exception e) {
+            sentryManager.captureException(e);
+        }
         super.onDestroy();
-        webView.removeAllViews();
-        webView.destroy();
     }
 
     /**
-     * Sets up the status bar's appearance (light or dark icons) if the device runs on a newer Android version.
+     * Adjusts the status bar's appearance based on the current theme.
      */
     private void setupStatusBarForActivity() {
-        // Replace UPSIDE_DOWN_CAKE with the appropriate API level check in real implementations
+        // Replace UPSIDE_DOWN_CAKE with an appropriate API level check.
         if (Build.VERSION.SDK_INT > Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             WindowInsetsController insetsController = getWindow().getInsetsController();
             if (insetsController != null) {
-                // Determine whether the current theme is in night mode or not
                 boolean isLightTheme = (getResources().getConfiguration().uiMode &
                         Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_NO;
-
-                // Apply light or default status bar appearance to match the theme
                 insetsController.setSystemBarsAppearance(
                         isLightTheme ? WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS : 0,
                         WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS
@@ -97,70 +99,75 @@ public class PingActivity extends AppCompatActivity {
     }
 
     /**
-     * Sets the app's language based on the current configuration. This ensures 
-     * the app resources (strings, layouts, etc.) match the selected locale.
+     * Sets up the language configuration for the activity.
      *
      * @return The language code (e.g., "en") representing the current locale.
      */
     private String setupLanguageForActivity() {
-        // Retrieve the current Configuration
         Configuration config = getResources().getConfiguration();
-
-        // Get the first locale from the configuration
-        Locale appLocale = config.getLocales().get(0);
+        Locale appLocale = (!config.getLocales().isEmpty()) ? config.getLocales().get(0) : Locale.getDefault();
         Locale.setDefault(appLocale);
 
-        // Create a new Configuration for overriding the locale
         Configuration newConfig = new Configuration(config);
         newConfig.setLocale(appLocale);
 
-        // Apply the override configuration using a ContextThemeWrapper
+        // Apply the new configuration using a ContextThemeWrapper.
         new ContextThemeWrapper(getBaseContext(), R.style.AppTheme)
                 .applyOverrideConfiguration(newConfig);
 
-        // Return the language code for logging
         return appLocale.getLanguage();
     }
 
     /**
-     * Sets up both WebViews in the activity layout with provided URLs.
+     * Configures both WebViews with the provided URLs.
      *
-     * @param url1 The first URL to load (e.g., ping test).
-     * @param url2 The second URL to load (e.g., additional test page).
+     * @param url1 The first URL to load.
+     * @param url2 The second URL to load.
      */
     @SuppressLint("SetJavaScriptEnabled")
     public void setupWebViewForActivity(String url1, String url2) {
-        // Find the WebViews from the layout
-        webView = findViewById(R.id.webView);
-        webView2 = findViewById(R.id.webView2);
+        try {
+            webView = findViewById(R.id.webView);
+            webView2 = findViewById(R.id.webView2);
 
-        // Initialize each WebView with common settings
-        setupWebView(webView);
-        setupWebView(webView2);
+            setupWebView(webView);
+            setupWebView(webView2);
 
-        // Load the desired URLs
-        webView.loadUrl(url1);
-        webView2.loadUrl(url2);
+            webView.loadUrl(url1);
+            webView2.loadUrl(url2);
+        } catch (Exception e) {
+            sentryManager.captureException(e);
+        }
     }
 
     /**
-     * Configures an individual WebView with JavaScript and storage settings, 
-     * and sets a simple WebViewClient.
+     * Configures an individual WebView with necessary settings and a custom WebViewClient
+     * that logs loading errors.
      *
-     * @param webView A WebView instance to configure.
+     * @param webView The WebView instance to configure.
      */
     @SuppressLint("SetJavaScriptEnabled")
     private void setupWebView(WebView webView) {
-        // Get the WebView's settings and enable commonly used features
-        WebSettings settings = webView.getSettings();
-        settings.setJavaScriptEnabled(true);
-        settings.setDomStorageEnabled(true);
-        settings.setDatabaseEnabled(true);
-        settings.setCacheMode(WebSettings.LOAD_DEFAULT);
-        settings.setAllowFileAccess(false);
-        settings.setAllowContentAccess(false);
+        try {
+            WebSettings settings = webView.getSettings();
+            settings.setJavaScriptEnabled(true);
+            settings.setDomStorageEnabled(true);
+            settings.setDatabaseEnabled(true);
+            settings.setCacheMode(WebSettings.LOAD_DEFAULT);
+            settings.setAllowFileAccess(false);
+            settings.setAllowContentAccess(false);
 
-        // Prevent loading pages in external browser by setting a WebViewClient
-        webView.setWebViewClient(new WebViewClient());
+            webView.setWebViewClient(new WebViewClient() {
+                @Override
+                public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
+                    super.onReceivedError(view, errorCode, description, failingUrl);
+                    if (sentryManager != null) {
+                        sentryManager.captureMessage("Error loading URL " + failingUrl + ": " + description);
+                    }
+                }
+            });
+        } catch (Exception e) {
+            sentryManager.captureException(e);
+        }
     }
 }

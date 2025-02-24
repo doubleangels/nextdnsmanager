@@ -4,17 +4,23 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
 
+import com.doubleangels.nextdnsmanagement.sentry.SentryManager;
+
 /**
  * A thread-safe utility class for managing SharedPreferences.
  * This class provides convenient static methods for reading and writing preference values.
+ * All errors are captured using SentryManager.
  */
 public class SharedPreferencesManager {
 
     // The name of the SharedPreferences file
     private static final String PREF_NAME = "MyAppPreferences";
 
-    // A reference to the SharedPreferences object
+    // A reference to the SharedPreferences object, backed by the application context.
     private static SharedPreferences sharedPreferences;
+
+    // Store only the application context to avoid leaking an Activity context.
+    private static Context appContext;
 
     /**
      * Private constructor to prevent instantiation.
@@ -25,22 +31,21 @@ public class SharedPreferencesManager {
     }
 
     /**
-     * Initializes the SharedPreferences object if it has not been initialized yet.
+     * Initializes the SharedPreferences object using the application context.
      * Must be called once, usually in an Application class or before using any put/get methods.
      *
      * @param context The context used to create or retrieve the SharedPreferences.
      */
     public static synchronized void init(Context context) {
         if (sharedPreferences == null) {
-            sharedPreferences = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+            appContext = context.getApplicationContext();
+            sharedPreferences = appContext.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
         }
     }
 
     /**
      * Saves a String value into the SharedPreferences, committing the change immediately.
-     * Using `commit()` ensures the data is written to disk synchronously,
-     * but can slow down the calling thread. If performance is a concern,
-     * `apply()` could be used instead for asynchronous commits.
+     * If an error occurs, it is captured via SentryManager.
      *
      * @param key   The preference key under which the value is stored.
      * @param value The string value to store.
@@ -48,12 +53,16 @@ public class SharedPreferencesManager {
     @SuppressLint("ApplySharedPref")
     public static void putString(String key, String value) {
         checkInitialization();
-        sharedPreferences.edit().putString(key, value).commit();
+        try {
+            sharedPreferences.edit().putString(key, value).commit();
+        } catch (Exception e) {
+            new SentryManager(appContext).captureException(e);
+        }
     }
 
     /**
      * Retrieves a String value from the SharedPreferences.
-     * If the key is not found, returns the provided default value.
+     * If the key is not found or an error occurs, returns the provided default value.
      *
      * @param key          The preference key to look for.
      * @param defaultValue The default value to return if not found.
@@ -61,12 +70,17 @@ public class SharedPreferencesManager {
      */
     public static String getString(String key, String defaultValue) {
         checkInitialization();
-        return sharedPreferences.getString(key, defaultValue);
+        try {
+            return sharedPreferences.getString(key, defaultValue);
+        } catch (Exception e) {
+            new SentryManager(appContext).captureException(e);
+            return defaultValue;
+        }
     }
 
     /**
      * Saves a boolean value into the SharedPreferences, committing the change immediately.
-     * Using `commit()` ensures the data is written to disk synchronously.
+     * If an error occurs, it is captured via SentryManager.
      *
      * @param key   The preference key under which the value is stored.
      * @param value The boolean value to store.
@@ -74,12 +88,16 @@ public class SharedPreferencesManager {
     @SuppressLint("ApplySharedPref")
     public static void putBoolean(String key, boolean value) {
         checkInitialization();
-        sharedPreferences.edit().putBoolean(key, value).commit();
+        try {
+            sharedPreferences.edit().putBoolean(key, value).commit();
+        } catch (Exception e) {
+            new SentryManager(appContext).captureException(e);
+        }
     }
 
     /**
      * Retrieves a boolean value from the SharedPreferences.
-     * If the key is not found, returns the provided default value.
+     * If the key is not found or an error occurs, returns the provided default value.
      *
      * @param key          The preference key to look for.
      * @param defaultValue The default value to return if not found.
@@ -87,7 +105,12 @@ public class SharedPreferencesManager {
      */
     public static boolean getBoolean(String key, boolean defaultValue) {
         checkInitialization();
-        return sharedPreferences.getBoolean(key, defaultValue);
+        try {
+            return sharedPreferences.getBoolean(key, defaultValue);
+        } catch (Exception e) {
+            new SentryManager(appContext).captureException(e);
+            return defaultValue;
+        }
     }
 
     /**

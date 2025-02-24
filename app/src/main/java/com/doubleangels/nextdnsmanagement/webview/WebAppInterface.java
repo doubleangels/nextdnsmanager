@@ -6,6 +6,8 @@ import android.webkit.JavascriptInterface;
 
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
+import com.doubleangels.nextdnsmanagement.sentry.SentryManager;
+
 public class WebAppInterface {
     private final Context context;
     private final SwipeRefreshLayout swipeRefreshLayout;
@@ -20,6 +22,14 @@ public class WebAppInterface {
      */
     @JavascriptInterface
     public void setSwipeRefreshEnabled(final boolean enabled) {
-        ((Activity) context).runOnUiThread(() -> swipeRefreshLayout.setEnabled(enabled));
+        try {
+            if (context instanceof Activity) {
+                ((Activity) context).runOnUiThread(() -> swipeRefreshLayout.setEnabled(enabled));
+            } else {
+                new SentryManager(context).captureMessage("Context is not an Activity instance. Cannot update swipe refresh.");
+            }
+        } catch (Exception e) {
+            new SentryManager(context).captureException(e);
+        }
     }
 }
