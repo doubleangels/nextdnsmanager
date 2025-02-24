@@ -198,8 +198,8 @@ public class MainActivity extends AppCompatActivity {
                 final BiometricLock biometricLock = new BiometricLock(this);
                 if (biometricLock.canAuthenticate()) {
                     biometricLock.showPrompt(
-                            "Unlock",
-                            "Authenticate to access and change your settings.",
+                            this.getString(R.string.unlock_title),
+                            this.getString(R.string.unlock_description),
                             "",
                             new BiometricLock.BiometricLockCallback() {
                                 @Override

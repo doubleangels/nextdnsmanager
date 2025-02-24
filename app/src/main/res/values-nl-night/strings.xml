@@ -48,6 +48,8 @@
     <string name="settings_activity_title">"Instellingen"</string>
     <string name="translate">"Vertaal"</string>
     <string name="translate_summary">"Als je een onjuiste vertaling ziet, help me dan deze hier op te lossen."</string>
+    <string name="unlock_description">Verifieer je identiteit om toegang te krijgen tot en wijzigingen aan te brengen in je instellingen.</string>
+    <string name="unlock_title">Ontgrendel</string>
     <string name="user_agreement">"Gebruikersovereenkomst"</string>
     <string name="version">"Versie"</string>
     <string name="whitelist_domains">"Als u Sentry inschakelt, kunt u deze domeinen in uw NextDNS configuratie uitsluiten."</string>

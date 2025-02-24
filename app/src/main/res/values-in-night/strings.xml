@@ -48,6 +48,8 @@
     <string name="settings_activity_title">"Pengaturan"</string>
     <string name="translate">"Terjemahkan"</string>
     <string name="translate_summary">"Jika Anda menemukan terjemahan yang tidak tepat, tolong bantu saya memperbaikinya di sini."</string>
+    <string name="unlock_description">Otentikasi untuk mengakses dan mengubah pengaturan Anda.</string>
+    <string name="unlock_title">Buka kunci</string>
     <string name="user_agreement">"Perjanjian Pengguna"</string>
     <string name="version">"Versi"</string>
     <string name="whitelist_domains">"Jika Anda mengaktifkan Sentry, harap masukkan domain-domain berikut ke dalam konfigurasi NextDNS Anda."</string>

@@ -48,6 +48,8 @@
     <string name="settings_activity_title">"[設定]"</string>
     <string name="translate">"[翻訳]"</string>
     <string name="translate_summary">"間違った翻訳が表示された場合は、こちらで修正してください。"</string>
+    <string name="unlock_description">設定にアクセスし、変更するには認証してください。</string>
+    <string name="unlock_title">解除</string>
     <string name="user_agreement">"ユーザー契約"</string>
     <string name="version">"[バージョン]"</string>
     <string name="whitelist_domains">"Sentryを有効にする場合は、NextDNS設定でこれらのドメインをホワイトリストに登録してください。"</string>

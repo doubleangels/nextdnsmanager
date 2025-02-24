@@ -48,6 +48,8 @@
     <string name="settings_activity_title">"Impostazioni"</string>
     <string name="translate">"Tradurre"</string>
     <string name="translate_summary">"Se vedi delle traduzioni errate, per favore aiutami a correggerle qui."</string>
+    <string name="unlock_description">Autenticati per accedere e modificare le tue impostazioni.</string>
+    <string name="unlock_title">Sblocca</string>
     <string name="user_agreement">"Accordo con l'utente"</string>
     <string name="version">"Versione"</string>
     <string name="whitelist_domains">"Se si abilita Sentry, si prega di whitelist questi domini nella configurazione NextDNS."</string>
