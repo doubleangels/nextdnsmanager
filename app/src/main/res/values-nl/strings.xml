@@ -18,7 +18,7 @@
     <string name="generic_content_description">"Dit is een algemene inhoudsbeschrijving."</string>
     <string name="github">"Github"</string>
     <string name="github_summary">"Tik om de Github repository van deze app te bekijken."</string>
-    <string name="github_issues">"Een probleem melden"</string>
+    <string name="issues">"Een probleem melden"</string>
     <string name="github_issues_summary">"Tik om een probleem te melden of de momenteel gerapporteerde problemen te bekijken."</string>
     <string name="help_green">"Secure DNS wordt gebruikt EN het apparaat is verbonden met NextDNS."</string>
     <string name="help_orange">"Secure DNS wordt NIET gebruikt EN het apparaat is verbonden met NextDNS."</string>
@@ -36,7 +36,6 @@
     <string name="ping_long">"Controleer snel de ping-tijden naar NextDNS-servers."</string>
     <string name="ping_short">"Ping"</string>
     <string name="ping_title">"Ping-test"</string>
-    <string name="poeditor">"POEditor"</string>
     <string name="privacy">"Privacy"</string>
     <string name="privacy_policy">"Privacybeleid van NextDNS Manager"</string>
     <string name="private_dns">"Privé DNS"</string>
@@ -46,8 +45,11 @@
     <string name="sentry_info_instructions">"Tik voor meer informatie over Sentry."</string>
     <string name="settings">"Instellingen"</string>
     <string name="settings_activity_title">"Instellingen"</string>
+    <string name="tally_issues">Als je geen GitHub-account hebt, kun je hier een probleem melden.</string>
     <string name="translate">"Vertaal"</string>
     <string name="translate_summary">"Als je een onjuiste vertaling ziet, help me dan deze hier op te lossen."</string>
+    <string name="unlock_description">Verifieer je identiteit om toegang te krijgen tot en wijzigingen aan te brengen in je instellingen</string>
+    <string name="unlock_title">Ontgrendel</string>
     <string name="user_agreement">"Gebruikersovereenkomst"</string>
     <string name="version">"Versie"</string>
     <string name="whitelist_domains">"Als u Sentry inschakelt, kunt u deze domeinen in uw NextDNS configuratie uitsluiten."</string>

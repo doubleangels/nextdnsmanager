@@ -6,6 +6,8 @@ import androidx.biometric.BiometricManager;
 import androidx.biometric.BiometricPrompt;
 import androidx.core.content.ContextCompat;
 
+import com.doubleangels.nextdnsmanagement.sentry.SentryManager;
+
 import java.util.concurrent.Executor;
 
 /**
@@ -54,16 +56,18 @@ public class BiometricLock {
      * and has at least one biometric enrolled or a lock screen set up.
      */
     public boolean canAuthenticate() {
-        BiometricManager biometricManager = BiometricManager.from(activity);
-
-        int canAuth = biometricManager.canAuthenticate(
-                BiometricManager.Authenticators.BIOMETRIC_STRONG
-                        | BiometricManager.Authenticators.DEVICE_CREDENTIAL
-        );
-        // canAuth will be BIOMETRIC_SUCCESS if the user can authenticate with either
-        // a biometric or the device credentials (PIN, pattern, password).
-
-        return (canAuth == BiometricManager.BIOMETRIC_SUCCESS);
+        SentryManager sentryManager = new SentryManager(activity);
+        try {
+            BiometricManager biometricManager = BiometricManager.from(activity);
+            int canAuth = biometricManager.canAuthenticate(
+                    BiometricManager.Authenticators.BIOMETRIC_STRONG
+                            | BiometricManager.Authenticators.DEVICE_CREDENTIAL
+            );
+            return (canAuth == BiometricManager.BIOMETRIC_SUCCESS);
+        } catch (Exception e) {
+            sentryManager.captureException(e);
+            return false;
+        }
     }
 
     /**
@@ -80,12 +84,12 @@ public class BiometricLock {
                            String description,
                            BiometricLockCallback callback) {
 
+        SentryManager sentryManager = new SentryManager(activity);
+
         // 1. Executor that will handle callback events on the main thread.
         Executor executor = ContextCompat.getMainExecutor(activity);
 
         // 2. Create the BiometricPrompt with a callback.
-        // This covers both a fatal error AND user cancellation.
-        // The user tried a biometric that didn’t match.
         BiometricPrompt biometricPrompt = new BiometricPrompt(activity,
                 executor,
                 new BiometricPrompt.AuthenticationCallback() {
@@ -93,7 +97,8 @@ public class BiometricLock {
                     public void onAuthenticationError(int errorCode,
                                                       @NonNull CharSequence errString) {
                         super.onAuthenticationError(errorCode, errString);
-                        // This covers both a fatal error AND user cancellation.
+                        String errorMessage = "Biometric authentication error (" + errorCode + "): " + errString;
+                        sentryManager.captureMessage(errorMessage);
                         callback.onAuthenticationError(errString.toString());
                     }
 
@@ -107,28 +112,28 @@ public class BiometricLock {
                     @Override
                     public void onAuthenticationFailed() {
                         super.onAuthenticationFailed();
-                        // The user tried a biometric that didn’t match.
+                        String failMessage = "Biometric authentication failed: unrecognized biometric input.";
+                        sentryManager.captureMessage(failMessage);
                         callback.onAuthenticationFailed();
                     }
                 });
 
         // 3. Build the PromptInfo object.
-        //    By using setAllowedAuthenticators(BIOMETRIC_STRONG | DEVICE_CREDENTIAL),
-        //    the system will let users either scan a fingerprint/face or enter their device PIN/password.
-        // Notice we do NOT call setNegativeButtonText(...)
-        // because device credentials fallback is used instead of a "Cancel" button.
         BiometricPrompt.PromptInfo promptInfo = new BiometricPrompt.PromptInfo.Builder()
                 .setTitle(title)
                 .setSubtitle(subtitle)
                 .setDescription(description)
                 .setAllowedAuthenticators(BiometricManager.Authenticators.BIOMETRIC_STRONG
                         | BiometricManager.Authenticators.DEVICE_CREDENTIAL)
-                // Notice we do NOT call setNegativeButtonText(...)
-                // because device credentials fallback is used instead of a "Cancel" button.
                 .build();
 
-        // 4. Show the prompt
-        biometricPrompt.authenticate(promptInfo);
+        // 4. Show the prompt with error handling.
+        try {
+            biometricPrompt.authenticate(promptInfo);
+        } catch (Exception e) {
+            sentryManager.captureException(e);
+            callback.onAuthenticationError(e.getMessage());
+        }
     }
 
     /**

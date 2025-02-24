@@ -18,7 +18,7 @@
     <string name="generic_content_description">"Ini adalah deskripsi konten generik."</string>
     <string name="github">"Github"</string>
     <string name="github_summary">"Ketuk untuk melihat repositori Github aplikasi ini."</string>
-    <string name="github_issues">"Laporkan Masalah"</string>
+    <string name="issues">"Laporkan Masalah"</string>
     <string name="github_issues_summary">"Ketuk untuk melaporkan masalah atau melihat masalah yang dilaporkan saat ini."</string>
     <string name="help_green">"DNS aman sedang digunakan DAN perangkat terhubung ke NextDNS."</string>
     <string name="help_orange">"DNS aman TIDAK digunakan DAN perangkat terhubung ke NextDNS."</string>
@@ -36,7 +36,6 @@
     <string name="ping_long">"Cepat periksa waktu ping ke server NextDNS."</string>
     <string name="ping_short">"Ping"</string>
     <string name="ping_title">"Tes Ping"</string>
-    <string name="poeditor">"POEditor"</string>
     <string name="privacy">"Privasi"</string>
     <string name="privacy_policy">"Kebijakan Privasi Manajer NextDNS"</string>
     <string name="private_dns">"DNS Pribadi"</string>
@@ -46,8 +45,11 @@
     <string name="sentry_info_instructions">"Ketuk untuk mempelajari lebih lanjut tentang Sentry."</string>
     <string name="settings">"Pengaturan"</string>
     <string name="settings_activity_title">"Pengaturan"</string>
+    <string name="tally_issues">Jika Anda tidak memiliki akun GitHub, Anda dapat melaporkan masalah di sini.</string>
     <string name="translate">"Terjemahkan"</string>
     <string name="translate_summary">"Jika Anda menemukan terjemahan yang tidak tepat, tolong bantu saya memperbaikinya di sini."</string>
+    <string name="unlock_description">Otentikasi untuk mengakses dan mengubah pengaturan Anda</string>
+    <string name="unlock_title">Buka kunci</string>
     <string name="user_agreement">"Perjanjian Pengguna"</string>
     <string name="version">"Versi"</string>
     <string name="whitelist_domains">"Jika Anda mengaktifkan Sentry, harap masukkan domain-domain berikut ke dalam konfigurasi NextDNS Anda."</string>

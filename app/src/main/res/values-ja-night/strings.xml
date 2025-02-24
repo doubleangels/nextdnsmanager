@@ -18,7 +18,7 @@
     <string name="generic_content_description">"これは一般的な内容説明です。"</string>
     <string name="github">"Github"</string>
     <string name="github_summary">"このアプリの Github リポジトリを表示するにはタップします。"</string>
-    <string name="github_issues">"問題を報告する"</string>
+    <string name="issues">"問題を報告する"</string>
     <string name="github_issues_summary">"タップして課題を報告するか、現在報告されている課題を表示します。"</string>
     <string name="help_green">"セキュア DNS が使用されており、デバイスが NextDNS に接続されています。"</string>
     <string name="help_orange">"安全なDNSは使用されておらず、デバイスはNextDNSに接続されています。"</string>
@@ -36,7 +36,6 @@
     <string name="ping_long">"NextDNSサーバーへのPING時間をすばやく確認できます。"</string>
     <string name="ping_short">"ping"</string>
     <string name="ping_title">"ピングテスト"</string>
-    <string name="poeditor">"POEditor"</string>
     <string name="privacy">"プライバシー"</string>
     <string name="privacy_policy">"NextDNSマネージャープライバシーポリシー"</string>
     <string name="private_dns">"プライベート DNS"</string>
@@ -46,8 +45,11 @@
     <string name="sentry_info_instructions">"項目の詳細については、タップしてください。"</string>
     <string name="settings">"[設定]"</string>
     <string name="settings_activity_title">"[設定]"</string>
+    <string name="tally_issues">GitHubアカウントをお持ちでない場合は、ここから問題を報告できます。</string>
     <string name="translate">"[翻訳]"</string>
     <string name="translate_summary">"間違った翻訳が表示された場合は、こちらで修正してください。"</string>
+    <string name="unlock_description">設定にアクセスし、変更するには認証してください</string>
+    <string name="unlock_title">解除</string>
     <string name="user_agreement">"ユーザー契約"</string>
     <string name="version">"[バージョン]"</string>
     <string name="whitelist_domains">"Sentryを有効にする場合は、NextDNS設定でこれらのドメインをホワイトリストに登録してください。"</string>

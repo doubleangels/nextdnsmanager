@@ -18,7 +18,7 @@
     <string name="generic_content_description">"这是一个通用的内容描述。"</string>
     <string name="github">"Gith"</string>
     <string name="github_summary">"点击查看此应用的 Github 仓库."</string>
-    <string name="github_issues">"报告问题"</string>
+    <string name="issues">"报告问题"</string>
     <string name="github_issues_summary">"点击报告一个问题或查看当前已报告的问题。"</string>
     <string name="help_green">"正在使用安全 DNS 并且设备已连接到 NextDNS。"</string>
     <string name="help_orange">"未使用安全 DNS 且设备已连接到 NextDNS。"</string>
@@ -36,7 +36,6 @@
     <string name="ping_long">"快速查看 NextDNS 服务器的 ping 时间。"</string>
     <string name="ping_short">"平"</string>
     <string name="ping_title">"Ping 测试"</string>
-    <string name="poeditor">"POEditor"</string>
     <string name="privacy">"隐私"</string>
     <string name="privacy_policy">"NextDNS 管理器隐私政策"</string>
     <string name="private_dns">"私有DNS"</string>
@@ -46,8 +45,11 @@
     <string name="sentry_info_instructions">"点击了解更多关于Sentry的信息。"</string>
     <string name="settings">"设置"</string>
     <string name="settings_activity_title">"设置"</string>
+    <string name="tally_issues">如果您没有 GitHub 账户，您可以在此报告问题。</string>
     <string name="translate">"翻译"</string>
     <string name="translate_summary">"如果您看到任何不正确的翻译，请帮助我修复这些翻译。"</string>
+    <string name="unlock_description">请验证身份以访问并更改您的设置</string>
+    <string name="unlock_title">解锁</string>
     <string name="user_agreement">"用户协议"</string>
     <string name="version">"版本"</string>
     <string name="whitelist_domains">"如果您启用了 Sentry，请在您的NextDNS 配置中将这些域名加入白名单。"</string>

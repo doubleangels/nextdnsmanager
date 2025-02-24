@@ -12,6 +12,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.doubleangels.nextdnsmanagement.R;
+import com.doubleangels.nextdnsmanagement.sentry.SentryManager;
 
 import java.util.List;
 
@@ -30,8 +31,12 @@ public class PermissionsAdapter extends RecyclerView.Adapter<PermissionsAdapter.
      *
      * @param permissions A list of PermissionInfo objects (from PackageManager)
      *                    that should be displayed in the RecyclerView.
+     * @throws IllegalArgumentException if the permissions list is null.
      */
     public PermissionsAdapter(List<PermissionInfo> permissions) {
+        if (permissions == null) {
+            throw new IllegalArgumentException("Permissions list cannot be null");
+        }
         this.permissions = permissions;
     }
 
@@ -65,43 +70,51 @@ public class PermissionsAdapter extends RecyclerView.Adapter<PermissionsAdapter.
         // Get the PermissionInfo at the current position
         PermissionInfo permissionInfo = permissions.get(position);
 
+        // Initialize SentryManager using the current context
+        SentryManager sentryManager = new SentryManager(holder.itemView.getContext());
+
         // Determine if the permission has been granted (applies only for newer permissions like POST_NOTIFICATIONS)
         boolean isGranted = true;
         if (permissionInfo.name.equals(android.Manifest.permission.POST_NOTIFICATIONS)) {
-            // For Android 13 (TIRAMISU) and above, explicitly check if the permission is granted
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
-                isGranted = holder.itemView.getContext().checkSelfPermission(permissionInfo.name)
-                        == PackageManager.PERMISSION_GRANTED;
+                try {
+                    isGranted = holder.itemView.getContext().checkSelfPermission(permissionInfo.name)
+                            == PackageManager.PERMISSION_GRANTED;
+                } catch (Exception e) {
+                    sentryManager.captureException(e);
+                    isGranted = false;
+                }
             }
         }
 
-        // Load and set the permission name label from system resources, then make it uppercase
-        holder.permissionName.setText(
-                permissionInfo
-                        .loadLabel(holder.itemView.getContext().getPackageManager())
-                        .toString()
-                        .toUpperCase()
-        );
+        // Load and set the permission name label from system resources, then make it uppercase.
+        String permissionLabel;
+        try {
+            CharSequence label = permissionInfo.loadLabel(holder.itemView.getContext().getPackageManager());
+            permissionLabel = label.toString().toUpperCase();
+        } catch (Exception e) {
+            sentryManager.captureException(e);
+            permissionLabel = permissionInfo.name.toUpperCase();
+        }
+        holder.permissionName.setText(permissionLabel);
 
-        // Attempt to load the description of the permission from system resources
-        CharSequence description = permissionInfo
-                .loadDescription(holder.itemView.getContext().getPackageManager());
-
-        // Build a string to display the description (if available) and indicate if it's granted
+        // Attempt to load the description of the permission from system resources.
         String displayText;
-        if (description == null) {
-            // If there's no description, display nothing
-            displayText = "";
-        } else {
-            displayText = description.toString();
-
-            // Ensure the description ends with a period, then append (GRANTED) or (NOT GRANTED)
-            if (!displayText.endsWith(".")) {
-                displayText += ".";
+        try {
+            CharSequence description = permissionInfo.loadDescription(holder.itemView.getContext().getPackageManager());
+            if (description == null || description.toString().trim().isEmpty()) {
+                displayText = isGranted ? "(GRANTED)" : "(NOT GRANTED)";
+            } else {
+                displayText = description.toString();
+                if (!displayText.endsWith(".")) {
+                    displayText += ".";
+                }
+                displayText += isGranted ? " (GRANTED)" : " (NOT GRANTED)";
             }
-            displayText = displayText + (isGranted ? " (GRANTED)" : " (NOT GRANTED)");
+        } catch (Exception e) {
+            sentryManager.captureException(e);
+            displayText = isGranted ? "(GRANTED)" : "(NOT GRANTED)";
         }
-
         holder.permissionDescription.setText(displayText);
     }
 
@@ -130,7 +143,6 @@ public class PermissionsAdapter extends RecyclerView.Adapter<PermissionsAdapter.
          *
          * @param itemView The inflated layout view for this item.
          */
-        @SuppressLint("SetTextI18n")
         public PermissionViewHolder(View itemView) {
             super(itemView);
             permissionName = itemView.findViewById(R.id.permissionName);

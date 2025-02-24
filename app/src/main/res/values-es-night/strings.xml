@@ -18,7 +18,7 @@
     <string name="generic_content_description">"Se trata de una descripción de contenido genérica."</string>
     <string name="github">"Github"</string>
     <string name="github_summary">"Pulse para ver el repositorio Github de esta aplicación."</string>
-    <string name="github_issues">"Reportar un problema"</string>
+    <string name="issues">"Reportar un problema"</string>
     <string name="github_issues_summary">"Pulse para reportar un problema o ver los reportados actualmente."</string>
     <string name="help_green">"Se está utilizando un DNS seguro Y el dispositivo está conectado a NextDNS."</string>
     <string name="help_orange">"El DNS seguro NO se está utilizando Y el dispositivo está conectado a NextDNS."</string>
@@ -36,7 +36,6 @@
     <string name="ping_long">"Comprueba rápidamente los tiempos de ping en los servidores de NextDNS."</string>
     <string name="ping_short">"Ping"</string>
     <string name="ping_title">"Prueba de ping"</string>
-    <string name="poeditor">"POEditor"</string>
     <string name="privacy">"Privacidad"</string>
     <string name="privacy_policy">"Política de privacidad de NextDNS Manager"</string>
     <string name="private_dns">"DNS Privado"</string>
@@ -46,8 +45,11 @@
     <string name="sentry_info_instructions">"Pulsa para aprender más sobre Sentry."</string>
     <string name="settings">"Ajustes"</string>
     <string name="settings_activity_title">"Ajustes"</string>
+    <string name="tally_issues">Si no tienes una cuenta de GitHub, puedes reportar un problema aquí.</string>
     <string name="translate">"Traducir"</string>
     <string name="translate_summary">"Si ves alguna traducción incorrecta, por favor ayúdame a arreglarlas aquí."</string>
+    <string name="unlock_description">Autentícate para acceder y cambiar tus configuraciones</string>
+    <string name="unlock_title">Desbloquear</string>
     <string name="user_agreement">"Acuerdo de usuario"</string>
     <string name="version">"Versión"</string>
     <string name="whitelist_domains">"Si activa Sentry, por favor incluya estos dominios en su configuración NextDNS."</string>

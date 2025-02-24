@@ -18,6 +18,9 @@ import android.view.MenuItem;
 import android.view.Window;
 import android.webkit.CookieManager;
 import android.webkit.WebChromeClient;
+import android.webkit.WebResourceError;
+import android.webkit.WebResourceRequest;
+import android.webkit.WebResourceResponse;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -69,105 +72,109 @@ public class MainActivity extends AppCompatActivity {
     // Timestamp (in ms) of the last successful authentication.
     private long lastAuthenticatedTime = 0;
 
-    /**
-     * Saves the current state of the activity, including the WebView state and dark mode flag.
-     *
-     * @param outState Bundle in which to place saved state data.
-     */
     @Override
     protected void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
-        if (webView != null) {
-            Bundle webViewBundle = new Bundle();
-            // Save the current state of the WebView.
-            webView.saveState(webViewBundle);
-            outState.putBundle("webViewState", webViewBundle);
+        try {
+            if (webView != null) {
+                Bundle webViewBundle = new Bundle();
+                webView.saveState(webViewBundle);
+                outState.putBundle("webViewState", webViewBundle);
+            }
+            outState.putBoolean("darkModeEnabled", darkModeEnabled);
+        } catch (Exception e) {
+            // Log and capture any exception during state save.
+            SentryManager.captureStaticException(e);
         }
-        // Save the current dark mode state.
-        outState.putBoolean("darkModeEnabled", darkModeEnabled);
     }
 
-    /**
-     * Called when the activity is created. Restores saved state if available, sets up the UI
-     * (toolbar, WebView, dark mode, etc.), applies the blur overlay, and initializes necessary services.
-     *
-     * @param savedInstanceState The saved state of the activity, if any.
-     */
     @SuppressLint({"WrongThread", "SetJavaScriptEnabled"})
     @RequiresApi(api = Build.VERSION_CODES.TIRAMISU)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Restore saved state if available (e.g., after rotation).
+        // Restore saved state if available.
         if (savedInstanceState != null) {
             webViewState = savedInstanceState.getBundle("webViewState");
             darkModeEnabled = savedInstanceState.getBoolean("darkModeEnabled");
         }
 
-        // Set the content view for this activity.
         setContentView(R.layout.activity_main);
 
-        // Initialize Sentry manager for error tracking and logging.
-        SentryManager sentryManager = new SentryManager(this);
-
-        // Initialize Firebase Messaging for push notifications.
+        // Initialize Sentry manager and Firebase Messaging.
+        final SentryManager sentryManager = new SentryManager(this);
         MessagingInitializer.initialize(this);
-
-        // Initialize SharedPreferences manager for storing/retrieving settings.
         SharedPreferencesManager.init(this);
 
         try {
-            // If Sentry is enabled, capture a startup message and initialize Sentry.
             if (sentryManager.isEnabled()) {
                 sentryManager.captureMessage("Sentry is enabled for NextDNS Manager.");
                 SentryInitializer.initialize(this);
             }
+        } catch (Exception e) {
+            sentryManager.captureException(e);
+        }
 
-            // Set up the status bar with custom insets and background color.
+        try {
             setupStatusBarForActivity();
-
-            // Set up the toolbar (action bar) and hide its default title.
             setupToolbarForActivity();
+        } catch (Exception e) {
+            sentryManager.captureException(e);
+        }
 
-            // Apply the device's language settings and capture the current locale.
+        try {
             String appLocale = setupLanguageForActivity();
             sentryManager.captureMessage("Using locale: " + appLocale);
+        } catch (Exception e) {
+            sentryManager.captureException(e);
+        }
 
-            // Determine and apply the dark mode preference.
+        try {
             setupDarkModeForActivity(sentryManager, SharedPreferencesManager.getString("dark_mode", "match"));
+        } catch (Exception e) {
+            sentryManager.captureException(e);
+        }
 
-            // Set up any additional UI indicators.
+        try {
             setupVisualIndicatorForActivity(sentryManager, this);
+        } catch (Exception e) {
+            sentryManager.captureException(e);
+        }
 
-            // Set up swipe-to-refresh functionality.
+        try {
             setupSwipeToRefreshForActivity();
+        } catch (Exception e) {
+            sentryManager.captureException(e);
+        }
 
-            // Request POST_NOTIFICATIONS permission if not granted already.
-            if (ContextCompat.checkSelfPermission(this, POST_NOTIFICATIONS) == PackageManager.PERMISSION_DENIED) {
-                ActivityCompat.requestPermissions(this, new String[]{POST_NOTIFICATIONS}, 1);
-            }
+        // Request POST_NOTIFICATIONS permission if not granted.
+        if (ContextCompat.checkSelfPermission(this, POST_NOTIFICATIONS) == PackageManager.PERMISSION_DENIED) {
+            ActivityCompat.requestPermissions(this, new String[]{POST_NOTIFICATIONS}, 1);
+        }
 
-            // Initialize the WebView and load the main URL.
+        try {
             setupWebViewForActivity(getString(R.string.main_url));
         } catch (Exception e) {
-            // Capture any exceptions in Sentry for analysis.
             sentryManager.captureException(e);
+            Toast.makeText(this, "Error initializing WebView", Toast.LENGTH_SHORT).show();
         }
     }
 
-    /**
-     * Called when the activity is destroyed. Cleans up the WebView to free resources.
-     */
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        webView.destroy();
+        if (webView != null) {
+            try {
+                webView.destroy();
+            } catch (Exception e) {
+                SentryManager.captureStaticException(e);
+            } finally {
+                webView = null;
+            }
+        }
     }
 
-    /**
-     * Called when the activity is paused. Pauses the WebView to avoid unnecessary resource usage.
-     */
     @Override
     protected void onPause() {
         super.onPause();
@@ -176,11 +183,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    /**
-     * Called when the activity is resumed. Resumes the WebView if previously initialized, and handles
-     * biometric authentication with a timeout to determine if the user needs to re-authenticate.
-     * Also includes a fallback reload if the WebView fails to load.
-     */
     @Override
     protected void onResume() {
         super.onResume();
@@ -194,12 +196,11 @@ public class MainActivity extends AppCompatActivity {
 
         if (SharedPreferencesManager.getBoolean("app_lock_enable", true)) {
             if (shouldAuthenticate()) {
-
                 final BiometricLock biometricLock = new BiometricLock(this);
                 if (biometricLock.canAuthenticate()) {
                     biometricLock.showPrompt(
-                            "Unlock",
-                            "Authenticate to access and change your settings.",
+                            getString(R.string.unlock_title),
+                            getString(R.string.unlock_description),
                             "",
                             new BiometricLock.BiometricLockCallback() {
                                 @Override
@@ -213,11 +214,15 @@ public class MainActivity extends AppCompatActivity {
 
                                 @Override
                                 public void onAuthenticationError(String error) {
+                                    SentryManager.captureStaticException(new Exception("Biometric auth error: " + error));
+                                    Toast.makeText(MainActivity.this, "Authentication error", Toast.LENGTH_SHORT).show();
                                     finish();
                                 }
 
                                 @Override
                                 public void onAuthenticationFailed() {
+                                    SentryManager.captureStaticException(new Exception("Biometric auth failed"));
+                                    Toast.makeText(MainActivity.this, "Authentication failed", Toast.LENGTH_SHORT).show();
                                     finish();
                                 }
                             }
@@ -227,25 +232,13 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-
-    /**
-     * Determines whether biometric authentication is required based on the timeout.
-     *
-     * @return true if the elapsed time since last authentication exceeds the allowed timeout.
-     */
     private boolean shouldAuthenticate() {
         return System.currentTimeMillis() - lastAuthenticatedTime > AUTH_TIMEOUT_MS;
     }
 
-    /**
-     * Sets up the status bar by applying a custom background color.
-     * This method may be updated to handle newer Android versions as needed.
-     */
     private void setupStatusBarForActivity() {
-        // Check if the Android version is higher than a placeholder version.
         if (Build.VERSION.SDK_INT > Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             Window window = getWindow();
-            // Set a listener to apply window insets and modify the background color.
             window.getDecorView().setOnApplyWindowInsetsListener((view, insets) -> {
                 view.setBackgroundColor(getResources().getColor(R.color.main));
                 return insets;
@@ -253,78 +246,46 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    /**
-     * Sets up the toolbar by hiding the default title and adding a click listener to an icon
-     * that navigates to the StatusActivity.
-     */
     private void setupToolbarForActivity() {
         Toolbar toolbar = findViewById(R.id.toolbar);
-        // Set the toolbar as the ActionBar.
         setSupportActionBar(toolbar);
-
-        // Hide the default title in the ActionBar.
         ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
             actionBar.setDisplayShowTitleEnabled(false);
         }
-
-        // Set up the connection status icon to navigate to the StatusActivity when clicked.
         ImageView imageView = findViewById(R.id.connectionStatus);
         imageView.setOnClickListener(v -> startActivity(new Intent(this, StatusActivity.class)));
     }
 
-    /**
-     * Reads the current language from the system configuration, applies it, and returns the language code.
-     *
-     * @return The language code (e.g., "en" or "fr").
-     */
     private String setupLanguageForActivity() {
-        // Retrieve the configuration and the first locale.
         Configuration config = getResources().getConfiguration();
         Locale appLocale = config.getLocales().get(0);
-        // Set the default locale.
         Locale.setDefault(appLocale);
-
-        // Create a new configuration and set its locale.
         Configuration newConfig = new Configuration(config);
         newConfig.setLocale(appLocale);
-
-        // Apply the new configuration using a ContextThemeWrapper.
         new ContextThemeWrapper(getBaseContext(), R.style.AppTheme).applyOverrideConfiguration(newConfig);
-
         return appLocale.getLanguage();
     }
 
-    /**
-     * Reads the user's dark mode preference from SharedPreferences and applies the appropriate mode.
-     * Also logs any changes or actions to Sentry for debugging.
-     *
-     * @param sentryManager The SentryManager instance for logging.
-     * @param darkMode      The dark mode preference (e.g., "match", "on", "off").
-     */
     private void setupDarkModeForActivity(SentryManager sentryManager, String darkMode) {
         switch (darkMode) {
             case "match":
-                // Follow the system's light/dark setting.
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
                 updateDarkModeState();
                 sentryManager.captureMessage("Dark mode set to follow system.");
                 break;
             case "on":
-                // Always use dark mode.
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
                 darkModeEnabled = true;
                 sentryManager.captureMessage("Dark mode set to on.");
                 break;
             case "disabled":
-                // Disable dark mode if the SDK version doesn't support it.
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
                 darkModeEnabled = false;
                 sentryManager.captureMessage("Dark mode is disabled due to SDK version.");
                 break;
             case "off":
             default:
-                // Default to light mode.
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
                 darkModeEnabled = false;
                 sentryManager.captureMessage("Dark mode set to off.");
@@ -332,59 +293,33 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    /**
-     * Updates the darkModeEnabled flag based on the current system configuration.
-     * This method helps determine whether dark mode is active.
-     */
     private void updateDarkModeState() {
         int nightModeFlags = getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
-        switch (nightModeFlags) {
-            case Configuration.UI_MODE_NIGHT_YES:
-                darkModeEnabled = true;
-                break;
-            case Configuration.UI_MODE_NIGHT_NO:
-                darkModeEnabled = false;
-                break;
-        }
+        darkModeEnabled = (nightModeFlags == Configuration.UI_MODE_NIGHT_YES);
     }
 
-    /**
-     * Sets up a visual indicator (e.g., connectivity or loading status) that operates alongside
-     * this activity's lifecycle.
-     *
-     * @param sentryManager  The SentryManager instance for logging any exceptions.
-     * @param lifecycleOwner The LifecycleOwner (usually the activity itself).
-     */
     private void setupVisualIndicatorForActivity(SentryManager sentryManager, LifecycleOwner lifecycleOwner) {
         try {
-            // Initialize and start the visual indicator.
             new VisualIndicator(this).initialize(this, lifecycleOwner, this);
         } catch (Exception e) {
-            // Log any exceptions that occur during initialization.
             sentryManager.captureException(e);
         }
     }
 
-    /**
-     * Initializes and configures the WebView, including JavaScript, DOM storage, caching,
-     * and download handling. Optionally restores a previously saved WebView state.
-     *
-     * @param url The URL to load if there is no saved WebView state.
-     */
     @SuppressLint("SetJavaScriptEnabled")
     public void setupWebViewForActivity(String url) {
-        // Find the WebView in the layout.
         webView = findViewById(R.id.webView);
-
-        // Restore the saved WebView state if available; otherwise, load the provided URL.
-        if (webViewState != null) {
-            webView.restoreState(webViewState);
-        } else {
-            // Load the URL only once if no saved state exists.
-            webView.loadUrl(url);
+        try {
+            if (webViewState != null) {
+                webView.restoreState(webViewState);
+            } else {
+                webView.loadUrl(url);
+            }
+        } catch (Exception e) {
+            SentryManager.captureStaticException(e);
+            Toast.makeText(this, "Error restoring WebView state", Toast.LENGTH_SHORT).show();
         }
 
-        // Configure various settings for the WebView.
         WebSettings webViewSettings = webView.getSettings();
         webViewSettings.setJavaScriptEnabled(true);
         webViewSettings.setDomStorageEnabled(true);
@@ -393,131 +328,107 @@ public class MainActivity extends AppCompatActivity {
         webViewSettings.setAllowFileAccess(false);
         webViewSettings.setAllowContentAccess(false);
 
-        // Set a custom WebViewClient to handle events such as page loading finished.
         webView.setWebViewClient(new WebViewClient() {
             @Override
-            public void onPageFinished(WebView webView, String url) {
-                // Enable cookies and flush them for persistence.
-                CookieManager.getInstance().setAcceptCookie(true);
-                CookieManager.getInstance().acceptCookie();
-                CookieManager.getInstance().flush();
+            public void onPageFinished(WebView view, String url) {
+                try {
+                    CookieManager.getInstance().setAcceptCookie(true);
+                    CookieManager.getInstance().acceptCookie();
+                    CookieManager.getInstance().flush();
+                    String js = "setInterval(function() {" +
+                            "   var modal = document.querySelector('.modal-dialog.modal-lg.modal-dialog-scrollable');" +
+                            "   if (modal) {" +
+                            "       if (!modal.getAttribute('data-listeners-attached')) {" +
+                            "           modal.setAttribute('data-listeners-attached', 'true');" +
+                            "           modal.addEventListener('touchstart', function(){" +
+                            "               AndroidInterface.setSwipeRefreshEnabled(false);" +
+                            "           });" +
+                            "           modal.addEventListener('touchend', function(){" +
+                            "               AndroidInterface.setSwipeRefreshEnabled(true);" +
+                            "           });" +
+                            "       }" +
+                            "   }" +
+                            "}, 500);";
+                    webView.evaluateJavascript(js, null);
+                } catch (Exception e) {
+                    SentryManager.captureStaticException(e);
+                }
+            }
 
-                // Inject JavaScript to enable swipe-to-refresh functionality.
-                String js =
-                        "setInterval(function() {" +
-                                "   var modal = document.querySelector('.modal-dialog.modal-lg.modal-dialog-scrollable');" +
-                                "   if (modal) {" +
-                                "       if (!modal.getAttribute('data-listeners-attached')) {" +
-                                "           modal.setAttribute('data-listeners-attached', 'true');" +
-                                "           modal.addEventListener('touchstart', function(){" +
-                                "               AndroidInterface.setSwipeRefreshEnabled(false);" +
-                                "           });" +
-                                "           modal.addEventListener('touchend', function(){" +
-                                "               AndroidInterface.setSwipeRefreshEnabled(true);" +
-                                "           });" +
-                                "       }" +
-                                "   }" +
-                                "}, 500);";
-                webView.evaluateJavascript(js, null);
+            @Override
+            public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
+                SentryManager.captureStaticException(new Exception("WebView error: " + error.getDescription()));
+                Toast.makeText(MainActivity.this, "Error loading page", Toast.LENGTH_SHORT).show();
+                super.onReceivedError(view, request, error);
+            }
+
+            @Override
+            public void onReceivedHttpError(WebView view, WebResourceRequest request, WebResourceResponse errorResponse) {
+                SentryManager.captureStaticException(new Exception("HTTP error: " + errorResponse.getStatusCode()));
+                Toast.makeText(MainActivity.this, "HTTP error loading page", Toast.LENGTH_SHORT).show();
+                super.onReceivedHttpError(view, request, errorResponse);
             }
         });
         webView.setWebChromeClient(new WebChromeClient());
 
-        // Enable algorithmic darkening for the WebView if dark mode is active and supported.
         if (Boolean.TRUE.equals(darkModeEnabled)) {
             if (WebViewFeature.isFeatureSupported(WebViewFeature.ALGORITHMIC_DARKENING)) {
                 WebSettingsCompat.setAlgorithmicDarkeningAllowed(webView.getSettings(), true);
             }
         }
 
-        // Set up the Download Manager for file downloads in the WebView.
         setupDownloadManagerForActivity();
-
-        // Do not call loadUrl(url) again here since the URL is already loaded above.
-        // Mark the WebView as fully initialized.
         isWebViewInitialized = true;
     }
 
-    /**
-     * Initializes and configures the SwipeRefreshLayout and WebView.
-     * Enables JavaScript, attaches a JavaScript interface for native-to-JS communication,
-     * and sets up a refresh listener to reload the WebView when swiped.
-     */
     @SuppressLint("SetJavaScriptEnabled")
     private void setupSwipeToRefreshForActivity() {
-        // Find the SwipeRefreshLayout and WebView by their IDs.
         swipeRefreshLayout = findViewById(R.id.swipeRefreshLayout);
         webView = findViewById(R.id.webView);
-
-        // Enable JavaScript on the WebView and add the custom JavaScript interface.
         webView.getSettings().setJavaScriptEnabled(true);
         webView.addJavascriptInterface(new WebAppInterface(this, swipeRefreshLayout), "AndroidInterface");
-
-        // Set up the swipe-to-refresh listener to reload the WebView and stop the refresh animation.
         swipeRefreshLayout.setOnRefreshListener(() -> {
             webView.reload();
             swipeRefreshLayout.setRefreshing(false);
         });
     }
 
-    /**
-     * Sets up a listener to handle file downloads from within the WebView using DownloadManager.
-     * Downloads are saved to the app's external files directory (Downloads).
-     */
     private void setupDownloadManagerForActivity() {
-        // Set the download listener on the WebView.
         webView.setDownloadListener((url, userAgent, contentDisposition, mimetype, contentLength) -> {
-            // Create a DownloadManager request for the file URL.
-            DownloadManager.Request request = new DownloadManager.Request(Uri.parse(url.trim()));
-            request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
-            // Set the download destination to the external files directory.
-            request.setDestinationInExternalFilesDir(this, Environment.DIRECTORY_DOWNLOADS, "NextDNS-Configuration.mobileconfig");
-
-            // Get the system's DownloadManager and enqueue the request.
-            DownloadManager downloadManager = (DownloadManager) getSystemService(DOWNLOAD_SERVICE);
-            if (downloadManager != null) {
-                downloadManager.enqueue(request);
+            try {
+                DownloadManager.Request request = new DownloadManager.Request(Uri.parse(url.trim()));
+                request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+                request.setDestinationInExternalFilesDir(this, Environment.DIRECTORY_DOWNLOADS, "NextDNS-Configuration.mobileconfig");
+                DownloadManager downloadManager = (DownloadManager) getSystemService(DOWNLOAD_SERVICE);
+                if (downloadManager != null) {
+                    downloadManager.enqueue(request);
+                } else {
+                    throw new Exception("DownloadManager is null");
+                }
+                Toast.makeText(getApplicationContext(), "Downloading file!", Toast.LENGTH_LONG).show();
+            } catch (Exception e) {
+                SentryManager.captureStaticException(e);
+                Toast.makeText(MainActivity.this, "Download failed", Toast.LENGTH_SHORT).show();
             }
-            // Show a toast to indicate that the download has started.
-            Toast.makeText(getApplicationContext(), "Downloading file!", Toast.LENGTH_LONG).show();
         });
     }
 
-    /**
-     * Helper method to start a new activity based on the given class.
-     *
-     * @param targetClass The Activity class to start.
-     */
     private void startIntent(Class<?> targetClass) {
         Intent intent = new Intent(this, targetClass);
         startActivity(intent);
     }
 
-    /**
-     * Initializes the options menu from a resource.
-     *
-     * @param menu The menu to inflate into the activity.
-     * @return true if the menu was created successfully.
-     */
     @Override
     public boolean onCreateOptionsMenu(@NonNull Menu menu) {
         getMenuInflater().inflate(R.menu.menu_main, menu);
         return true;
     }
 
-    /**
-     * Handles option item selections, such as navigating back, refreshing the page,
-     * or opening various settings.
-     *
-     * @param item The selected menu item.
-     * @return true if the event was handled successfully.
-     */
     @SuppressLint("NonConstantResourceId")
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.back:
-                // If the WebView is null, reinitialize it; otherwise, navigate back in history.
                 if (webView == null) {
                     setupWebViewForActivity(getString(R.string.main_url));
                 } else {
@@ -525,7 +436,6 @@ public class MainActivity extends AppCompatActivity {
                 }
                 break;
             case R.id.refreshNextDNS:
-                // If the WebView is null, reinitialize it; otherwise, reload the current page.
                 if (webView == null) {
                     setupWebViewForActivity(getString(R.string.main_url));
                 } else {
@@ -533,11 +443,9 @@ public class MainActivity extends AppCompatActivity {
                 }
                 break;
             case R.id.pingNextDNS:
-                // Start the PingActivity.
                 startIntent(PingActivity.class);
                 break;
             case R.id.returnHome:
-                // If the WebView is null, reinitialize it; otherwise, load the main URL.
                 if (webView == null) {
                     setupWebViewForActivity(getString(R.string.main_url));
                 } else {
@@ -545,11 +453,9 @@ public class MainActivity extends AppCompatActivity {
                 }
                 break;
             case R.id.privateDNS:
-                // Launch the system settings for Private DNS.
                 startActivity(new Intent(Settings.ACTION_WIRELESS_SETTINGS));
                 break;
             case R.id.settings:
-                // Launch the app's custom SettingsActivity.
                 startIntent(SettingsActivity.class);
                 break;
         }

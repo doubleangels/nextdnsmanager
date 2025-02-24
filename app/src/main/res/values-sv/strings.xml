@@ -18,7 +18,7 @@
     <string name="generic_content_description">"Detta är en generisk innehållsbeskrivning."</string>
     <string name="github">"Github"</string>
     <string name="github_summary">"Tryck för att visa appens Github förråd."</string>
-    <string name="github_issues">"Rapportera ett problem"</string>
+    <string name="issues">"Rapportera ett problem"</string>
     <string name="github_issues_summary">"Tryck för att rapportera ett problem eller visa för närvarande rapporterade."</string>
     <string name="help_green">"Säker DNS används OCH enheten är ansluten till NextDNS."</string>
     <string name="help_orange">"Secure DNS används INTE OCH enheten är ansluten till NextDNS."</string>
@@ -36,7 +36,6 @@
     <string name="ping_long">"Kontrollera snabbt pingtider till NextDNS-servrar."</string>
     <string name="ping_short">"Ping"</string>
     <string name="ping_title">"Ping-test"</string>
-    <string name="poeditor">"POEditor"</string>
     <string name="privacy">"Integritet"</string>
     <string name="privacy_policy">"Sekretesspolicy för NextDNS Manager"</string>
     <string name="private_dns">"Privat DNS"</string>
@@ -46,8 +45,11 @@
     <string name="sentry_info_instructions">"Tryck för att läsa mer om Sentry."</string>
     <string name="settings">"Inställningar"</string>
     <string name="settings_activity_title">"Inställningar"</string>
+    <string name="tally_issues">Om du inte har ett GitHub-konto kan du rapportera ett problem här.</string>
     <string name="translate">"Översätt"</string>
     <string name="translate_summary">"Om du ser några felaktiga översättningar, var snäll och hjälp mig att fixa dem här."</string>
+    <string name="unlock_description">Autentisera dig för att komma åt och ändra dina inställningar</string>
+    <string name="unlock_title">Lås upp</string>
     <string name="user_agreement">"Användaravtal"</string>
     <string name="version">"Versionen"</string>
     <string name="whitelist_domains">"Om du aktiverar Sentry, vänligen vitlista dessa domäner i din NextDNS-konfiguration."</string>

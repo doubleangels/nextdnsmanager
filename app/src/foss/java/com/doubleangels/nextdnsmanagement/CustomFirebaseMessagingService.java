@@ -7,13 +7,13 @@ import android.os.IBinder;
 import androidx.annotation.Nullable;
 
 /**
- * A basic Service class named "CustomFirebaseMessagingService." 
+ * A basic Service class named "CustomFirebaseMessagingService."
  */
 public class CustomFirebaseMessagingService extends Service {
 
     /**
      * Called each time the service is started with an Intent.
-     * Returning START_NOT_STICKY means the system will NOT recreate the service 
+     * Returning START_NOT_STICKY means the system will NOT recreate the service
      * if it is killed while there are no start commands pending.
      *
      * @param intent  The Intent used to start the service.

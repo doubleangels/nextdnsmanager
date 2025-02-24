@@ -18,7 +18,7 @@
     <string name="generic_content_description">"Essa é uma descrição genérica do conteúdo."</string>
     <string name="github">"Github"</string>
     <string name="github_summary">"Toque para ver o repositório Github deste aplicativo."</string>
-    <string name="github_issues">"Relatar um problema"</string>
+    <string name="issues">"Relatar um problema"</string>
     <string name="github_issues_summary">"Toque para relatar um problema ou ver relatados atualmente."</string>
     <string name="help_green">"O DNS seguro está sendo usado E o dispositivo está conectado ao NextDNS."</string>
     <string name="help_orange">"O DNS seguro NÃO está a ser usado E o aparelho está ligado ao NextDNS."</string>
@@ -36,7 +36,6 @@
     <string name="ping_long">"Verifique rapidamente os tempos de ping nos servidores NextDNS."</string>
     <string name="ping_short">"Latência"</string>
     <string name="ping_title">"Teste de ping"</string>
-    <string name="poeditor">"POEditor"</string>
     <string name="privacy">"Privacidade"</string>
     <string name="privacy_policy">"Política de privacidade do NextDNS Manager"</string>
     <string name="private_dns">"DNS Particular"</string>
@@ -46,8 +45,11 @@
     <string name="sentry_info_instructions">"Toque para saber mais sobre o Sentry."</string>
     <string name="settings">"Configurações"</string>
     <string name="settings_activity_title">"Configurações"</string>
+    <string name="tally_issues">Se não tens uma conta no GitHub, podes relatar um problema aqui.</string>
     <string name="translate">"Traduza"</string>
     <string name="translate_summary">"Se você ver alguma tradução incorreta, por favor me ajude a corrigi-la aqui."</string>
+    <string name="unlock_description">Autentique-se para aceder e alterar as suas definições</string>
+    <string name="unlock_title">Desbloquear</string>
     <string name="user_agreement">"Contrato de usuário"</string>
     <string name="version">"Versão"</string>
     <string name="whitelist_domains">"Se você habilitar o Sentry, por favor whitelist esses domínios na sua configuração de NextDNS."</string>
