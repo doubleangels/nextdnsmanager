@@ -107,14 +107,10 @@ public class AuthorActivity extends AppCompatActivity {
         githubButton.setOnClickListener(view -> {
             String url = getString(R.string.github_profile_url);
             Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-            if (intent.resolveActivity(getPackageManager()) != null) {
-                try {
-                    startActivity(intent);
-                } catch (Exception e) {
-                    sentryManager.captureException(e);
-                }
-            } else {
-                sentryManager.captureMessage("No application found to handle GitHub URL: " + url);
+            try {
+                startActivity(intent);
+            } catch (Exception e) {
+                sentryManager.captureException(e);
             }
         });
 
@@ -122,14 +118,10 @@ public class AuthorActivity extends AppCompatActivity {
         emailButton.setOnClickListener(view -> {
             Intent emailIntent = new Intent(Intent.ACTION_SENDTO);
             emailIntent.setData(Uri.parse("mailto:nextdns@doubleangels.com"));
-            if (emailIntent.resolveActivity(getPackageManager()) != null) {
-                try {
-                    startActivity(Intent.createChooser(emailIntent, "Send Email"));
-                } catch (Exception e) {
-                    sentryManager.captureException(e);
-                }
-            } else {
-                sentryManager.captureMessage("No email application found");
+            try {
+                startActivity(Intent.createChooser(emailIntent, "Send Email"));
+            } catch (Exception e) {
+                sentryManager.captureException(e);
             }
         });
 
@@ -137,14 +129,10 @@ public class AuthorActivity extends AppCompatActivity {
         websiteButton.setOnClickListener(view -> {
             String url = getString(R.string.author_url);
             Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-            if (intent.resolveActivity(getPackageManager()) != null) {
-                try {
-                    startActivity(intent);
-                } catch (Exception e) {
-                    sentryManager.captureException(e);
-                }
-            } else {
-                sentryManager.captureMessage("No application found to handle website URL: " + url);
+            try {
+                startActivity(intent);
+            } catch (Exception e) {
+                sentryManager.captureException(e);
             }
         });
     }
