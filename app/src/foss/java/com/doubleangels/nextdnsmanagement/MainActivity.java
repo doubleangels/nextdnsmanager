@@ -201,13 +201,11 @@ public class MainActivity extends AppCompatActivity {
 
                                 @Override
                                 public void onAuthenticationError(String error) {
-                                    SentryManager.captureStaticException(new Exception("Biometric authentication error: " + error));
                                     finish();
                                 }
 
                                 @Override
                                 public void onAuthenticationFailed() {
-                                    SentryManager.captureStaticException(new Exception("Biometric authentication failed!"));
                                     finish();
                                 }
                             }
