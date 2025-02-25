@@ -63,6 +63,7 @@ public class MainActivity extends AppCompatActivity {
     private static final long AUTH_TIMEOUT_MS = 5 * 60 * 1000;
     // Timestamp (in ms) of the last successful biometric authentication.
     private long lastAuthenticatedTime = 0;
+    // Request code for notification permission.
 
     // Flags to control when to display the biometric prompt.
     private boolean pendingBiometricPrompt = false;
@@ -397,7 +398,7 @@ public class MainActivity extends AppCompatActivity {
                             "       }" +
                             "   }" +
                             "}, 500);";
-                    webView.evaluateJavascript(js, null);
+                    view.evaluateJavascript(js, null);
                 } catch (Exception e) {
                     SentryManager.captureStaticException(e);
                 }
@@ -442,7 +443,7 @@ public class MainActivity extends AppCompatActivity {
         webView = findViewById(R.id.webView);
         webView.getSettings().setJavaScriptEnabled(true);
         // Add a JavaScript interface for controlling swipe refresh.
-        webView.addJavascriptInterface(new WebAppInterface(this, swipeRefreshLayout), "SwipeToRefreshInterface");
+        webView.addJavascriptInterface(new WebAppInterface(this, swipeRefreshLayout), "AndroidInterface");
         swipeRefreshLayout.setOnRefreshListener(() -> {
             // Reload the WebView when the user swipes to refresh.
             webView.reload();
