@@ -7,47 +7,47 @@ import android.os.IBinder;
 import androidx.annotation.Nullable;
 
 /**
- * A basic Service class named "CustomFirebaseMessagingService."
+ * A simple Service implementation for Firebase Messaging.
+ * <p>
+ * This service currently does not perform any messaging functions and is set up to not restart if terminated.
+ * </p>
  */
 public class CustomFirebaseMessagingService extends Service {
 
     /**
-     * Called each time the service is started with an Intent.
-     * Returning START_NOT_STICKY means the system will NOT recreate the service
-     * if it is killed while there are no start commands pending.
+     * Called when the service is started.
+     * Returns START_NOT_STICKY so that the service is not recreated after being killed.
      *
-     * @param intent  The Intent used to start the service.
-     * @param flags   Additional data about the start request.
+     * @param intent  The Intent supplied to startService(Intent), as given.
+     * @param flags   Additional data about this start request.
      * @param startId A unique integer representing this specific request to start.
-     * @return The mode in which the system will handle if this service’s process is killed.
+     * @return The mode in which to continue running; START_NOT_STICKY indicates not to restart.
      */
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        // Perform any necessary work here (e.g., background tasks, message handling).
+        // Return START_NOT_STICKY to prevent the service from restarting automatically.
         return START_NOT_STICKY;
     }
 
     /**
      * Called by the system when the service is first created.
-     * This is where you can do one-time setup before the service runs.
      */
     @Override
     public void onCreate() {
         super.onCreate();
-        // Initialize resources or perform any setup needed by this service.
+        // Additional initialization can be done here if needed.
     }
 
     /**
-     * Called when another component wants to bind with the service by calling bindService().
-     * Returning null indicates this service is not designed to be bound; it's started as needed.
+     * This service does not support binding.
      *
      * @param intent The Intent that was used to bind to this service.
-     * @return An IBinder for client binding, or null if binding is not allowed.
+     * @return Always returns null since binding is not allowed.
      */
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
-        // For a bound service, you would return a binder interface here.
+        // Binding is not implemented in this service.
         return null;
     }
 }

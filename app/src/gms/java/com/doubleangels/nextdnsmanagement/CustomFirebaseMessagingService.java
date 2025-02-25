@@ -14,37 +14,41 @@ import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 
 /**
- * Custom Firebase Messaging Service to handle incoming FCM messages and display notifications.
+ * Service handling Firebase Cloud Messaging events. It receives incoming messages,
+ * extracts the notification data, and displays notifications. It also logs errors via Sentry.
  */
 public class CustomFirebaseMessagingService extends FirebaseMessagingService {
 
-    // Unique channel ID for notifications sent by this service
+    // Notification channel constants.
     private static final String CHANNEL_ID = "general";
-    // Human-readable channel name for settings and system UI
     private static final String CHANNEL_NAME = "General";
 
+    // Sentry manager instance for capturing errors.
     private SentryManager sentryManager;
 
+    /**
+     * Called when the service is created. Initializes the SentryManager.
+     */
     @Override
     public void onCreate() {
         super.onCreate();
-        // Initialize SentryManager for capturing exceptions and messages.
         sentryManager = new SentryManager(this);
     }
 
     /**
-     * Called when a message is received.
-     * This method extracts the title and body from either the notification or data payload
-     * and displays a notification to the user.
+     * Called when a new message is received from Firebase Cloud Messaging.
+     * Extracts notification details from the message and displays a notification.
+     *
+     * @param remoteMessage The received RemoteMessage.
      */
     @Override
     public void onMessageReceived(@NonNull RemoteMessage remoteMessage) {
         try {
-            // Default values if no title or message body is provided.
+            // Default title and message in case none is provided.
             String title = "This notification did not include a title.";
             String messageBody = "This notification did not include a message body.";
 
-            // Extract title and message from the notification payload if available.
+            // Attempt to extract title and body from the notification payload.
             try {
                 if (remoteMessage.getNotification() != null) {
                     if (remoteMessage.getNotification().getTitle() != null) {
@@ -55,10 +59,11 @@ public class CustomFirebaseMessagingService extends FirebaseMessagingService {
                     }
                 }
             } catch (Exception e) {
+                // Capture exception if an error occurs while processing the notification payload.
                 sentryManager.captureException(e);
             }
 
-            // Override with values from the data payload if present.
+            // Attempt to override with data payload if available.
             try {
                 if (!remoteMessage.getData().isEmpty()) {
                     if (remoteMessage.getData().containsKey("title")) {
@@ -69,13 +74,13 @@ public class CustomFirebaseMessagingService extends FirebaseMessagingService {
                     }
                 }
             } catch (Exception e) {
+                // Capture exception if an error occurs while processing the data payload.
                 sentryManager.captureException(e);
             }
 
-            // Create an intent to launch MainActivity when the notification is tapped.
+            // Create an intent to open MainActivity when the notification is clicked.
             Intent intent = new Intent(this, MainActivity.class);
             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-
             PendingIntent pendingIntent = PendingIntent.getActivity(
                     this,
                     0,
@@ -83,20 +88,20 @@ public class CustomFirebaseMessagingService extends FirebaseMessagingService {
                     PendingIntent.FLAG_ONE_SHOT | PendingIntent.FLAG_IMMUTABLE
             );
 
-            // Configure the notification.
+            // Build the notification.
             NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this, CHANNEL_ID)
-                    .setSmallIcon(R.drawable.ic_notification) // Replace with your own notification icon.
+                    .setSmallIcon(R.drawable.ic_notification)
                     .setContentTitle(title)
                     .setContentText(messageBody)
-                    .setAutoCancel(true) // Dismiss the notification when tapped.
+                    .setAutoCancel(true)
                     .setPriority(NotificationCompat.PRIORITY_HIGH)
                     .setContentIntent(pendingIntent);
 
-            // Get the NotificationManager.
+            // Get the NotificationManager system service.
             NotificationManager notificationManager =
                     (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
             if (notificationManager != null) {
-                // Create a NotificationChannel for Android O and above.
+                // Create a notification channel for Android O and above.
                 try {
                     NotificationChannel channel = new NotificationChannel(
                             CHANNEL_ID,
@@ -105,34 +110,41 @@ public class CustomFirebaseMessagingService extends FirebaseMessagingService {
                     );
                     notificationManager.createNotificationChannel(channel);
                 } catch (Exception e) {
+                    // Capture any exception that occurs during channel creation.
                     sentryManager.captureException(e);
                 }
-
-                // Display the notification.
+                // Show the notification.
                 try {
-                    int notificationId = 0; // Use a static or dynamically generated ID as needed.
+                    int notificationId = 0;
                     notificationManager.notify(notificationId, notificationBuilder.build());
                 } catch (Exception e) {
+                    // Capture any exception that occurs while displaying the notification.
                     sentryManager.captureException(e);
                 }
             } else {
+                // Log a message if the NotificationManager is not available.
                 sentryManager.captureMessage("NotificationManager is null");
             }
         } catch (Exception e) {
+            // Capture any general exception during message processing.
             sentryManager.captureException(e);
         }
     }
 
     /**
-     * Called if the FCM registration token is updated. Override this method to send the updated token to your server.
+     * Called when a new Firebase Cloud Messaging token is generated.
+     * Logs the new token for debugging purposes.
+     *
+     * @param token The new FCM token.
      */
     @Override
     public void onNewToken(@NonNull String token) {
         try {
             super.onNewToken(token);
-            // You can send the new token to your server or save it locally.
+            // Log the new token using Sentry.
             sentryManager.captureMessage("New FCM token: " + token);
         } catch (Exception e) {
+            // Capture any exception that occurs while handling the new token.
             sentryManager.captureException(e);
         }
     }

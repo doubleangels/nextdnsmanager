@@ -8,7 +8,6 @@ import android.content.res.Configuration;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.view.ContextThemeWrapper;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -25,29 +24,39 @@ import com.doubleangels.nextdnsmanagement.sharedpreferences.SharedPreferencesMan
 
 import java.util.Locale;
 
+/**
+ * Activity for application settings. It initializes shared preferences, sets up error logging (Sentry),
+ * configures dark mode settings, and loads the SettingsFragment.
+ */
 public class SettingsActivity extends AppCompatActivity {
 
+    // Sentry manager instance for capturing errors.
     public SentryManager sentryManager;
 
+    /**
+     * Called when the activity is created. Sets up shared preferences, error logging,
+     * dark mode configuration, and initializes the settings views.
+     *
+     * @param savedInstanceState Bundle containing saved state data, if any.
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        // Set the layout for this activity.
         setContentView(R.layout.activity_settings);
 
-        // Initialize SentryManager
+        // Initialize the SentryManager for error logging.
         sentryManager = new SentryManager(this);
-
-        // Initialize SharedPreferencesManager
         try {
+            // Initialize shared preferences.
             SharedPreferencesManager.init(this);
         } catch (Exception e) {
             if (sentryManager != null) {
                 sentryManager.captureException(e);
             }
         }
-
-        // Log current preference values for debugging.
         try {
+            // Log the current settings for dark mode and Sentry enable flag.
             assert sentryManager != null;
             sentryManager.captureMessage("SharedPreferences 'dark_mode' value: "
                     + SharedPreferencesManager.getString("dark_mode", "match"));
@@ -56,33 +65,22 @@ public class SettingsActivity extends AppCompatActivity {
         } catch (Exception e) {
             sentryManager.captureException(e);
         }
-
-        // Initialize Sentry if enabled.
         try {
+            // Initialize Sentry if it is enabled.
             if (sentryManager.isEnabled()) {
                 SentryInitializer.initialize(this);
             }
         } catch (Exception e) {
             sentryManager.captureException(e);
         }
-
-        // Apply language configuration.
         try {
-            String appLocale = setupLanguageForActivity();
-            sentryManager.captureMessage("Using locale: " + appLocale);
-        } catch (Exception e) {
-            sentryManager.captureException(e);
-        }
-
-        // Apply dark mode preference.
-        try {
+            // Set up dark mode configuration based on saved preferences.
             setupDarkModeForActivity(SharedPreferencesManager.getString("dark_mode", "match"));
         } catch (Exception e) {
             sentryManager.captureException(e);
         }
-
-        // Load the settings fragment.
         try {
+            // Initialize the settings views (fragment).
             initializeViews();
         } catch (Exception e) {
             sentryManager.captureException(e);
@@ -90,28 +88,34 @@ public class SettingsActivity extends AppCompatActivity {
     }
 
     /**
-     * Applies the current locale to the base context and returns the language code.
+     * Attaches a new base context with locale settings based on device configuration.
+     *
+     * @param newBase The new base context.
      */
-    private String setupLanguageForActivity() {
-        Configuration config = getResources().getConfiguration();
-        Locale appLocale = config.getLocales().get(0);
-        Locale.setDefault(appLocale);
-
-        Configuration newConfig = new Configuration(config);
-        newConfig.setLocale(appLocale);
-
-        new ContextThemeWrapper(getBaseContext(), R.style.AppTheme)
-                .applyOverrideConfiguration(newConfig);
-
-        return appLocale.getLanguage();
+    @Override
+    protected void attachBaseContext(Context newBase) {
+        // Retrieve the current configuration.
+        Configuration config = newBase.getResources().getConfiguration();
+        // Get the primary locale from the configuration, or default if empty.
+        Locale newLocale = (!config.getLocales().isEmpty()) ? config.getLocales().get(0) : Locale.getDefault();
+        // Create a new configuration overriding the locale.
+        Configuration overrideConfig = new Configuration(config);
+        overrideConfig.setLocale(newLocale);
+        // Create a localized context with the new configuration.
+        Context localizedContext = newBase.createConfigurationContext(overrideConfig);
+        super.attachBaseContext(localizedContext);
     }
 
     /**
-     * Applies the dark mode setting (for pre-TIRAMISU devices).
+     * Configures the dark mode settings for the activity.
+     *
+     * @param darkMode The dark mode setting value from shared preferences.
      */
     private void setupDarkModeForActivity(String darkMode) {
+        // Only set dark mode for Android versions below TIRAMISU.
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
             sentryManager.captureMessage("Dark mode setting: " + darkMode);
+            // Set the night mode based on the darkMode string.
             if (darkMode.contains("match")) {
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
             } else if (darkMode.contains("on")) {
@@ -123,9 +127,10 @@ public class SettingsActivity extends AppCompatActivity {
     }
 
     /**
-     * Loads the settings fragment into the activity.
+     * Initializes the settings fragment view.
      */
     private void initializeViews() {
+        // Replace the container with the SettingsFragment.
         getSupportFragmentManager()
                 .beginTransaction()
                 .replace(R.id.settings, new SettingsFragment())
@@ -133,42 +138,48 @@ public class SettingsActivity extends AppCompatActivity {
     }
 
     /**
-     * The SettingsFragment displays and handles user preferences.
+     * Fragment for displaying and handling settings preferences.
      */
     public static class SettingsFragment extends PreferenceFragmentCompat {
 
+        /**
+         * Called during fragment creation to initialize the preference hierarchy from an XML resource.
+         *
+         * @param savedInstanceState Saved state, if any.
+         * @param rootKey            The key of the preference hierarchy.
+         */
         @Override
         public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
             try {
+                // Load preferences from the XML resource.
                 setPreferencesFromResource(R.xml.root_preferences, rootKey);
             } catch (Exception e) {
                 new SentryManager(requireContext()).captureException(e);
             }
-
             try {
+                // Initialize shared preferences for the fragment.
                 SharedPreferencesManager.init(requireContext());
             } catch (Exception e) {
                 new SentryManager(requireContext()).captureException(e);
             }
-
             try {
+                // Set the initial visibility of Sentry-related preferences.
                 setInitialSentryVisibility(SharedPreferencesManager.getBoolean("sentry_enable", false));
             } catch (Exception e) {
                 new SentryManager(requireContext()).captureException(e);
             }
-
             try {
-                // Retrieve references to specific preferences.
+                // Retrieve references to various preferences.
                 SwitchPreference sentryEnablePreference = findPreference("sentry_enable");
                 SwitchPreference appLockPreference = findPreference("app_lock_enable");
                 ListPreference darkModePreference = findPreference("dark_mode");
-
-                // Ensure app lock is only available if the device is configured for biometric authentication.
                 final BiometricLock biometricLock = new BiometricLock((AppCompatActivity) requireContext());
+
+                // Hide app lock preferences if biometric authentication is not available.
                 if (!biometricLock.canAuthenticate()) {
                     setPreferenceVisibility("applock", false);
                 }
-
+                // Set up change listeners for each preference.
                 if (sentryEnablePreference != null) {
                     setupSentryChangeListener(sentryEnablePreference);
                 }
@@ -178,8 +189,7 @@ public class SettingsActivity extends AppCompatActivity {
                 if (darkModePreference != null) {
                     setupDarkModeChangeListener(darkModePreference);
                 }
-
-                // Set up buttons for copying text or opening links.
+                // Setup buttons that perform various actions.
                 setupButton("whitelist_domain_1_button", R.string.whitelist_domain_1);
                 setupButton("whitelist_domain_2_button", R.string.whitelist_domain_2);
                 setupButton("sentry_info_button", R.string.sentry_info_url);
@@ -195,8 +205,7 @@ public class SettingsActivity extends AppCompatActivity {
                 setupButton("nextdns_user_agreement_button", R.string.nextdns_user_agreement_url);
                 setupButtonForIntent("permission_button");
                 setupButton("version_button", R.string.versions_url);
-
-                // Display the current app version name on the version preference.
+                // Set the version name as the summary for the version preference.
                 String versionName = BuildConfig.VERSION_NAME;
                 Preference versionPreference = findPreference("version_button");
                 if (versionPreference != null) {
@@ -208,7 +217,9 @@ public class SettingsActivity extends AppCompatActivity {
         }
 
         /**
-         * Shows or hides the whitelist-related preferences based on Sentry enablement.
+         * Sets the initial visibility of Sentry-related preferences.
+         *
+         * @param visibility The visibility flag for Sentry preferences.
          */
         private void setInitialSentryVisibility(Boolean visibility) {
             setPreferenceVisibility("whitelist_domains", visibility);
@@ -217,7 +228,10 @@ public class SettingsActivity extends AppCompatActivity {
         }
 
         /**
-         * Sets the visibility of a preference by its key.
+         * Sets the visibility for a given preference key.
+         *
+         * @param key        The key of the preference.
+         * @param visibility The visibility flag.
          */
         private void setPreferenceVisibility(String key, Boolean visibility) {
             Preference preference = findPreference(key);
@@ -227,14 +241,17 @@ public class SettingsActivity extends AppCompatActivity {
         }
 
         /**
-         * Configures a button preference to copy text to the clipboard or open a URL.
+         * Sets up a button preference that performs an action when clicked.
+         *
+         * @param buttonKey    The key for the button preference.
+         * @param textResource The text resource to use for the action.
          */
         private void setupButton(String buttonKey, int textResource) {
             Preference button = findPreference(buttonKey);
             if (button != null) {
                 button.setOnPreferenceClickListener(preference -> {
                     try {
-                        // For whitelist buttons, copy text to clipboard.
+                        // If the button is for whitelisting a domain, copy the text to clipboard.
                         if ("whitelist_domain_1_button".equals(buttonKey) || "whitelist_domain_2_button".equals(buttonKey)) {
                             ClipboardManager clipboardManager = (ClipboardManager)
                                     requireContext().getSystemService(Context.CLIPBOARD_SERVICE);
@@ -243,7 +260,7 @@ public class SettingsActivity extends AppCompatActivity {
                             clipboardManager.setPrimaryClip(copiedData);
                             Toast.makeText(getContext(), "Text copied!", Toast.LENGTH_SHORT).show();
                         } else {
-                            // Otherwise, open the URL.
+                            // Otherwise, open the URL in a browser.
                             Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(getString(textResource)));
                             startActivity(intent);
                         }
@@ -256,13 +273,16 @@ public class SettingsActivity extends AppCompatActivity {
         }
 
         /**
-         * Configures a button preference that navigates to another Activity within the app.
+         * Sets up a button preference that starts a new activity based on its key.
+         *
+         * @param buttonKey The key for the button preference.
          */
         private void setupButtonForIntent(String buttonKey) {
             Preference button = findPreference(buttonKey);
             if (button != null) {
                 button.setOnPreferenceClickListener(preference -> {
                     try {
+                        // Launch the appropriate activity based on the button key.
                         if ("author_button".equals(buttonKey)) {
                             Intent intent = new Intent(getContext(), AuthorActivity.class);
                             startActivity(intent);
@@ -279,11 +299,14 @@ public class SettingsActivity extends AppCompatActivity {
         }
 
         /**
-         * Sets up a change listener for dark mode settings.
+         * Sets up a listener to handle changes to the dark mode preference.
+         *
+         * @param setting The dark mode list preference.
          */
         private void setupDarkModeChangeListener(ListPreference setting) {
             setting.setOnPreferenceChangeListener((preference, newValue) -> {
                 try {
+                    // Log and save the new dark mode setting.
                     new SentryManager(requireContext())
                             .captureMessage("Dark mode set to " + newValue.toString() + ".");
                     SharedPreferencesManager.putString("dark_mode", newValue.toString());
@@ -295,11 +318,14 @@ public class SettingsActivity extends AppCompatActivity {
         }
 
         /**
-         * Sets up a change listener for app lock settings.
+         * Sets up a listener to handle changes to the app lock preference.
+         *
+         * @param setting The app lock switch preference.
          */
         private void setupAppLockChangeListener(SwitchPreference setting) {
             setting.setOnPreferenceChangeListener((preference, newValue) -> {
                 try {
+                    // Log and save the new app lock setting.
                     new SentryManager(requireContext())
                             .captureMessage("App lock set to " + newValue.toString() + ".");
                     SharedPreferencesManager.putBoolean("app_lock_enable", (Boolean) newValue);
@@ -311,16 +337,20 @@ public class SettingsActivity extends AppCompatActivity {
         }
 
         /**
-         * Sets up a change listener for the Sentry enable/disable setting.
+         * Sets up a listener to handle changes to the Sentry preference.
+         *
+         * @param switchPreference The Sentry switch preference.
          */
         private void setupSentryChangeListener(SwitchPreference switchPreference) {
             if (switchPreference != null) {
                 switchPreference.setOnPreferenceChangeListener((preference, newValue) -> {
                     try {
+                        // Log and update the Sentry preference.
                         new SentryManager(requireContext())
                                 .captureMessage("Sentry set to " + newValue.toString() + ".");
                         boolean isEnabled = (boolean) newValue;
                         SharedPreferencesManager.putBoolean("sentry_enable", isEnabled);
+                        // Update visibility for Sentry-related preferences.
                         setPreferenceVisibility("whitelist_domains", isEnabled);
                         setPreferenceVisibility("whitelist_domain_1_button", isEnabled);
                         setPreferenceVisibility("whitelist_domain_2_button", isEnabled);
