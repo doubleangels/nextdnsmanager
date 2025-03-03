@@ -15,7 +15,7 @@ jobs:
           fetch-depth: 0
 
       - name: Create Sentry release
-        uses: getsentry/action-release@v2
+        uses: getsentry/action-release@v3
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: doubleangels
