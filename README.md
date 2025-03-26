@@ -1,11 +1,11 @@
 <p align="center">
   <img src="https://img.shields.io/github/release/doubleangels/NextDNSManager.svg?logo=github&label=GitHub%20Build&style=for-the-badge" alt="GitHub Build">
   <img src="https://img.shields.io/f-droid/v/com.doubleangels.nextdnsmanagement.svg?logo=F-Droid&label=F-Droid%20Build&style=for-the-badge" alt="F-Droid Build">
-  <img src="https://img.shields.io/github/actions/workflow/status/doubleangels/NextDNSManager/.github/workflows/deploy.yml?label=Deployment%20Pipeline&style=for-the-badge" alt="Main Deployment">
-  <img src="https://img.shields.io/github/actions/workflow/status/doubleangels/NextDNSManager/.github/workflows/test-dev.yml?label=Development%20Testing&style=for-the-badge" alt="Development Testing">
-  <img src="https://img.shields.io/librariesio/github/doubleangels/NextDNSManager?label=Dependencies&style=for-the-badge" alt="Dependencies">
-  <img src="https://img.shields.io/github/issues/doubleangels/NextDNSManager?label=GitHub%20Issues&style=for-the-badge" alt="GitHub Issues">
-  <img src="https://img.shields.io/github/issues-pr/doubleangels/NextDNSManager?label=GitHub%20Pull%20Requests&style=for-the-badge" alt="GitHub Pull Requests">
+  <img src="https://img.shields.io/github/actions/workflow/status/doubleangels/nextdnsmanager/.github/workflows/deploy.yml?label=Deployment%20Pipeline&style=for-the-badge" alt="Main Deployment">
+  <img src="https://img.shields.io/github/actions/workflow/status/doubleangels/nextdnsmanager/.github/workflows/test-dev.yml?label=Development%20Testing&style=for-the-badge" alt="Development Testing">
+  <img src="https://img.shields.io/librariesio/github/doubleangels/nextdnsmanager?label=Dependencies&style=for-the-badge" alt="Dependencies">
+  <img src="https://img.shields.io/github/issues/doubleangels/nextdnsmanager?label=GitHub%20Issues&style=for-the-badge" alt="GitHub Issues">
+  <img src="https://img.shields.io/github/issues-pr/doubleangels/nextdnsmanager?label=GitHub%20Pull%20Requests&style=for-the-badge" alt="GitHub Pull Requests">
 </p>
 
 <p align="center">
@@ -46,7 +46,7 @@ NextDNS Manager is an Android application that simplifies managing your [NextDNS
 - [FAQ](#faq)
 
   - [I have multiple versions of NextDNS Manager on my phone after the 5.5.0 update!](#i-have-multiple-versions-of-nextdns-manager-on-my-phone-after-the-550-update)
-  - [What is Sentry, are you tracking me?](#what-is-sentry-and-why-are-you-tracking-me)
+  - [What is Sentry, are you tracking me?](#what-is-sentry-and-are-you-tracking-me)
   - [Why does F-Droid show an antifeature warning about Sentry?](#why-does-f-droid-show-an-antifeature-warning-about-sentry)
   - [Why doesn’t the app support Android versions before 12L?](#why-doesnt-the-app-support-android-versions-before-12l)
   - [Will you bring back support for older Android versions?](#will-you-bring-back-support-for-older-android-versions)
@@ -122,11 +122,11 @@ Download the latest APK directly from the [GitHub Releases page](https://github.
 
 ## FAQ
 
-### Multiple Versions of NextDNS Manager After the 5.5.0 Update
+### Multiple versions of NextDNS Manager after the 5.5.0 opdate
 
 If you see multiple versions of the app on your device after updating to 5.5.0 and have questions, [check this](https://github.com/doubleangels/nextdnsmanager/issues/430).
 
-### What is Sentry, and Why is It Tracking Me?
+### What is Sentry, and is it tracking me?
 
 If you're wondering about Sentry, [check this](https://github.com/doubleangels/nextdnsmanager/issues/445). Sentry is completely opt-in (both via a manual toggle and DNS whitelisting) and only collects anonymized data to help diagnose issues. The information I receive includes:
 
@@ -141,15 +141,15 @@ If you're wondering about Sentry, [check this](https://github.com/doubleangels/n
 
 This data is solely used to improve app stability by fixing bugs and errors. It remains anonymous, isn't shared with anyone else, and is not used for analytics.
 
-### Why Does F-Droid Show an Antifeature Warning About Sentry?
+### Why does F-Droid show an Antifeature warning about Sentry?
 
 This warning is misleading. Sentry is fully opt-in in multiple ways and does not collect any personal or identifiable information. I’m working with the F-Droid team to address and resolve this.
 
-### Why Doesn’t the App Support Android Versions Before 12L?
+### Why doesn’t the app support Android versions before 12L?
 
 Android apps rely on API calls to interact with the operating system. Each new Android release introduces additional capabilities, which the app takes advantage of to enhance functionality, privacy, and security. Older Android versions lack support for these improvements, making them incompatible with the app’s implementation.
 
-### Will You Bring Back Support for Older Android Versions?
+### Will you bring back support for older android versions?
 
 No. The app is moving forward, not backward.
 
