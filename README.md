@@ -45,12 +45,12 @@ NextDNS Manager is an Android application that simplifies managing your [NextDNS
 
 - [FAQ](#faq)
 
-  - [I have multiple versions of NextDNS Manager on my phone after the 5.5.0 update!](#i-have-multiple-versions-of-nextdns-manager-on-my-phone-after-the-550-update)
-  - [What is Sentry, are you tracking me?](#what-is-sentry-and-are-you-tracking-me)
-  - [Why does F-Droid show an antifeature warning about Sentry?](#why-does-f-droid-show-an-antifeature-warning-about-sentry)
-  - [Why doesn’t the app support Android versions before 12L?](#why-doesnt-the-app-support-android-versions-before-12l)
-  - [Will you bring back support for older Android versions?](#will-you-bring-back-support-for-older-android-versions)
-  - [What is FCM, and why is it disabled in F-Droid builds?](#what-is-fcm-and-why-is-it-disabled-in-f-droid-builds)
+  - [I have multiple versions of NextDNS Manager on my phone after the 5.5.0 update!](#multiple-versions)
+  - [What is Sentry, are you tracking me?](#sentry)
+  - [Why does F-Droid show an antifeature warning about Sentry?](#antifeature-warning)
+  - [Why doesn’t the app support Android versions before 12L?](#supported-android-versions)
+  - [Will you bring back support for older Android versions?](#add-supported-android-versions)
+  - [What is FCM, and why is it disabled in F-Droid builds?](#fcm)
 
 - [Reporting Issues & Feedback](#reporting-issues--feedback)
 - [Contributing](#contributing)
@@ -122,11 +122,11 @@ Download the latest APK directly from the [GitHub Releases page](https://github.
 
 ## FAQ
 
-### Multiple versions of NextDNS Manager after the 5.5.0 opdate
+### <a id="multiple-versions"></a>Multiple versions of NextDNS Manager after the 5.5.0 update
 
 If you see multiple versions of the app on your device after updating to 5.5.0 and have questions, [check this](https://github.com/doubleangels/nextdnsmanager/issues/430).
 
-### What is Sentry, and is it tracking me?
+### <a id="sentry"></a>What is Sentry, and is it tracking me?
 
 If you're wondering about Sentry, [check this](https://github.com/doubleangels/nextdnsmanager/issues/445). Sentry is completely opt-in (both via a manual toggle and DNS whitelisting) and only collects anonymized data to help diagnose issues. The information I receive includes:
 
@@ -141,19 +141,19 @@ If you're wondering about Sentry, [check this](https://github.com/doubleangels/n
 
 This data is solely used to improve app stability by fixing bugs and errors. It remains anonymous, isn't shared with anyone else, and is not used for analytics.
 
-### Why does F-Droid show an Antifeature warning about Sentry?
+### <a id="antifeature-warning"></a>Why does F-Droid show an Antifeature warning about Sentry?
 
 This warning is misleading. Sentry is fully opt-in in multiple ways and does not collect any personal or identifiable information. I’m working with the F-Droid team to address and resolve this.
 
-### Why doesn’t the app support Android versions before 12L?
+### <a id="supported-android-versions"></a>Why doesn’t the app support Android versions before 12L?
 
 Android apps rely on API calls to interact with the operating system. Each new Android release introduces additional capabilities, which the app takes advantage of to enhance functionality, privacy, and security. Older Android versions lack support for these improvements, making them incompatible with the app’s implementation.
 
-### Will you bring back support for older android versions?
+### <a id="add-supported-android-versions"></a>Will you bring back support for older android versions?
 
 No. The app is moving forward, not backward.
 
-### What is FCM, and why is it disabled in F-Droid builds?
+### <a id="fcm"></a>What is FCM, and why is it disabled in F-Droid builds?
 
 FCM (Firebase Cloud Messaging) is used for push notifications. Currently, it is only utilized to send updates, important information, and known error/fix notifications from me, though it may be expanded in the future.
 
