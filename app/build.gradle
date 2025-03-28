@@ -10,8 +10,8 @@ android {
         applicationId "com.doubleangels.nextdnsmanagement"
         minSdkVersion 32
         targetSdk = 35
-        versionCode 261
-        versionName "5.5.12"
+        versionCode 262
+        versionName "5.5.13"
         resourceConfigurations += ["en", "zh", "nl", "fi", "fr", "de", "in", "it", "ja", "pl", "pt", "es", "sv", "tr"]
     }
 
@@ -70,10 +70,7 @@ dependencies {
     implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0'
     implementation 'androidx.webkit:webkit:1.13.0'
     implementation 'com.google.android.material:material:1.12.0'
-
-    // Only include Firebase Messaging in the gms flavor:
     gmsImplementation 'com.google.firebase:firebase-messaging:24.1.1'
-
     implementation 'com.squareup.retrofit2:converter-gson:2.11.0'
     implementation 'de.hdodenhof:circleimageview:3.1.0'
     implementation 'io.sentry:sentry-android:8.5.0'
