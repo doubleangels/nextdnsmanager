@@ -159,19 +159,19 @@ jobs:
         uses: actions/checkout@v5
 
       - name: Download APK from Github release artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: github-release-apk
           path: .
 
       - name: Download foss APK from Github release artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: github-foss-release-apk
           path: .
 
       - name: Download Google Play bundle from Github release artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: google-play-bundle
           path: .
@@ -245,7 +245,7 @@ jobs:
         uses: actions/checkout@v5
 
       - name: Download APK from Github release artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: github-release-apk
           path: .
