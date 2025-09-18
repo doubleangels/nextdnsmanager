@@ -10,6 +10,7 @@ import com.doubleangels.nextdnsmanagement.sentry.SentryManager;
 
 import java.lang.ref.WeakReference;
 
+/** @noinspection unused*/
 public class WebAppInterface {
     private final WeakReference<Context> contextRef;
     private final WeakReference<SwipeRefreshLayout> swipeRefreshLayoutRef;

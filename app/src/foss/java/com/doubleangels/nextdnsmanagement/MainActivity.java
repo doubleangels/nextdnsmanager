@@ -68,8 +68,6 @@ public class MainActivity extends AppCompatActivity {
     // Timestamp (in ms) of the last successful biometric authentication.
     private long lastAuthenticatedTime = 0;
 
-    // Flag to track if page has loaded.
-    private boolean isPageLoaded = false;
     // Blur overlay view to hide content during biometric authentication.
     private View blurOverlay;
     // SentryManager instance for error logging.
@@ -193,8 +191,8 @@ public class MainActivity extends AppCompatActivity {
             if (webView != null) {
                 // Remove JavaScript interfaces and clients.
                 webView.removeJavascriptInterface("SwipeToRefreshInterface");
-                webView.setWebViewClient(null);
-                webView.setWebChromeClient(null);
+                webView.setWebViewClient(new WebViewClient());
+                webView.setWebChromeClient(new WebChromeClient());
                 webView.setDownloadListener(null);
                 // Destroy the WebView.
                 webView.destroy();
@@ -220,8 +218,6 @@ public class MainActivity extends AppCompatActivity {
         super.onPause();
         if (webView != null) {
             webView.onPause();
-            // Disable drawing cache to free memory
-            webView.setDrawingCacheEnabled(false);
         }
     }
 
@@ -249,8 +245,6 @@ public class MainActivity extends AppCompatActivity {
         // Resume WebView if it exists; otherwise, initialize it.
         if (webView != null) {
             webView.onResume();
-            // Re-enable drawing cache when resuming
-            webView.setDrawingCacheEnabled(true);
         } else if (!isWebViewInitialized) {
             setupWebViewForActivity(getString(R.string.main_url));
         }
@@ -389,7 +383,6 @@ public class MainActivity extends AppCompatActivity {
     @SuppressLint("SetJavaScriptEnabled")
     public void setupWebViewForActivity(String url) {
         webView = findViewById(R.id.webView);
-        isPageLoaded = false;
         try {
             // Load URL directly if dark mode is disabled; otherwise, try to restore state.
             if (!darkModeEnabled) {
@@ -442,8 +435,6 @@ public class MainActivity extends AppCompatActivity {
                 } catch (Exception e) {
                     SentryManager.captureStaticException(e);
                 }
-                // Mark that the page has finished loading.
-                isPageLoaded = true;
             }
         });
 

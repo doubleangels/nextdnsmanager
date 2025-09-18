@@ -376,14 +376,13 @@ public class SettingsActivity extends AppCompatActivity {
                                                     .captureMessage("App lock disable failed - authentication failed");
                                         }
                                     });
-                            return false; // Don't apply the change yet
                         } else {
                             // No biometric available, don't allow disabling
                             setting.setChecked(true);
                             new SentryManager(requireContext())
                                     .captureMessage("Cannot disable app lock - biometric authentication not available");
-                            return false;
                         }
+                        return false; // Don't apply the change yet
                     } else {
                         // Enabling app lock or other changes don't require authentication
                         SharedPreferencesManager.putBoolean("app_lock_enable", newValueBoolean);

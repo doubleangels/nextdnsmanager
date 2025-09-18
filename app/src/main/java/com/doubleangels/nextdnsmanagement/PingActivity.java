@@ -19,8 +19,10 @@ import com.doubleangels.nextdnsmanagement.sentry.SentryManager;
 import java.util.Locale;
 
 /**
- * Activity that handles ping functionality by loading two web pages in separate WebViews.
- * It initializes Sentry for error logging, sets up the status bar appearance, and configures the WebViews.
+ * Activity that handles ping functionality by loading two web pages in separate
+ * WebViews.
+ * It initializes Sentry for error logging, sets up the status bar appearance,
+ * and configures the WebViews.
  */
 public class PingActivity extends AppCompatActivity {
 
@@ -32,11 +34,14 @@ public class PingActivity extends AppCompatActivity {
     public WebView webView2;
 
     /**
-     * Called when the activity is created. Initializes Sentry, configures the status bar,
+     * Called when the activity is created. Initializes Sentry, configures the
+     * status bar,
      * and sets up the WebViews with the provided URLs.
      *
-     * @param savedInstanceState If the activity is being re-initialized after previously being shut down,
-     *                           this Bundle contains the data it most recently supplied. Otherwise, it is null.
+     * @param savedInstanceState If the activity is being re-initialized after
+     *                           previously being shut down,
+     *                           this Bundle contains the data it most recently
+     *                           supplied. Otherwise, it is null.
      */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -73,27 +78,28 @@ public class PingActivity extends AppCompatActivity {
 
     /**
      * Called when the activity is about to be destroyed.
-     * Cleans up WebView resources by removing them from their parent and destroying them.
+     * Cleans up WebView resources by removing them from their parent and destroying
+     * them.
      */
     @Override
     protected void onDestroy() {
         super.onDestroy();
         try {
             // Remove and destroy the first WebView.
-            if (webView.getParent() != null) {
-                ((ViewGroup) webView.getParent()).removeView(webView);
-            }
             if (webView != null) {
-                webView.setWebViewClient(null);
+                if (webView.getParent() != null) {
+                    ((ViewGroup) webView.getParent()).removeView(webView);
+                }
+                webView.setWebViewClient(new WebViewClient());
                 webView.destroy();
                 webView = null;
             }
             // Remove and destroy the second WebView.
-            if (webView2.getParent() != null) {
-                ((ViewGroup) webView2.getParent()).removeView(webView2);
-            }
             if (webView2 != null) {
-                webView2.setWebViewClient(null);
+                if (webView2.getParent() != null) {
+                    ((ViewGroup) webView2.getParent()).removeView(webView2);
+                }
+                webView2.setWebViewClient(new WebViewClient());
                 webView2.destroy();
                 webView2 = null;
             }
@@ -107,7 +113,8 @@ public class PingActivity extends AppCompatActivity {
     }
 
     /**
-     * Attaches a new base context with the locale configured based on device settings.
+     * Attaches a new base context with the locale configured based on device
+     * settings.
      *
      * @param newBase The new base context.
      */
@@ -126,7 +133,8 @@ public class PingActivity extends AppCompatActivity {
     }
 
     /**
-     * Configures the status bar appearance based on the current UI theme (light or dark).
+     * Configures the status bar appearance based on the current UI theme (light or
+     * dark).
      * Uses the WindowInsetsController on supported Android versions.
      */
     private void setupStatusBarForActivity() {
@@ -140,8 +148,7 @@ public class PingActivity extends AppCompatActivity {
                 // Adjust the system bars appearance based on the theme.
                 insetsController.setSystemBarsAppearance(
                         isLightTheme ? WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS : 0,
-                        WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS
-                );
+                        WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS);
             }
         }
     }
