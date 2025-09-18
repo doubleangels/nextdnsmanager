@@ -6,6 +6,8 @@ import android.util.Log;
 
 import androidx.preference.PreferenceManager;
 
+import java.lang.ref.WeakReference;
+
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
@@ -20,7 +22,8 @@ import okhttp3.internal.http2.ConnectionShutdownException;
 
 /**
  * A helper class to manage Sentry error logging.
- * It checks user preferences to see if Sentry is enabled before capturing messages and exceptions.
+ * It checks user preferences to see if Sentry is enabled before capturing
+ * messages and exceptions.
  */
 public class SentryManager {
 
@@ -37,26 +40,29 @@ public class SentryManager {
             SocketException.class,
             SSLException.class,
             SSLHandshakeException.class,
-            ConnectionShutdownException.class
-    );
+            ConnectionShutdownException.class);
 
     /** Android context used for accessing SharedPreferences and other resources. */
-    private final Context context;
+    private final WeakReference<Context> contextRef;
 
-    /** Reference to SharedPreferences where Sentry enable/disable setting is stored. */
+    /**
+     * Reference to SharedPreferences where Sentry enable/disable setting is stored.
+     */
     public SharedPreferences sharedPreferences;
 
     /**
      * Constructs a new SentryManager instance.
      *
-     * @param context The context used to access preferences and other application-level resources.
+     * @param context The context used to access preferences and other
+     *                application-level resources.
      */
     public SentryManager(Context context) {
-        this.context = context;
+        this.contextRef = new WeakReference<>(context);
     }
 
     /**
-     * Checks whether the provided exception is an instance of any ignored error types.
+     * Checks whether the provided exception is an instance of any ignored error
+     * types.
      * <p>
      * This static method is available for both static and instance contexts.
      * </p>
@@ -76,8 +82,10 @@ public class SentryManager {
     /**
      * Captures an exception using Sentry.
      * <p>
-     * If the exception is one of the ignored types or Sentry is disabled in user preferences,
-     * the exception is logged locally using Log.e() rather than being sent to Sentry.
+     * If the exception is one of the ignored types or Sentry is disabled in user
+     * preferences,
+     * the exception is logged locally using Log.e() rather than being sent to
+     * Sentry.
      * </p>
      *
      * @param e The exception to capture or log.
@@ -89,11 +97,11 @@ public class SentryManager {
         }
 
         if (isEnabled()) {
-            // When enabled, capture the exception in Sentry for remote error tracking.
+            // When enabled, capture the exception in Sentry for remote error tracking
             Sentry.captureException(e);
             Log.e(TAG, "Got error:", e);
         } else {
-            // If not enabled, just log the error locally.
+            // If not enabled, just log the error locally
             Log.e(TAG, "Got error:", e);
         }
     }
@@ -101,8 +109,10 @@ public class SentryManager {
     /**
      * Captures an exception using Sentry in a static context.
      * <p>
-     * If the exception is one of the ignored types, the error is logged locally using Log.e()
-     * without sending it to Sentry. This method assumes Sentry is enabled or uses a default behavior.
+     * If the exception is one of the ignored types, the error is logged locally
+     * using Log.e()
+     * without sending it to Sentry. This method assumes Sentry is enabled or uses a
+     * default behavior.
      * </p>
      *
      * @param e The exception to capture or log.
@@ -113,7 +123,7 @@ public class SentryManager {
             return;
         }
 
-        // In a static context, we assume Sentry is enabled.
+        // In a static context, we assume Sentry is enabled
         Sentry.captureException(e);
         Log.e(TAG, "Got error:", e);
     }
@@ -126,11 +136,12 @@ public class SentryManager {
      */
     public void captureMessage(String message) {
         if (isEnabled()) {
-            // If Sentry is enabled, add a breadcrumb (a trail of events leading to a crash or issue).
+            // If Sentry is enabled, add a breadcrumb (a trail of events leading to a crash
+            // or issue)
             Sentry.addBreadcrumb(message);
             Log.d(TAG, message);
         } else {
-            // Otherwise, log the message locally.
+            // Otherwise, log the message locally
             Log.d(TAG, message);
         }
     }
@@ -138,12 +149,17 @@ public class SentryManager {
     /**
      * Checks SharedPreferences to determine whether Sentry is enabled.
      * <p>
-     * The preference ("sentry_enable") is assumed to be managed elsewhere, for example, in a settings UI.
+     * The preference ("sentry_enable") is assumed to be managed elsewhere, for
+     * example, in a settings UI.
      * </p>
      *
      * @return true if Sentry is enabled by the user; false otherwise.
      */
     public boolean isEnabled() {
+        Context context = contextRef.get();
+        if (context == null) {
+            return false; // Context has been garbage collected
+        }
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
         return sharedPreferences.getBoolean("sentry_enable", false);
     }

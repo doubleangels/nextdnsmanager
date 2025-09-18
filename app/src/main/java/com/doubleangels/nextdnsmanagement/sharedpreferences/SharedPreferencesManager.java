@@ -8,7 +8,8 @@ import com.doubleangels.nextdnsmanagement.sentry.SentryManager;
 
 /**
  * A thread-safe utility class for managing SharedPreferences.
- * This class provides convenient static methods for reading and writing preference values.
+ * This class provides convenient static methods for reading and writing
+ * preference values.
  * All errors are captured using SentryManager.
  */
 public class SharedPreferencesManager {
@@ -16,10 +17,11 @@ public class SharedPreferencesManager {
     // The name of the SharedPreferences file
     private static final String PREF_NAME = "MyAppPreferences";
 
-    // A reference to the SharedPreferences object, backed by the application context.
+    // A reference to the SharedPreferences object, backed by the application
+    // context
     private static SharedPreferences sharedPreferences;
 
-    // Store only the application context to avoid leaking an Activity context.
+    // Store only the application context to avoid leaking an Activity context
     private static Context appContext;
 
     /**
@@ -32,7 +34,8 @@ public class SharedPreferencesManager {
 
     /**
      * Initializes the SharedPreferences object using the application context.
-     * Must be called once, usually in an Application class or before using any put/get methods.
+     * Must be called once, usually in an Application class or before using any
+     * put/get methods.
      *
      * @param context The context used to create or retrieve the SharedPreferences.
      */
@@ -44,7 +47,8 @@ public class SharedPreferencesManager {
     }
 
     /**
-     * Saves a String value into the SharedPreferences, committing the change immediately.
+     * Saves a String value into the SharedPreferences, committing the change
+     * immediately.
      * If an error occurs, it is captured via SentryManager.
      *
      * @param key   The preference key under which the value is stored.
@@ -62,7 +66,8 @@ public class SharedPreferencesManager {
 
     /**
      * Retrieves a String value from the SharedPreferences.
-     * If the key is not found or an error occurs, returns the provided default value.
+     * If the key is not found or an error occurs, returns the provided default
+     * value.
      *
      * @param key          The preference key to look for.
      * @param defaultValue The default value to return if not found.
@@ -79,7 +84,8 @@ public class SharedPreferencesManager {
     }
 
     /**
-     * Saves a boolean value into the SharedPreferences, committing the change immediately.
+     * Saves a boolean value into the SharedPreferences, committing the change
+     * immediately.
      * If an error occurs, it is captured via SentryManager.
      *
      * @param key   The preference key under which the value is stored.
@@ -97,7 +103,8 @@ public class SharedPreferencesManager {
 
     /**
      * Retrieves a boolean value from the SharedPreferences.
-     * If the key is not found or an error occurs, returns the provided default value.
+     * If the key is not found or an error occurs, returns the provided default
+     * value.
      *
      * @param key          The preference key to look for.
      * @param defaultValue The default value to return if not found.
@@ -119,7 +126,8 @@ public class SharedPreferencesManager {
      */
     private static void checkInitialization() {
         if (sharedPreferences == null) {
-            throw new IllegalStateException("SharedPreferencesManager is not initialized. Call init() before using it.");
+            throw new IllegalStateException(
+                    "SharedPreferencesManager is not initialized. Call init() before using it.");
         }
     }
 }

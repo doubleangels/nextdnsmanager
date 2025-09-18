@@ -8,13 +8,16 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.doubleangels.nextdnsmanagement.sentry.SentryManager;
 
+import java.lang.ref.WeakReference;
+
+/** @noinspection unused*/
 public class WebAppInterface {
-    private final Context context;
-    private final SwipeRefreshLayout swipeRefreshLayout;
+    private final WeakReference<Context> contextRef;
+    private final WeakReference<SwipeRefreshLayout> swipeRefreshLayoutRef;
 
     public WebAppInterface(Context context, SwipeRefreshLayout swipeRefreshLayout) {
-        this.context = context;
-        this.swipeRefreshLayout = swipeRefreshLayout;
+        this.contextRef = new WeakReference<>(context);
+        this.swipeRefreshLayoutRef = new WeakReference<>(swipeRefreshLayout);
     }
 
     /**
@@ -23,13 +26,30 @@ public class WebAppInterface {
     @JavascriptInterface
     public void setSwipeRefreshEnabled(final boolean enabled) {
         try {
+            Context context = contextRef.get();
+            SwipeRefreshLayout swipeRefreshLayout = swipeRefreshLayoutRef.get();
+
+            if (context == null || swipeRefreshLayout == null) {
+                // References have been garbage collected, safe to ignore
+                return;
+            }
+
             if (context instanceof Activity) {
-                ((Activity) context).runOnUiThread(() -> swipeRefreshLayout.setEnabled(enabled));
+                ((Activity) context).runOnUiThread(() -> {
+                    SwipeRefreshLayout layout = swipeRefreshLayoutRef.get();
+                    if (layout != null) {
+                        layout.setEnabled(enabled);
+                    }
+                });
             } else {
-                new SentryManager(context).captureMessage("Context is not an Activity instance. Cannot update swipe refresh.");
+                new SentryManager(context)
+                        .captureMessage("Context is not an Activity instance. Cannot update swipe refresh.");
             }
         } catch (Exception e) {
-            new SentryManager(context).captureException(e);
+            Context context = contextRef.get();
+            if (context != null) {
+                new SentryManager(context).captureException(e);
+            }
         }
     }
 }

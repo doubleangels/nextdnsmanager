@@ -30,27 +30,30 @@ import okhttp3.Response;
 
 /**
  * A class that monitors and visually indicates the network status, specifically
- * whether NextDNS is being used securely. It listens for changes in network 
+ * whether NextDNS is being used securely. It listens for changes in network
  * properties and updates a UI element (ImageView) accordingly.
  */
 public class VisualIndicator {
 
-    // Used for capturing exceptions or logs to Sentry.
+    // Used for capturing exceptions or logs to Sentry
     private final SentryManager sentryManager;
 
-    // OkHttpClient instance for making network calls (to check NextDNS status, etc.).
+    // OkHttpClient instance for making network calls (to check NextDNS status,
+    // etc)
     private final OkHttpClient httpClient;
 
-    // Manages network connections and can register callbacks for connectivity changes.
+    // Manages network connections and can register callbacks for connectivity
+    // changes
     private ConnectivityManager connectivityManager;
 
-    // Callback to track changes in network properties (e.g., Private DNS settings).
+    // Callback to track changes in network properties (e.g., Private DNS settings)
     private ConnectivityManager.NetworkCallback networkCallback;
 
     /**
      * Constructor that initializes SentryManager and OkHttpClient.
      *
-     * @param context The application context, used for initializing Sentry and OkHttpClient.
+     * @param context The application context, used for initializing Sentry and
+     *                OkHttpClient.
      */
     public VisualIndicator(Context context) {
         this.sentryManager = new SentryManager(context);
@@ -58,15 +61,16 @@ public class VisualIndicator {
     }
 
     /**
-     * Initializes the network monitoring and sets up a callback to listen for 
-     * changes in network properties. Also registers a lifecycle observer to 
+     * Initializes the network monitoring and sets up a callback to listen for
+     * changes in network properties. Also registers a lifecycle observer to
      * unregister the callback when the provided lifecycleOwner is destroyed.
      *
      * @param context        The application or activity context.
-     * @param lifecycleOwner The lifecycle owner (e.g., an Activity or Fragment) 
-     *                       used to automatically unregister the network callback 
+     * @param lifecycleOwner The lifecycle owner (e.g., an Activity or Fragment)
+     *                       used to automatically unregister the network callback
      *                       upon destruction.
-     * @param activity       The Activity where the UI update (ImageView) is handled.
+     * @param activity       The Activity where the UI update (ImageView) is
+     *                       handled.
      */
     public void initialize(Context context, LifecycleOwner lifecycleOwner, AppCompatActivity activity) {
         try {
@@ -87,7 +91,8 @@ public class VisualIndicator {
                 return;
             }
 
-            // Obtain the network's LinkProperties, which include DNS and other connection details
+            // Obtain the network's LinkProperties, which include DNS and other connection
+            // details
             LinkProperties linkProperties = connectivityManager.getLinkProperties(network);
 
             // Update the UI immediately based on the current link properties
@@ -105,7 +110,8 @@ public class VisualIndicator {
             // Register the callback to listen for changes in the network's properties
             connectivityManager.registerNetworkCallback(networkRequest, networkCallback);
 
-            // Add an observer to remove the network callback when the lifecycleOwner is destroyed
+            // Add an observer to remove the network callback when the lifecycleOwner is
+            // destroyed
             lifecycleOwner.getLifecycle().addObserver(new NetworkConnectivityObserver());
         } catch (Exception e) {
             sentryManager.captureException(e);
@@ -122,16 +128,22 @@ public class VisualIndicator {
             try {
                 if (connectivityManager != null && networkCallback != null) {
                     connectivityManager.unregisterNetworkCallback(networkCallback);
+                    networkCallback = null; // Clear reference
                 }
             } catch (Exception e) {
                 sentryManager.captureException(e);
+            } finally {
+                // Ensure cleanup even if exception occurs
+                connectivityManager = null;
+                networkCallback = null;
             }
         }
     }
 
     /**
      * Updates the UI (e.g., an ImageView) to reflect the current network status.
-     * If Private DNS is active, we attempt further checks to see if NextDNS is being used.
+     * If Private DNS is active, we attempt further checks to see if NextDNS is
+     * being used.
      *
      * @param linkProperties The current network's LinkProperties, or null if none.
      * @param activity       The Activity containing the ImageView to update.
@@ -140,13 +152,12 @@ public class VisualIndicator {
     public void update(@Nullable LinkProperties linkProperties, AppCompatActivity activity, Context context) {
         try {
             if (linkProperties == null) {
-                // No valid network. Show a 'failure' icon in red.
+                // No valid network. Show a 'failure' icon in red
                 setConnectionStatus(
                         activity.findViewById(R.id.connectionStatus),
                         R.drawable.failure,
                         R.color.red,
-                        context
-                );
+                        context);
                 // Perform a more detailed check for NextDNS usage
                 checkInheritedDNS(context, activity);
                 return;
@@ -159,9 +170,9 @@ public class VisualIndicator {
             int statusDrawable = linkProperties.isPrivateDnsActive() ? R.drawable.success : R.drawable.failure;
             int statusColor = linkProperties.isPrivateDnsActive()
                     ? (linkProperties.getPrivateDnsServerName() != null
-                    && linkProperties.getPrivateDnsServerName().contains("nextdns")
-                    ? R.color.green
-                    : R.color.yellow)
+                            && linkProperties.getPrivateDnsServerName().contains("nextdns")
+                                    ? R.color.green
+                                    : R.color.yellow)
                     : R.color.red;
 
             // Update the image resource and color filter
@@ -197,7 +208,7 @@ public class VisualIndicator {
             @Override
             public void onResponse(@NonNull Call call, @NonNull Response response) {
                 try {
-                    // If the response is not successful, capture the failure.
+                    // If the response is not successful, capture the failure
                     if (!response.isSuccessful()) {
                         sentryManager.captureMessage("Response was not successful.");
                         response.close();
@@ -234,8 +245,7 @@ public class VisualIndicator {
                     if (connectionStatus != null) {
                         connectionStatus.setImageResource(isSecure ? R.drawable.success : R.drawable.failure);
                         connectionStatus.setColorFilter(
-                                ContextCompat.getColor(context, isSecure ? R.color.green : R.color.orange)
-                        );
+                                ContextCompat.getColor(context, isSecure ? R.color.green : R.color.orange));
                     }
                     response.close();
                 } catch (Exception e) {
@@ -261,9 +271,9 @@ public class VisualIndicator {
      * @param context          The Context to retrieve the color resource.
      */
     private void setConnectionStatus(ImageView connectionStatus,
-                                     int drawableResId,
-                                     int colorResId,
-                                     Context context) {
+            int drawableResId,
+            int colorResId,
+            Context context) {
         connectionStatus.setImageResource(drawableResId);
         connectionStatus.setColorFilter(ContextCompat.getColor(context, colorResId));
     }

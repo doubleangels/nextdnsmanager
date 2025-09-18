@@ -45,7 +45,8 @@ public class PermissionsAdapter extends RecyclerView.Adapter<PermissionsAdapter.
      * resource (permission_item) for each item in the list.
      *
      * @param parent   The parent ViewGroup into which the new view will be added.
-     * @param viewType The view type of the new View. Not used here, but required by the API.
+     * @param viewType The view type of the new View. Not used here, but required by
+     *                 the API.
      * @return A new PermissionViewHolder holding the inflated layout.
      */
     @NonNull
@@ -58,8 +59,10 @@ public class PermissionsAdapter extends RecyclerView.Adapter<PermissionsAdapter.
     }
 
     /**
-     * Binds the data from the PermissionInfo object to the views in the PermissionViewHolder.
-     * Also checks if the permission is granted (for relevant permissions, such as POST_NOTIFICATIONS).
+     * Binds the data from the PermissionInfo object to the views in the
+     * PermissionViewHolder.
+     * Also checks if the permission is granted (for relevant permissions, such as
+     * POST_NOTIFICATIONS).
      *
      * @param holder   The ViewHolder to be updated with new data.
      * @param position The position in the data set of the item being bound.
@@ -73,13 +76,14 @@ public class PermissionsAdapter extends RecyclerView.Adapter<PermissionsAdapter.
         // Initialize SentryManager using the current context
         SentryManager sentryManager = new SentryManager(holder.itemView.getContext());
 
-        // Determine if the permission has been granted (applies only for newer permissions like POST_NOTIFICATIONS)
+        // Determine if the permission has been granted (applies only for newer
+        // permissions like POST_NOTIFICATIONS)
         boolean isGranted = true;
         if (permissionInfo.name.equals(android.Manifest.permission.POST_NOTIFICATIONS)) {
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
                 try {
-                    isGranted = holder.itemView.getContext().checkSelfPermission(permissionInfo.name)
-                            == PackageManager.PERMISSION_GRANTED;
+                    isGranted = holder.itemView.getContext()
+                            .checkSelfPermission(permissionInfo.name) == PackageManager.PERMISSION_GRANTED;
                 } catch (Exception e) {
                     sentryManager.captureException(e);
                     isGranted = false;
@@ -87,7 +91,8 @@ public class PermissionsAdapter extends RecyclerView.Adapter<PermissionsAdapter.
             }
         }
 
-        // Load and set the permission name label from system resources, then make it uppercase.
+        // Load and set the permission name label from system resources, then make it
+        // uppercase
         String permissionLabel;
         try {
             CharSequence label = permissionInfo.loadLabel(holder.itemView.getContext().getPackageManager());
@@ -98,7 +103,7 @@ public class PermissionsAdapter extends RecyclerView.Adapter<PermissionsAdapter.
         }
         holder.permissionName.setText(permissionLabel);
 
-        // Attempt to load the description of the permission from system resources.
+        // Attempt to load the description of the permission from system resources
         String displayText;
         try {
             CharSequence description = permissionInfo.loadDescription(holder.itemView.getContext().getPackageManager());
@@ -129,7 +134,8 @@ public class PermissionsAdapter extends RecyclerView.Adapter<PermissionsAdapter.
     }
 
     /**
-     * Inner ViewHolder class that holds references to each view in a single item layout.
+     * Inner ViewHolder class that holds references to each view in a single item
+     * layout.
      * This improves performance by avoiding repeated calls to findViewById.
      */
     public static class PermissionViewHolder extends RecyclerView.ViewHolder {
@@ -139,7 +145,8 @@ public class PermissionsAdapter extends RecyclerView.Adapter<PermissionsAdapter.
         TextView permissionDescription;
 
         /**
-         * Constructor that assigns references to the TextViews for the permission name and description.
+         * Constructor that assigns references to the TextViews for the permission name
+         * and description.
          *
          * @param itemView The inflated layout view for this item.
          */

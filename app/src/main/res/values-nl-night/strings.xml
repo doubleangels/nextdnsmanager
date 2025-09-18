@@ -52,11 +52,11 @@
     <string name="unlock_title">Ontgrendel</string>
     <string name="user_agreement">"Gebruikersovereenkomst"</string>
     <string name="version">"Versie"</string>
-    <string name="whitelist_domains">"Als u Sentry inschakelt, kunt u deze domeinen in uw NextDNS configuratie uitsluiten."</string>
+    <string name="whitelist_domains">"Als u Sentry inschakelt, kunt u deze domeinen in uw NextDNS configuratie op de whitelist zetten."</string>
     <string name="whitelist_instructions">"Overweeg een opting in to Sentry error tracking. Dit verzamelt geen persoonlijke informatie en helpt mij de app beter te maken."</string>
     <string-array name="dark_mode_entries">
-        <item>Overeenkomen met Systeem</item>
-        <item>Op</item>
+        <item>Systeem volgen</item>
+        <item>Aan</item>
         <item>Uit</item>
     </string-array>
 </resources>

@@ -14,16 +14,18 @@ import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 
 /**
- * Service handling Firebase Cloud Messaging events. It receives incoming messages,
- * extracts the notification data, and displays notifications. It also logs errors via Sentry.
+ * Service handling Firebase Cloud Messaging events. It receives incoming
+ * messages,
+ * extracts the notification data, and displays notifications. It also logs
+ * errors via Sentry.
  */
 public class CustomFirebaseMessagingService extends FirebaseMessagingService {
 
-    // Notification channel constants.
+    // Notification channel constants
     private static final String CHANNEL_ID = "general";
     private static final String CHANNEL_NAME = "General";
 
-    // Sentry manager instance for capturing errors.
+    // Sentry manager instance for capturing errors
     private SentryManager sentryManager;
 
     /**
@@ -44,11 +46,11 @@ public class CustomFirebaseMessagingService extends FirebaseMessagingService {
     @Override
     public void onMessageReceived(@NonNull RemoteMessage remoteMessage) {
         try {
-            // Default title and message in case none is provided.
+            // Default title and message in case none is provided
             String title = "This notification did not include a title.";
             String messageBody = "This notification did not include a message body.";
 
-            // Attempt to extract title and body from the notification payload.
+            // Attempt to extract title and body from the notification payload
             try {
                 if (remoteMessage.getNotification() != null) {
                     if (remoteMessage.getNotification().getTitle() != null) {
@@ -59,11 +61,12 @@ public class CustomFirebaseMessagingService extends FirebaseMessagingService {
                     }
                 }
             } catch (Exception e) {
-                // Capture exception if an error occurs while processing the notification payload.
+                // Capture exception if an error occurs while processing the notification
+                // payload
                 sentryManager.captureException(e);
             }
 
-            // Attempt to override with data payload if available.
+            // Attempt to override with data payload if available
             try {
                 if (!remoteMessage.getData().isEmpty()) {
                     if (remoteMessage.getData().containsKey("title")) {
@@ -74,21 +77,20 @@ public class CustomFirebaseMessagingService extends FirebaseMessagingService {
                     }
                 }
             } catch (Exception e) {
-                // Capture exception if an error occurs while processing the data payload.
+                // Capture exception if an error occurs while processing the data payload
                 sentryManager.captureException(e);
             }
 
-            // Create an intent to open MainActivity when the notification is clicked.
+            // Create an intent to open MainActivity when the notification is clicked
             Intent intent = new Intent(this, MainActivity.class);
             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
             PendingIntent pendingIntent = PendingIntent.getActivity(
                     this,
                     0,
                     intent,
-                    PendingIntent.FLAG_ONE_SHOT | PendingIntent.FLAG_IMMUTABLE
-            );
+                    PendingIntent.FLAG_ONE_SHOT | PendingIntent.FLAG_IMMUTABLE);
 
-            // Build the notification.
+            // Build the notification
             NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this, CHANNEL_ID)
                     .setSmallIcon(R.drawable.ic_notification)
                     .setContentTitle(title)
@@ -97,36 +99,35 @@ public class CustomFirebaseMessagingService extends FirebaseMessagingService {
                     .setPriority(NotificationCompat.PRIORITY_HIGH)
                     .setContentIntent(pendingIntent);
 
-            // Get the NotificationManager system service.
-            NotificationManager notificationManager =
-                    (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+            // Get the NotificationManager system service
+            NotificationManager notificationManager = (NotificationManager) getSystemService(
+                    Context.NOTIFICATION_SERVICE);
             if (notificationManager != null) {
-                // Create a notification channel for Android O and above.
+                // Create a notification channel for Android O and above
                 try {
                     NotificationChannel channel = new NotificationChannel(
                             CHANNEL_ID,
                             CHANNEL_NAME,
-                            NotificationManager.IMPORTANCE_HIGH
-                    );
+                            NotificationManager.IMPORTANCE_HIGH);
                     notificationManager.createNotificationChannel(channel);
                 } catch (Exception e) {
-                    // Capture any exception that occurs during channel creation.
+                    // Capture any exception that occurs during channel creation
                     sentryManager.captureException(e);
                 }
-                // Show the notification.
+                // Show the notification
                 try {
                     int notificationId = 0;
                     notificationManager.notify(notificationId, notificationBuilder.build());
                 } catch (Exception e) {
-                    // Capture any exception that occurs while displaying the notification.
+                    // Capture any exception that occurs while displaying the notification
                     sentryManager.captureException(e);
                 }
             } else {
-                // Log a message if the NotificationManager is not available.
+                // Log a message if the NotificationManager is not available
                 sentryManager.captureMessage("NotificationManager is null");
             }
         } catch (Exception e) {
-            // Capture any general exception during message processing.
+            // Capture any general exception during message processing
             sentryManager.captureException(e);
         }
     }
@@ -141,10 +142,10 @@ public class CustomFirebaseMessagingService extends FirebaseMessagingService {
     public void onNewToken(@NonNull String token) {
         try {
             super.onNewToken(token);
-            // Log the new token using Sentry.
+            // Log the new token using Sentry
             sentryManager.captureMessage("New FCM token: " + token);
         } catch (Exception e) {
-            // Capture any exception that occurs while handling the new token.
+            // Capture any exception that occurs while handling the new token
             sentryManager.captureException(e);
         }
     }

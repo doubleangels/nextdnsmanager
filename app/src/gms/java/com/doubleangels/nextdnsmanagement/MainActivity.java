@@ -15,6 +15,7 @@ import android.provider.Settings;
 import android.view.ContextThemeWrapper;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.webkit.CookieManager;
@@ -49,34 +50,38 @@ import com.doubleangels.nextdnsmanagement.webview.WebAppInterface;
 import java.util.Locale;
 
 /**
- * Main Activity class that handles initialization of the UI, WebView, and various settings
- * such as dark mode, locale, biometric re-authentication, and notification permission checks.
+ * Main Activity class that handles initialization of the UI, WebView, and
+ * various settings
+ * such as dark mode, locale, biometric re-authentication, and notification
+ * permission checks.
  */
 public class MainActivity extends AppCompatActivity {
 
-    // Main WebView for displaying web content.
+    // Main WebView for displaying web content
     private WebView webView;
-    // SwipeRefreshLayout wrapping the WebView to enable pull-to-refresh functionality.
+    // SwipeRefreshLayout wrapping the WebView to enable pull-to-refresh
+    // functionality
     private SwipeRefreshLayout swipeRefreshLayout;
-    // Flag indicating whether dark mode is enabled.
+    // Flag indicating whether dark mode is enabled
     private Boolean darkModeEnabled = false;
-    // Flag to avoid re-initializing the WebView if it has already been set up.
+    // Flag to avoid re-initializing the WebView if it has already been set up
     private Boolean isWebViewInitialized = false;
-    // Bundle used to store and restore the WebView state across configuration changes.
+    // Bundle used to store and restore the WebView state across configuration
+    // changes
     private Bundle webViewState = null;
-    // Biometric authentication timeout in milliseconds (5 minutes).
+    // Biometric authentication timeout in milliseconds (5 minutes)
     private static final long AUTH_TIMEOUT_MS = 5 * 60 * 1000;
-    // Timestamp (in ms) of the last successful biometric authentication.
+    // Timestamp (in ms) of the last successful biometric authentication
     private long lastAuthenticatedTime = 0;
-    // Request code for notification permission.
-    private static final int NOTIFICATION_PERMISSION_REQUEST_CODE = 2;
 
-    // Flags to control when to display the biometric prompt.
-    private boolean pendingBiometricPrompt = false;
-    private boolean isPageLoaded = false;
+    // Blur overlay view to hide content during biometric authentication
+    private View blurOverlay;
+    // SentryManager instance for error logging
+    private SentryManager sentryManager;
 
     /**
-     * Saves the current state of the activity, including the WebView state and dark mode flag.
+     * Saves the current state of the activity, including the WebView state and dark
+     * mode flag.
      *
      * @param outState Bundle in which to save the activity state.
      */
@@ -84,13 +89,13 @@ public class MainActivity extends AppCompatActivity {
     protected void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
         try {
-            // Save the WebView state if it exists.
+            // Save the WebView state if it exists
             if (webView != null) {
                 Bundle webViewBundle = new Bundle();
                 webView.saveState(webViewBundle);
                 outState.putBundle("webViewState", webViewBundle);
             }
-            // Save the dark mode flag.
+            // Save the dark mode flag
             outState.putBoolean("darkModeEnabled", darkModeEnabled);
         } catch (Exception e) {
             SentryManager.captureStaticException(e);
@@ -99,24 +104,30 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * Called when the activity is created.
-     * Initializes Sentry, messaging, UI components, language, dark mode, visual indicator,
+     * Initializes Sentry, messaging, UI components, language, dark mode, visual
+     * indicator,
      * swipe-to-refresh, and the WebView.
      *
-     * @param savedInstanceState Bundle containing the activity's previously saved state.
+     * @param savedInstanceState Bundle containing the activity's previously saved
+     *                           state.
      */
     @RequiresApi(api = Build.VERSION_CODES.TIRAMISU)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // Restore previously saved state if available.
+        // Restore previously saved state if available
         if (savedInstanceState != null) {
             webViewState = savedInstanceState.getBundle("webViewState");
             darkModeEnabled = savedInstanceState.getBoolean("darkModeEnabled");
         }
         setContentView(R.layout.activity_main);
 
-        // Initialize Sentry for error logging, Firebase Messaging, and SharedPreferences.
-        final SentryManager sentryManager = new SentryManager(this);
+        // Initialize blur overlay
+        blurOverlay = findViewById(R.id.blurOverlay);
+
+        // Initialize Sentry for error logging, Firebase Messaging, and
+        // SharedPreferences
+        sentryManager = new SentryManager(this);
         MessagingInitializer.initialize(this);
         SharedPreferencesManager.init(this);
 
@@ -129,7 +140,7 @@ public class MainActivity extends AppCompatActivity {
             sentryManager.captureException(e);
         }
 
-        // Setup UI components and configurations.
+        // Setup UI components and configurations
         try {
             setupStatusBarForActivity();
             setupToolbarForActivity();
@@ -158,10 +169,17 @@ public class MainActivity extends AppCompatActivity {
             sentryManager.captureException(e);
         }
         try {
-            // Setup the WebView with the main URL.
+            // Setup the WebView with the main URL
             setupWebViewForActivity(getString(R.string.main_url));
         } catch (Exception e) {
             sentryManager.captureException(e);
+        }
+
+        // Check biometric authentication on app start
+        if (SharedPreferencesManager.getBoolean("app_lock_enable", true)) {
+            if (shouldAuthenticate()) {
+                showBiometricPrompt();
+            }
         }
     }
 
@@ -174,22 +192,22 @@ public class MainActivity extends AppCompatActivity {
         super.onDestroy();
         try {
             webViewState = null;
-            // Remove WebView from its parent if attached.
+            // Remove WebView from its parent if attached
             if (webView.getParent() != null) {
                 ((ViewGroup) webView.getParent()).removeView(webView);
             }
             if (webView != null) {
-                // Remove JavaScript interfaces and clients.
+                // Remove JavaScript interfaces and clients
                 webView.removeJavascriptInterface("SwipeToRefreshInterface");
-                webView.setWebViewClient(null);
-                webView.setWebChromeClient(null);
+                webView.setWebViewClient(new WebViewClient());
+                webView.setWebChromeClient(new WebChromeClient());
                 webView.setDownloadListener(null);
-                // Destroy the WebView.
+                // Destroy the WebView
                 webView.destroy();
                 webView = null;
             }
             if (swipeRefreshLayout != null) {
-                // Remove refresh listener.
+                // Remove refresh listener
                 swipeRefreshLayout.setOnRefreshListener(null);
                 swipeRefreshLayout = null;
             }
@@ -212,27 +230,40 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
+     * Handles results from other activities to ensure biometric authentication is
+     * maintained.
+     */
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        // Check biometric authentication when returning from other activities
+        if (SharedPreferencesManager.getBoolean("app_lock_enable", true)) {
+            if (shouldAuthenticate()) {
+                showBiometricPrompt();
+            }
+        }
+    }
+
+    /**
      * Resumes the WebView and triggers biometric authentication if needed.
      */
     @Override
     protected void onResume() {
         super.onResume();
-        // Resume WebView if it exists; otherwise, initialize it.
+        // Resume WebView if it exists; otherwise, initialize it
         if (webView != null) {
             webView.onResume();
         } else if (!isWebViewInitialized) {
             setupWebViewForActivity(getString(R.string.main_url));
         }
         SharedPreferencesManager.init(this);
-        // Check if app lock is enabled and if biometric authentication is needed.
+        // Refresh dark mode settings when returning from settings
+        setupDarkModeForActivity(sentryManager, SharedPreferencesManager.getString("dark_mode", "match"));
+        // Check if app lock is enabled and if biometric authentication is needed
         if (SharedPreferencesManager.getBoolean("app_lock_enable", true)) {
             if (shouldAuthenticate()) {
-                pendingBiometricPrompt = true;
-                // Show biometric prompt if page is loaded and drawn.
-                if (isPageLoaded && webView.getHeight() > 0) {
-                    showBiometricPrompt();
-                    pendingBiometricPrompt = false;
-                }
+                // Show biometric prompt immediately - don't wait for WebView state
+                showBiometricPrompt();
             }
         }
     }
@@ -240,7 +271,8 @@ public class MainActivity extends AppCompatActivity {
     /**
      * Determines whether biometric authentication is required based on the timeout.
      *
-     * @return true if the elapsed time since last authentication exceeds the timeout.
+     * @return true if the elapsed time since last authentication exceeds the
+     *         timeout.
      */
     private boolean shouldAuthenticate() {
         return System.currentTimeMillis() - lastAuthenticatedTime > AUTH_TIMEOUT_MS;
@@ -248,7 +280,8 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * Configures the status bar for the activity.
-     * For newer SDK versions, sets the background color using an OnApplyWindowInsetsListener.
+     * For newer SDK versions, sets the background color using an
+     * OnApplyWindowInsetsListener.
      */
     private void setupStatusBarForActivity() {
         if (Build.VERSION.SDK_INT > Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
@@ -261,17 +294,18 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * Sets up the toolbar for the activity.
-     * Configures the action bar and assigns a click listener to the connection status icon.
+     * Configures the action bar and assigns a click listener to the connection
+     * status icon.
      */
     private void setupToolbarForActivity() {
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
-            // Disable default title display.
+            // Disable default title display
             actionBar.setDisplayShowTitleEnabled(false);
         }
-        // Launch StatusActivity when the connection status icon is clicked.
+        // Launch StatusActivity when the connection status icon is clicked
         ImageView imageView = findViewById(R.id.connectionStatus);
         imageView.setOnClickListener(v -> startActivity(new Intent(this, StatusActivity.class)));
     }
@@ -334,7 +368,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * Initializes a visual indicator (e.g., a network or loading indicator) using the VisualIndicator class.
+     * Initializes a visual indicator (e.g., a network or loading indicator) using
+     * the VisualIndicator class.
      *
      * @param sentryManager  SentryManager instance for logging.
      * @param lifecycleOwner LifecycleOwner to manage the indicator's lifecycle.
@@ -356,9 +391,8 @@ public class MainActivity extends AppCompatActivity {
     @SuppressLint("SetJavaScriptEnabled")
     public void setupWebViewForActivity(String url) {
         webView = findViewById(R.id.webView);
-        isPageLoaded = false;
         try {
-            // Load URL directly if dark mode is disabled; otherwise, try to restore state.
+            // Load URL directly if dark mode is disabled; otherwise, try to restore state
             if (!darkModeEnabled) {
                 webViewState = null;
                 webView.loadUrl(url);
@@ -372,7 +406,7 @@ public class MainActivity extends AppCompatActivity {
         } catch (Exception e) {
             SentryManager.captureStaticException(e);
         }
-        // Configure WebView settings.
+        // Configure WebView settings
         WebSettings webViewSettings = webView.getSettings();
         webViewSettings.setJavaScriptEnabled(true);
         webViewSettings.setDomStorageEnabled(true);
@@ -381,16 +415,16 @@ public class MainActivity extends AppCompatActivity {
         webViewSettings.setAllowFileAccess(false);
         webViewSettings.setAllowContentAccess(false);
 
-        // Set a custom WebViewClient to handle page events.
+        // Set a custom WebViewClient to handle page events
         webView.setWebViewClient(new WebViewClient() {
             @Override
             public void onPageFinished(WebView view, String url) {
                 try {
-                    // Enable and flush cookies.
+                    // Enable and flush cookies
                     CookieManager.getInstance().setAcceptCookie(true);
                     CookieManager.getInstance().acceptCookie();
                     CookieManager.getInstance().flush();
-                    // Inject JavaScript to monitor modal dialogs and disable/enable swipe refresh.
+                    // Inject JavaScript to monitor modal dialogs and disable/enable swipe refresh
                     String js = "setInterval(function() {" +
                             "   var modal = document.querySelector('.modal-dialog.modal-lg.modal-dialog-scrollable');" +
                             "   if (modal) {" +
@@ -409,69 +443,58 @@ public class MainActivity extends AppCompatActivity {
                 } catch (Exception e) {
                     SentryManager.captureStaticException(e);
                 }
-                // Mark that the page has finished loading.
-                isPageLoaded = true;
-                // Add a PreDraw listener to trigger the biometric prompt after the WebView is drawn.
-                webView.getViewTreeObserver().addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener() {
-                    @Override
-                    public boolean onPreDraw() {
-                        webView.getViewTreeObserver().removeOnPreDrawListener(this);
-                        if (pendingBiometricPrompt) {
-                            showBiometricPrompt();
-                            pendingBiometricPrompt = false;
-                        }
-                        return true;
-                    }
-                });
             }
         });
 
-        // Set a WebChromeClient to handle JavaScript dialogs and progress updates.
+        // Set a WebChromeClient to handle JavaScript dialogs and progress updates
         webView.setWebChromeClient(new WebChromeClient());
 
-        // Enable algorithmic darkening if dark mode is enabled and supported.
+        // Enable algorithmic darkening if dark mode is enabled and supported
         if (Boolean.TRUE.equals(darkModeEnabled)) {
             if (WebViewFeature.isFeatureSupported(WebViewFeature.ALGORITHMIC_DARKENING)) {
                 WebSettingsCompat.setAlgorithmicDarkeningAllowed(webView.getSettings(), true);
             }
         }
-        // Setup file download handling.
+        // Setup file download handling
         setupDownloadManagerForActivity();
         isWebViewInitialized = true;
     }
 
     /**
      * Configures the SwipeRefreshLayout to allow pull-to-refresh on the WebView.
-     * Also adds a JavaScript interface to control swipe refresh behavior from web content.
+     * Also adds a JavaScript interface to control swipe refresh behavior from web
+     * content.
      */
     @SuppressLint("SetJavaScriptEnabled")
     private void setupSwipeToRefreshForActivity() {
         swipeRefreshLayout = findViewById(R.id.swipeRefreshLayout);
         webView = findViewById(R.id.webView);
         webView.getSettings().setJavaScriptEnabled(true);
-        // Add a JavaScript interface for controlling swipe refresh.
+        // Add a JavaScript interface for controlling swipe refresh
         webView.addJavascriptInterface(new WebAppInterface(this, swipeRefreshLayout), "AndroidInterface");
         swipeRefreshLayout.setOnRefreshListener(() -> {
-            // Reload the WebView when the user swipes to refresh.
+            // Reload the WebView when the user swipes to refresh
             webView.reload();
             swipeRefreshLayout.setRefreshing(false);
         });
     }
 
     /**
-     * Configures the download manager to handle file downloads initiated within the WebView.
+     * Configures the download manager to handle file downloads initiated within the
+     * WebView.
      * Downloads are saved to the app's external downloads directory.
      */
     private void setupDownloadManagerForActivity() {
         webView.setDownloadListener((url, userAgent, contentDisposition, mimetype, contentLength) -> {
             try {
-                // Create a new download request.
+                // Create a new download request
                 DownloadManager.Request request = new DownloadManager.Request(Uri.parse(url.trim()));
                 request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
-                request.setDestinationInExternalFilesDir(this, Environment.DIRECTORY_DOWNLOADS, "NextDNS-Configuration.mobileconfig");
+                request.setDestinationInExternalFilesDir(this, Environment.DIRECTORY_DOWNLOADS,
+                        "NextDNS-Configuration.mobileconfig");
                 DownloadManager downloadManager = (DownloadManager) getSystemService(DOWNLOAD_SERVICE);
                 if (downloadManager != null) {
-                    // Enqueue the download request.
+                    // Enqueue the download request
                     downloadManager.enqueue(request);
                 } else {
                     throw new Exception("DownloadManager is null");
@@ -485,13 +508,65 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
+     * Shows the blur overlay to hide WebView content during biometric
+     * authentication.
+     */
+    private void showBlurOverlay() {
+        if (blurOverlay != null) {
+            // Set overlay color based on current theme
+            int overlayColor;
+            if (darkModeEnabled) {
+                // Dark mode: #212529
+                overlayColor = android.graphics.Color.parseColor("#212529");
+            } else {
+                // Light mode: #007bff
+                overlayColor = android.graphics.Color.parseColor("#007bff");
+            }
+
+            blurOverlay.setBackgroundColor(overlayColor);
+            blurOverlay.setVisibility(View.VISIBLE);
+            blurOverlay.setScaleX(0.95f);
+            blurOverlay.setScaleY(0.95f);
+            blurOverlay.animate()
+                    .alpha(1.0f)
+                    .scaleX(1.0f)
+                    .scaleY(1.0f)
+                    .setDuration(300)
+                    .start();
+        }
+    }
+
+    /**
+     * Hides the blur overlay after biometric authentication is complete.
+     */
+    private void hideBlurOverlay() {
+        if (blurOverlay != null) {
+            blurOverlay.animate()
+                    .alpha(0.0f)
+                    .scaleX(1.05f)
+                    .scaleY(1.05f)
+                    .setDuration(300)
+                    .withEndAction(() -> {
+                        blurOverlay.setVisibility(View.GONE);
+                        blurOverlay.setScaleX(1.0f);
+                        blurOverlay.setScaleY(1.0f);
+                    })
+                    .start();
+        }
+    }
+
+    /**
      * Displays a biometric prompt to the user if authentication is available.
-     * On successful authentication, updates the last authentication time and, if necessary,
+     * On successful authentication, updates the last authentication time and, if
+     * necessary,
      * requests notification permission.
      */
     private void showBiometricPrompt() {
         final BiometricLock biometricLock = new BiometricLock(this);
         if (biometricLock.canAuthenticate()) {
+            // Show blur overlay to hide WebView content
+            showBlurOverlay();
+
             biometricLock.showPrompt(
                     getString(R.string.unlock_title),
                     getString(R.string.unlock_description),
@@ -499,42 +574,38 @@ public class MainActivity extends AppCompatActivity {
                     new BiometricLock.BiometricLockCallback() {
                         @Override
                         public void onAuthenticationSucceeded() {
-                            // Update the last authenticated time.
+                            // Update the last authenticated time
                             lastAuthenticatedTime = System.currentTimeMillis();
-                            // Check for notification permission on supported devices.
+                            // Hide blur overlay on successful authentication
+                            hideBlurOverlay();
+                            // Check for notification permission on supported devices
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                                if (ContextCompat.checkSelfPermission(MainActivity.this, POST_NOTIFICATIONS) == PackageManager.PERMISSION_DENIED) {
+                                if (ContextCompat.checkSelfPermission(MainActivity.this,
+                                        POST_NOTIFICATIONS) == PackageManager.PERMISSION_DENIED) {
                                     ActivityCompat.requestPermissions(MainActivity.this,
-                                            new String[]{POST_NOTIFICATIONS},
-                                            NOTIFICATION_PERMISSION_REQUEST_CODE);
+                                            new String[] { POST_NOTIFICATIONS },
+                                            2);
                                 }
                             }
                         }
 
                         @Override
                         public void onAuthenticationError(String error) {
-                            // Finish the activity on authentication error.
+                            // Hide blur overlay before finishing
+                            hideBlurOverlay();
+                            // Finish the activity on authentication error
                             finish();
                         }
 
                         @Override
                         public void onAuthenticationFailed() {
-                            // Finish the activity on authentication failure.
+                            // Hide blur overlay before finishing
+                            hideBlurOverlay();
+                            // Finish the activity on authentication failure
                             finish();
                         }
-                    }
-            );
+                    });
         }
-    }
-
-    /**
-     * Starts an activity specified by the target class.
-     *
-     * @param targetClass The class of the activity to launch.
-     */
-    private void startIntent(Class<?> targetClass) {
-        Intent intent = new Intent(this, targetClass);
-        startActivity(intent);
     }
 
     /**
@@ -558,10 +629,10 @@ public class MainActivity extends AppCompatActivity {
     @SuppressLint("NonConstantResourceId")
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Determine action based on selected menu item.
+        // Determine action based on selected menu item
         switch (item.getItemId()) {
             case R.id.back:
-                // Navigate back in the WebView history.
+                // Navigate back in the WebView history
                 if (webView == null) {
                     setupWebViewForActivity(getString(R.string.main_url));
                 } else {
@@ -569,7 +640,7 @@ public class MainActivity extends AppCompatActivity {
                 }
                 break;
             case R.id.refreshNextDNS:
-                // Reload the WebView.
+                // Reload the WebView
                 if (webView == null) {
                     setupWebViewForActivity(getString(R.string.main_url));
                 } else {
@@ -577,11 +648,11 @@ public class MainActivity extends AppCompatActivity {
                 }
                 break;
             case R.id.pingNextDNS:
-                // Launch the PingActivity.
-                startIntent(PingActivity.class);
+                // Launch the PingActivity
+                startActivity(new Intent(this, PingActivity.class));
                 break;
             case R.id.returnHome:
-                // Load the main URL in the WebView.
+                // Load the main URL in the WebView
                 if (webView == null) {
                     setupWebViewForActivity(getString(R.string.main_url));
                 } else {
@@ -589,12 +660,12 @@ public class MainActivity extends AppCompatActivity {
                 }
                 break;
             case R.id.privateDNS:
-                // Open wireless settings.
+                // Open wireless settings
                 startActivity(new Intent(Settings.ACTION_WIRELESS_SETTINGS));
                 break;
             case R.id.settings:
-                // Launch the SettingsActivity.
-                startIntent(SettingsActivity.class);
+                // Launch the SettingsActivity
+                startActivity(new Intent(this, SettingsActivity.class));
                 break;
         }
         return super.onOptionsItemSelected(item);

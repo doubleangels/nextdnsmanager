@@ -43,8 +43,8 @@
     <string name="sentry_enable_instructions">"Activer Sentry"</string>
     <string name="sentry_info">"En Savoir Plus"</string>
     <string name="sentry_info_instructions">"Appuyez pour en savoir plus sur Sentry."</string>
-    <string name="settings">"Réglages"</string>
-    <string name="settings_activity_title">"Réglages"</string>
+    <string name="settings">"Paramètres"</string>
+    <string name="settings_activity_title">"Paramètres"</string>
     <string name="tally_issues">Si vous n\'avez pas de compte GitHub, vous pouvez signaler un problème ici.</string>
     <string name="translate">"Traduire"</string>
     <string name="translate_summary">"Si vous voyez des traductions incorrectes, aidez-moi à les corriger ici."</string>
@@ -53,9 +53,9 @@
     <string name="user_agreement">"Contrat d'utilisation"</string>
     <string name="version">"Version"</string>
     <string name="whitelist_domains">"Si vous activez Sentry, veuillez mettre ces domaines en liste blanche dans votre configuration NextDNS."</string>
-    <string name="whitelist_instructions">"Veuillez envisager d'opter pour le suivi des erreurs Sentr. Cela ne collecte aucune information personnelle et m'aide à améliorer l'application."</string>
+    <string name="whitelist_instructions">"Veuillez envisager d'opter pour le suivi des erreurs Sentry. Cela ne collecte aucune information personnelle et m'aide à améliorer l'application."</string>
     <string-array name="dark_mode_entries">
-        <item>Système de Correspondance</item>
+        <item>Suivre le système</item>
         <item>Activé</item>
         <item>Désactivé</item>
     </string-array>
