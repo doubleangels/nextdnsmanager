@@ -218,6 +218,8 @@ public class MainActivity extends AppCompatActivity {
         super.onPause();
         if (webView != null) {
             webView.onPause();
+            // Disable drawing cache to free memory
+            webView.setDrawingCacheEnabled(false);
         }
     }
 
@@ -245,6 +247,8 @@ public class MainActivity extends AppCompatActivity {
         // Resume WebView if it exists; otherwise, initialize it.
         if (webView != null) {
             webView.onResume();
+            // Re-enable drawing cache when resuming
+            webView.setDrawingCacheEnabled(true);
         } else if (!isWebViewInitialized) {
             setupWebViewForActivity(getString(R.string.main_url));
         }
