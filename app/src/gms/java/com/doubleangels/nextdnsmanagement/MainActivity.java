@@ -73,8 +73,7 @@ public class MainActivity extends AppCompatActivity {
     // Timestamp (in ms) of the last successful biometric authentication.
     private long lastAuthenticatedTime = 0;
 
-    // Flags to control when to display the biometric prompt.
-    private boolean pendingBiometricPrompt = false;
+    // Flag to track if page has loaded.
     private boolean isPageLoaded = false;
 
     /**
@@ -169,6 +168,13 @@ public class MainActivity extends AppCompatActivity {
         } catch (Exception e) {
             sentryManager.captureException(e);
         }
+
+        // Check biometric authentication on app start
+        if (SharedPreferencesManager.getBoolean("app_lock_enable", true)) {
+            if (shouldAuthenticate()) {
+                showBiometricPrompt();
+            }
+        }
     }
 
     /**
@@ -218,6 +224,21 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
+     * Handles results from other activities to ensure biometric authentication is
+     * maintained.
+     */
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        // Check biometric authentication when returning from other activities
+        if (SharedPreferencesManager.getBoolean("app_lock_enable", true)) {
+            if (shouldAuthenticate()) {
+                showBiometricPrompt();
+            }
+        }
+    }
+
+    /**
      * Resumes the WebView and triggers biometric authentication if needed.
      */
     @Override
@@ -233,12 +254,8 @@ public class MainActivity extends AppCompatActivity {
         // Check if app lock is enabled and if biometric authentication is needed.
         if (SharedPreferencesManager.getBoolean("app_lock_enable", true)) {
             if (shouldAuthenticate()) {
-                pendingBiometricPrompt = true;
-                // Show biometric prompt if page is loaded and drawn.
-                if (isPageLoaded && webView.getHeight() > 0) {
-                    showBiometricPrompt();
-                    pendingBiometricPrompt = false;
-                }
+                // Show biometric prompt immediately - don't wait for WebView state
+                showBiometricPrompt();
             }
         }
     }
@@ -421,19 +438,6 @@ public class MainActivity extends AppCompatActivity {
                 }
                 // Mark that the page has finished loading.
                 isPageLoaded = true;
-                // Add a PreDraw listener to trigger the biometric prompt after the WebView is
-                // drawn.
-                webView.getViewTreeObserver().addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener() {
-                    @Override
-                    public boolean onPreDraw() {
-                        webView.getViewTreeObserver().removeOnPreDrawListener(this);
-                        if (pendingBiometricPrompt) {
-                            showBiometricPrompt();
-                            pendingBiometricPrompt = false;
-                        }
-                        return true;
-                    }
-                });
             }
         });
 

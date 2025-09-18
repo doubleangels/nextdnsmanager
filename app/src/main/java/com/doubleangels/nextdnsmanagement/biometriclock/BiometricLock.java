@@ -13,35 +13,36 @@ import java.util.concurrent.Executor;
 /**
  * A helper class that wraps Biometric + Device Credential authentication logic.
  * Usage:
- *   1. Create an instance in your Activity:
- *        BiometricLock biometricLock = new BiometricLock(this);
- *   2. Check if you can authenticate:
- *        if (biometricLock.canAuthenticate()) {
- *            // 3. Show the prompt:
- *            biometricLock.showPrompt(
- *               "Secure Login",
- *               "Use biometric or device lock",
- *               "Authenticate with fingerprint, face, or device PIN/pattern",
- *               new BiometricLockCallback() {
- *                   @Override
- *                   public void onAuthenticationSucceeded() {
- *                       // Access granted!
- *                   }
+ * 1. Create an instance in your Activity:
+ * BiometricLock biometricLock = new BiometricLock(this);
+ * 2. Check if you can authenticate:
+ * if (biometricLock.canAuthenticate()) {
+ * // 3. Show the prompt:
+ * biometricLock.showPrompt(
+ * "Secure Login",
+ * "Use biometric or device lock",
+ * "Authenticate with fingerprint, face, or device PIN/pattern",
+ * new BiometricLockCallback() {
+ * 
+ * @Override
+ *           public void onAuthenticationSucceeded() {
+ *           // Access granted!
+ *           }
  *
- *                   @Override
- *                   public void onAuthenticationError(String error) {
- *                       // Error or user canceled
- *                   }
+ * @Override
+ *           public void onAuthenticationError(String error) {
+ *           // Error or user canceled
+ *           }
  *
- *                   @Override
- *                   public void onAuthenticationFailed() {
- *                       // Biometric not recognized
- *                   }
- *               }
- *            );
- *        } else {
- *            // Handle fallback or show a message
- *        }
+ * @Override
+ *           public void onAuthenticationFailed() {
+ *           // Biometric not recognized
+ *           }
+ *           }
+ *           );
+ *           } else {
+ *           // Handle fallback or show a message
+ *           }
  */
 public class BiometricLock {
 
@@ -59,20 +60,30 @@ public class BiometricLock {
         SentryManager sentryManager = new SentryManager(activity);
         try {
             BiometricManager biometricManager = BiometricManager.from(activity);
+            if (biometricManager == null) {
+                sentryManager.captureMessage("BiometricManager is null - biometric authentication not available");
+                return false;
+            }
             int canAuth = biometricManager.canAuthenticate(
                     BiometricManager.Authenticators.BIOMETRIC_STRONG
-                            | BiometricManager.Authenticators.DEVICE_CREDENTIAL
-            );
-            return (canAuth == BiometricManager.BIOMETRIC_SUCCESS);
+                            | BiometricManager.Authenticators.DEVICE_CREDENTIAL);
+            boolean result = (canAuth == BiometricManager.BIOMETRIC_SUCCESS);
+            if (!result) {
+                sentryManager.captureMessage("Biometric authentication not available. Status: " + canAuth);
+            }
+            return result;
         } catch (Exception e) {
             sentryManager.captureException(e);
+            // Don't allow exceptions to bypass authentication - return false for security
             return false;
         }
     }
 
     /**
-     * Shows a prompt that allows either biometrics OR device credentials as a fallback.
-     * No negative button is required because the system handles fallback to device PIN/pattern/password.
+     * Shows a prompt that allows either biometrics OR device credentials as a
+     * fallback.
+     * No negative button is required because the system handles fallback to device
+     * PIN/pattern/password.
      *
      * @param title       Main title text
      * @param subtitle    Smaller text under the title
@@ -80,9 +91,9 @@ public class BiometricLock {
      * @param callback    Callback to handle results
      */
     public void showPrompt(String title,
-                           String subtitle,
-                           String description,
-                           BiometricLockCallback callback) {
+            String subtitle,
+            String description,
+            BiometricLockCallback callback) {
 
         SentryManager sentryManager = new SentryManager(activity);
 
@@ -95,7 +106,7 @@ public class BiometricLock {
                 new BiometricPrompt.AuthenticationCallback() {
                     @Override
                     public void onAuthenticationError(int errorCode,
-                                                      @NonNull CharSequence errString) {
+                            @NonNull CharSequence errString) {
                         super.onAuthenticationError(errorCode, errString);
                         String errorMessage = "Biometric authentication error (" + errorCode + "): " + errString;
                         sentryManager.captureMessage(errorMessage);

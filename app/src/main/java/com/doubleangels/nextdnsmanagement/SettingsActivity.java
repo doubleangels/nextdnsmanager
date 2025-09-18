@@ -25,7 +25,8 @@ import com.doubleangels.nextdnsmanagement.sharedpreferences.SharedPreferencesMan
 import java.util.Locale;
 
 /**
- * Activity for application settings. It initializes shared preferences, sets up error logging (Sentry),
+ * Activity for application settings. It initializes shared preferences, sets up
+ * error logging (Sentry),
  * configures dark mode settings, and loads the SettingsFragment.
  */
 public class SettingsActivity extends AppCompatActivity {
@@ -34,7 +35,8 @@ public class SettingsActivity extends AppCompatActivity {
     public SentryManager sentryManager;
 
     /**
-     * Called when the activity is created. Sets up shared preferences, error logging,
+     * Called when the activity is created. Sets up shared preferences, error
+     * logging,
      * dark mode configuration, and initializes the settings views.
      *
      * @param savedInstanceState Bundle containing saved state data, if any.
@@ -88,7 +90,8 @@ public class SettingsActivity extends AppCompatActivity {
     }
 
     /**
-     * Attaches a new base context with locale settings based on device configuration.
+     * Attaches a new base context with locale settings based on device
+     * configuration.
      *
      * @param newBase The new base context.
      */
@@ -143,7 +146,8 @@ public class SettingsActivity extends AppCompatActivity {
     public static class SettingsFragment extends PreferenceFragmentCompat {
 
         /**
-         * Called during fragment creation to initialize the preference hierarchy from an XML resource.
+         * Called during fragment creation to initialize the preference hierarchy from
+         * an XML resource.
          *
          * @param savedInstanceState Saved state, if any.
          * @param rootKey            The key of the preference hierarchy.
@@ -252,9 +256,10 @@ public class SettingsActivity extends AppCompatActivity {
                 button.setOnPreferenceClickListener(preference -> {
                     try {
                         // If the button is for whitelisting a domain, copy the text to clipboard.
-                        if ("whitelist_domain_1_button".equals(buttonKey) || "whitelist_domain_2_button".equals(buttonKey)) {
-                            ClipboardManager clipboardManager = (ClipboardManager)
-                                    requireContext().getSystemService(Context.CLIPBOARD_SERVICE);
+                        if ("whitelist_domain_1_button".equals(buttonKey)
+                                || "whitelist_domain_2_button".equals(buttonKey)) {
+                            ClipboardManager clipboardManager = (ClipboardManager) requireContext()
+                                    .getSystemService(Context.CLIPBOARD_SERVICE);
                             CharSequence copiedText = getString(textResource);
                             ClipData copiedData = ClipData.newPlainText("text", copiedText);
                             clipboardManager.setPrimaryClip(copiedData);
@@ -319,16 +324,65 @@ public class SettingsActivity extends AppCompatActivity {
 
         /**
          * Sets up a listener to handle changes to the app lock preference.
+         * Requires biometric authentication to disable app lock for security.
          *
          * @param setting The app lock switch preference.
          */
         private void setupAppLockChangeListener(SwitchPreference setting) {
             setting.setOnPreferenceChangeListener((preference, newValue) -> {
                 try {
-                    // Log and save the new app lock setting.
-                    new SentryManager(requireContext())
-                            .captureMessage("App lock set to " + newValue.toString() + ".");
-                    SharedPreferencesManager.putBoolean("app_lock_enable", (Boolean) newValue);
+                    boolean newValueBoolean = (Boolean) newValue;
+                    boolean currentValue = SharedPreferencesManager.getBoolean("app_lock_enable", true);
+
+                    // If trying to disable app lock, require biometric authentication
+                    if (currentValue && !newValueBoolean) {
+                        final BiometricLock biometricLock = new BiometricLock((AppCompatActivity) requireContext());
+                        if (biometricLock.canAuthenticate()) {
+                            biometricLock.showPrompt(
+                                    "Disable App Lock",
+                                    "Authenticate to disable app lock",
+                                    "Use biometric or device credentials to confirm this action",
+                                    new BiometricLock.BiometricLockCallback() {
+                                        @Override
+                                        public void onAuthenticationSucceeded() {
+                                            // Authentication successful, allow the change
+                                            SharedPreferencesManager.putBoolean("app_lock_enable", false);
+                                            new SentryManager(requireContext())
+                                                    .captureMessage(
+                                                            "App lock disabled after biometric authentication.");
+                                        }
+
+                                        @Override
+                                        public void onAuthenticationError(String error) {
+                                            // Authentication failed, revert the change
+                                            setting.setChecked(true);
+                                            new SentryManager(requireContext())
+                                                    .captureMessage(
+                                                            "App lock disable failed - authentication error: " + error);
+                                        }
+
+                                        @Override
+                                        public void onAuthenticationFailed() {
+                                            // Authentication failed, revert the change
+                                            setting.setChecked(true);
+                                            new SentryManager(requireContext())
+                                                    .captureMessage("App lock disable failed - authentication failed");
+                                        }
+                                    });
+                            return false; // Don't apply the change yet
+                        } else {
+                            // No biometric available, don't allow disabling
+                            setting.setChecked(true);
+                            new SentryManager(requireContext())
+                                    .captureMessage("Cannot disable app lock - biometric authentication not available");
+                            return false;
+                        }
+                    } else {
+                        // Enabling app lock or other changes don't require authentication
+                        SharedPreferencesManager.putBoolean("app_lock_enable", newValueBoolean);
+                        new SentryManager(requireContext())
+                                .captureMessage("App lock set to " + newValue.toString() + ".");
+                    }
                 } catch (Exception e) {
                     new SentryManager(requireContext()).captureException(e);
                 }
