@@ -16,7 +16,6 @@ import android.view.ContextThemeWrapper;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import jp.wasabeef.blurry.Blurry;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.webkit.CookieManager;
@@ -515,34 +514,26 @@ public class MainActivity extends AppCompatActivity {
      */
     private void showBlurOverlay() {
         if (blurOverlay != null) {
-            try {
-                // Apply blur effect to the entire content behind the overlay
-                Blurry.with(this)
-                        .radius(25)
-                        .sampling(4)
-                        .color(android.graphics.Color.argb(66, 255, 255, 255))
-                        .async()
-                        .animate(300)
-                        .onto((ViewGroup) findViewById(android.R.id.content));
-
-                blurOverlay.setVisibility(View.VISIBLE);
-                blurOverlay.setScaleX(0.95f);
-                blurOverlay.setScaleY(0.95f);
-                blurOverlay.animate()
-                        .alpha(1.0f)
-                        .scaleX(1.0f)
-                        .scaleY(1.0f)
-                        .setDuration(300)
-                        .start();
-            } catch (Exception e) {
-                // Fallback: simple white overlay
-                blurOverlay.setBackgroundColor(android.graphics.Color.WHITE);
-                blurOverlay.setVisibility(View.VISIBLE);
-                blurOverlay.animate()
-                        .alpha(1.0f)
-                        .setDuration(300)
-                        .start();
+            // Set overlay color based on current theme
+            int overlayColor;
+            if (darkModeEnabled) {
+                // Dark mode: #212529
+                overlayColor = android.graphics.Color.parseColor("#212529");
+            } else {
+                // Light mode: #007bff
+                overlayColor = android.graphics.Color.parseColor("#007bff");
             }
+
+            blurOverlay.setBackgroundColor(overlayColor);
+            blurOverlay.setVisibility(View.VISIBLE);
+            blurOverlay.setScaleX(0.95f);
+            blurOverlay.setScaleY(0.95f);
+            blurOverlay.animate()
+                    .alpha(1.0f)
+                    .scaleX(1.0f)
+                    .scaleY(1.0f)
+                    .setDuration(300)
+                    .start();
         }
     }
 
@@ -551,13 +542,6 @@ public class MainActivity extends AppCompatActivity {
      */
     private void hideBlurOverlay() {
         if (blurOverlay != null) {
-            try {
-                // Remove the blur effect
-                Blurry.delete((ViewGroup) findViewById(android.R.id.content));
-            } catch (Exception e) {
-                // Ignore errors when removing blur
-            }
-
             blurOverlay.animate()
                     .alpha(0.0f)
                     .scaleX(1.05f)

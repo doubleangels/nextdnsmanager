@@ -74,7 +74,6 @@ dependencies {
     implementation 'com.squareup.retrofit2:converter-gson:3.0.0'
     implementation 'de.hdodenhof:circleimageview:3.1.0'
     implementation 'io.sentry:sentry-android:8.21.1'
-    implementation 'jp.wasabeef:blurry:4.0.1'
     debugImplementation 'com.squareup.leakcanary:leakcanary-android:2.14'
 }
 
