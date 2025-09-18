@@ -352,6 +352,8 @@ public class SettingsActivity extends AppCompatActivity {
                                         public void onAuthenticationSucceeded() {
                                             // Authentication successful, allow the change
                                             SharedPreferencesManager.putBoolean("app_lock_enable", false);
+                                            // Update the UI toggle to reflect the change
+                                            setting.setChecked(false);
                                             new SentryManager(requireContext())
                                                     .captureMessage(
                                                             "App lock disabled after biometric authentication.");

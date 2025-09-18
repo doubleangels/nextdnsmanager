@@ -26,10 +26,6 @@ public class BiometricLock {
         SentryManager sentryManager = new SentryManager(activity);
         try {
             BiometricManager biometricManager = BiometricManager.from(activity);
-            if (biometricManager == null) {
-                sentryManager.captureMessage("BiometricManager is null - biometric authentication not available");
-                return false;
-            }
             int canAuth = biometricManager.canAuthenticate(
                     BiometricManager.Authenticators.BIOMETRIC_STRONG
                             | BiometricManager.Authenticators.DEVICE_CREDENTIAL);
