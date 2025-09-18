@@ -21,14 +21,16 @@ public class MessagingInitializer {
 
     /**
      * Initializes Firebase, retrieves the device's FCM registration token,
-     * stores it in shared preferences, and subscribes the device to the "general" topic.
+     * stores it in shared preferences, and subscribes the device to the "general"
+     * topic.
      *
-     * @param context The context from which this method is called (e.g., an Application or Activity).
+     * @param context The context from which this method is called (e.g., an
+     *                Application or Activity).
      */
     public static void initialize(Context context) {
         SentryManager sentryManager = new SentryManager(context);
 
-        // Initialize Firebase (Required before using Firebase services).
+        // Initialize Firebase (Required before using Firebase services)
         try {
             FirebaseApp.initializeApp(context);
         } catch (Exception e) {
@@ -36,7 +38,7 @@ public class MessagingInitializer {
             return;
         }
 
-        // Retrieve the FCM registration token asynchronously.
+        // Retrieve the FCM registration token asynchronously
         FirebaseMessaging.getInstance().getToken()
                 .addOnCompleteListener(task -> {
                     try {
@@ -49,7 +51,7 @@ public class MessagingInitializer {
                             return;
                         }
 
-                        // Get the token result from the task.
+                        // Get the token result from the task
                         String token = task.getResult();
                         if (token == null) {
                             sentryManager.captureMessage("FCM token is null");
@@ -58,11 +60,11 @@ public class MessagingInitializer {
 
                         sentryManager.captureMessage("FCM Token retrieved: " + token);
 
-                        // Store the token in SharedPreferences for future use.
+                        // Store the token in SharedPreferences for future use
                         SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
                         prefs.edit().putString(KEY_FCM_TOKEN, token).apply();
 
-                        // Subscribe the user to the "general" topic.
+                        // Subscribe the user to the "general" topic
                         FirebaseMessaging.getInstance().subscribeToTopic("general")
                                 .addOnCompleteListener(task1 -> {
                                     try {

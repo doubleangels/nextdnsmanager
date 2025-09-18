@@ -51,26 +51,26 @@ import java.util.Locale;
  */
 public class MainActivity extends AppCompatActivity {
 
-    // Main WebView for displaying web content.
+    // Main WebView for displaying web content
     private WebView webView;
     // SwipeRefreshLayout wrapping the WebView to enable pull-to-refresh
-    // functionality.
+    // functionality
     private SwipeRefreshLayout swipeRefreshLayout;
-    // Flag indicating whether dark mode is enabled.
+    // Flag indicating whether dark mode is enabled
     private Boolean darkModeEnabled = false;
-    // Flag to avoid re-initializing the WebView if it has already been set up.
+    // Flag to avoid re-initializing the WebView if it has already been set up
     private Boolean isWebViewInitialized = false;
     // Bundle used to store and restore the WebView state across configuration
-    // changes.
+    // changes
     private Bundle webViewState = null;
-    // Biometric authentication timeout in milliseconds (5 minutes).
+    // Biometric authentication timeout in milliseconds (5 minutes)
     private static final long AUTH_TIMEOUT_MS = 5 * 60 * 1000;
-    // Timestamp (in ms) of the last successful biometric authentication.
+    // Timestamp (in ms) of the last successful biometric authentication
     private long lastAuthenticatedTime = 0;
 
-    // Blur overlay view to hide content during biometric authentication.
+    // Blur overlay view to hide content during biometric authentication
     private View blurOverlay;
-    // SentryManager instance for error logging.
+    // SentryManager instance for error logging
     private SentryManager sentryManager;
 
     /**
@@ -83,13 +83,13 @@ public class MainActivity extends AppCompatActivity {
     protected void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
         try {
-            // Save the WebView state if it exists.
+            // Save the WebView state if it exists
             if (webView != null) {
                 Bundle webViewBundle = new Bundle();
                 webView.saveState(webViewBundle);
                 outState.putBundle("webViewState", webViewBundle);
             }
-            // Save the dark mode flag.
+            // Save the dark mode flag
             outState.putBoolean("darkModeEnabled", darkModeEnabled);
         } catch (Exception e) {
             SentryManager.captureStaticException(e);
@@ -109,7 +109,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // Restore previously saved state if available.
+        // Restore previously saved state if available
         if (savedInstanceState != null) {
             webViewState = savedInstanceState.getBundle("webViewState");
             darkModeEnabled = savedInstanceState.getBoolean("darkModeEnabled");
@@ -119,7 +119,7 @@ public class MainActivity extends AppCompatActivity {
         // Initialize blur overlay
         blurOverlay = findViewById(R.id.blurOverlay);
 
-        // Initialize Sentry for error logging and SharedPreferences.
+        // Initialize Sentry for error logging and SharedPreferences
         sentryManager = new SentryManager(this);
         SharedPreferencesManager.init(this);
 
@@ -132,7 +132,7 @@ public class MainActivity extends AppCompatActivity {
             sentryManager.captureException(e);
         }
 
-        // Setup UI components and configurations.
+        // Setup UI components and configurations
         try {
             setupStatusBarForActivity();
             setupToolbarForActivity();
@@ -161,7 +161,7 @@ public class MainActivity extends AppCompatActivity {
             sentryManager.captureException(e);
         }
         try {
-            // Setup the WebView with the main URL.
+            // Setup the WebView with the main URL
             setupWebViewForActivity(getString(R.string.main_url));
         } catch (Exception e) {
             sentryManager.captureException(e);
@@ -184,22 +184,22 @@ public class MainActivity extends AppCompatActivity {
         super.onDestroy();
         try {
             webViewState = null;
-            // Remove WebView from its parent if attached.
+            // Remove WebView from its parent if attached
             if (webView.getParent() != null) {
                 ((ViewGroup) webView.getParent()).removeView(webView);
             }
             if (webView != null) {
-                // Remove JavaScript interfaces and clients.
+                // Remove JavaScript interfaces and clients
                 webView.removeJavascriptInterface("SwipeToRefreshInterface");
                 webView.setWebViewClient(new WebViewClient());
                 webView.setWebChromeClient(new WebChromeClient());
                 webView.setDownloadListener(null);
-                // Destroy the WebView.
+                // Destroy the WebView
                 webView.destroy();
                 webView = null;
             }
             if (swipeRefreshLayout != null) {
-                // Remove refresh listener.
+                // Remove refresh listener
                 swipeRefreshLayout.setOnRefreshListener(null);
                 swipeRefreshLayout = null;
             }
@@ -242,7 +242,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        // Resume WebView if it exists; otherwise, initialize it.
+        // Resume WebView if it exists; otherwise, initialize it
         if (webView != null) {
             webView.onResume();
         } else if (!isWebViewInitialized) {
@@ -251,7 +251,7 @@ public class MainActivity extends AppCompatActivity {
         SharedPreferencesManager.init(this);
         // Refresh dark mode settings when returning from settings
         setupDarkModeForActivity(sentryManager, SharedPreferencesManager.getString("dark_mode", "match"));
-        // Check if app lock is enabled and if biometric authentication is needed.
+        // Check if app lock is enabled and if biometric authentication is needed
         if (SharedPreferencesManager.getBoolean("app_lock_enable", true)) {
             if (shouldAuthenticate()) {
                 // Show biometric prompt immediately - don't wait for WebView state
@@ -294,10 +294,10 @@ public class MainActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
         ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
-            // Disable default title display.
+            // Disable default title display
             actionBar.setDisplayShowTitleEnabled(false);
         }
-        // Launch StatusActivity when the connection status icon is clicked.
+        // Launch StatusActivity when the connection status icon is clicked
         ImageView imageView = findViewById(R.id.connectionStatus);
         imageView.setOnClickListener(v -> startActivity(new Intent(this, StatusActivity.class)));
     }
@@ -384,7 +384,7 @@ public class MainActivity extends AppCompatActivity {
     public void setupWebViewForActivity(String url) {
         webView = findViewById(R.id.webView);
         try {
-            // Load URL directly if dark mode is disabled; otherwise, try to restore state.
+            // Load URL directly if dark mode is disabled; otherwise, try to restore state
             if (!darkModeEnabled) {
                 webViewState = null;
                 webView.loadUrl(url);
@@ -398,7 +398,7 @@ public class MainActivity extends AppCompatActivity {
         } catch (Exception e) {
             SentryManager.captureStaticException(e);
         }
-        // Configure WebView settings.
+        // Configure WebView settings
         WebSettings webViewSettings = webView.getSettings();
         webViewSettings.setJavaScriptEnabled(true);
         webViewSettings.setDomStorageEnabled(true);
@@ -407,16 +407,16 @@ public class MainActivity extends AppCompatActivity {
         webViewSettings.setAllowFileAccess(false);
         webViewSettings.setAllowContentAccess(false);
 
-        // Set a custom WebViewClient to handle page events.
+        // Set a custom WebViewClient to handle page events
         webView.setWebViewClient(new WebViewClient() {
             @Override
             public void onPageFinished(WebView view, String url) {
                 try {
-                    // Enable and flush cookies.
+                    // Enable and flush cookies
                     CookieManager.getInstance().setAcceptCookie(true);
                     CookieManager.getInstance().acceptCookie();
                     CookieManager.getInstance().flush();
-                    // Inject JavaScript to monitor modal dialogs and disable/enable swipe refresh.
+                    // Inject JavaScript to monitor modal dialogs and disable/enable swipe refresh
                     String js = "setInterval(function() {" +
                             "   var modal = document.querySelector('.modal-dialog.modal-lg.modal-dialog-scrollable');" +
                             "   if (modal) {" +
@@ -438,16 +438,16 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        // Set a WebChromeClient to handle JavaScript dialogs and progress updates.
+        // Set a WebChromeClient to handle JavaScript dialogs and progress updates
         webView.setWebChromeClient(new WebChromeClient());
 
-        // Enable algorithmic darkening if dark mode is enabled and supported.
+        // Enable algorithmic darkening if dark mode is enabled and supported
         if (Boolean.TRUE.equals(darkModeEnabled)) {
             if (WebViewFeature.isFeatureSupported(WebViewFeature.ALGORITHMIC_DARKENING)) {
                 WebSettingsCompat.setAlgorithmicDarkeningAllowed(webView.getSettings(), true);
             }
         }
-        // Setup file download handling.
+        // Setup file download handling
         setupDownloadManagerForActivity();
         isWebViewInitialized = true;
     }
@@ -462,10 +462,10 @@ public class MainActivity extends AppCompatActivity {
         swipeRefreshLayout = findViewById(R.id.swipeRefreshLayout);
         webView = findViewById(R.id.webView);
         webView.getSettings().setJavaScriptEnabled(true);
-        // Add a JavaScript interface for controlling swipe refresh.
+        // Add a JavaScript interface for controlling swipe refresh
         webView.addJavascriptInterface(new WebAppInterface(this, swipeRefreshLayout), "AndroidInterface");
         swipeRefreshLayout.setOnRefreshListener(() -> {
-            // Reload the WebView when the user swipes to refresh.
+            // Reload the WebView when the user swipes to refresh
             webView.reload();
             swipeRefreshLayout.setRefreshing(false);
         });
@@ -479,14 +479,14 @@ public class MainActivity extends AppCompatActivity {
     private void setupDownloadManagerForActivity() {
         webView.setDownloadListener((url, userAgent, contentDisposition, mimetype, contentLength) -> {
             try {
-                // Create a new download request.
+                // Create a new download request
                 DownloadManager.Request request = new DownloadManager.Request(Uri.parse(url.trim()));
                 request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
                 request.setDestinationInExternalFilesDir(this, Environment.DIRECTORY_DOWNLOADS,
                         "NextDNS-Configuration.mobileconfig");
                 DownloadManager downloadManager = (DownloadManager) getSystemService(DOWNLOAD_SERVICE);
                 if (downloadManager != null) {
-                    // Enqueue the download request.
+                    // Enqueue the download request
                     downloadManager.enqueue(request);
                 } else {
                     throw new Exception("DownloadManager is null");
@@ -566,7 +566,7 @@ public class MainActivity extends AppCompatActivity {
                     new BiometricLock.BiometricLockCallback() {
                         @Override
                         public void onAuthenticationSucceeded() {
-                            // Update the last authenticated time.
+                            // Update the last authenticated time
                             lastAuthenticatedTime = System.currentTimeMillis();
                             // Hide blur overlay on successful authentication
                             hideBlurOverlay();
@@ -576,7 +576,7 @@ public class MainActivity extends AppCompatActivity {
                         public void onAuthenticationError(String error) {
                             // Hide blur overlay before finishing
                             hideBlurOverlay();
-                            // Finish the activity on authentication error.
+                            // Finish the activity on authentication error
                             finish();
                         }
 
@@ -584,7 +584,7 @@ public class MainActivity extends AppCompatActivity {
                         public void onAuthenticationFailed() {
                             // Hide blur overlay before finishing
                             hideBlurOverlay();
-                            // Finish the activity on authentication failure.
+                            // Finish the activity on authentication failure
                             finish();
                         }
                     });
@@ -612,10 +612,10 @@ public class MainActivity extends AppCompatActivity {
     @SuppressLint("NonConstantResourceId")
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Determine action based on selected menu item.
+        // Determine action based on selected menu item
         switch (item.getItemId()) {
             case R.id.back:
-                // Navigate back in the WebView history.
+                // Navigate back in the WebView history
                 if (webView == null) {
                     setupWebViewForActivity(getString(R.string.main_url));
                 } else {
@@ -623,7 +623,7 @@ public class MainActivity extends AppCompatActivity {
                 }
                 break;
             case R.id.refreshNextDNS:
-                // Reload the WebView.
+                // Reload the WebView
                 if (webView == null) {
                     setupWebViewForActivity(getString(R.string.main_url));
                 } else {
@@ -631,11 +631,11 @@ public class MainActivity extends AppCompatActivity {
                 }
                 break;
             case R.id.pingNextDNS:
-                // Launch the PingActivity.
+                // Launch the PingActivity
                 startActivity(new Intent(this, PingActivity.class));
                 break;
             case R.id.returnHome:
-                // Load the main URL in the WebView.
+                // Load the main URL in the WebView
                 if (webView == null) {
                     setupWebViewForActivity(getString(R.string.main_url));
                 } else {
@@ -643,11 +643,11 @@ public class MainActivity extends AppCompatActivity {
                 }
                 break;
             case R.id.privateDNS:
-                // Open wireless settings.
+                // Open wireless settings
                 startActivity(new Intent(Settings.ACTION_WIRELESS_SETTINGS));
                 break;
             case R.id.settings:
-                // Launch the SettingsActivity.
+                // Launch the SettingsActivity
                 startActivity(new Intent(this, SettingsActivity.class));
                 break;
         }

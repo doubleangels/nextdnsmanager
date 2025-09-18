@@ -35,18 +35,18 @@ import okhttp3.Response;
  */
 public class VisualIndicator {
 
-    // Used for capturing exceptions or logs to Sentry.
+    // Used for capturing exceptions or logs to Sentry
     private final SentryManager sentryManager;
 
     // OkHttpClient instance for making network calls (to check NextDNS status,
-    // etc.).
+    // etc)
     private final OkHttpClient httpClient;
 
     // Manages network connections and can register callbacks for connectivity
-    // changes.
+    // changes
     private ConnectivityManager connectivityManager;
 
-    // Callback to track changes in network properties (e.g., Private DNS settings).
+    // Callback to track changes in network properties (e.g., Private DNS settings)
     private ConnectivityManager.NetworkCallback networkCallback;
 
     /**
@@ -152,7 +152,7 @@ public class VisualIndicator {
     public void update(@Nullable LinkProperties linkProperties, AppCompatActivity activity, Context context) {
         try {
             if (linkProperties == null) {
-                // No valid network. Show a 'failure' icon in red.
+                // No valid network. Show a 'failure' icon in red
                 setConnectionStatus(
                         activity.findViewById(R.id.connectionStatus),
                         R.drawable.failure,
@@ -208,7 +208,7 @@ public class VisualIndicator {
             @Override
             public void onResponse(@NonNull Call call, @NonNull Response response) {
                 try {
-                    // If the response is not successful, capture the failure.
+                    // If the response is not successful, capture the failure
                     if (!response.isSuccessful()) {
                         sentryManager.captureMessage("Response was not successful.");
                         response.close();

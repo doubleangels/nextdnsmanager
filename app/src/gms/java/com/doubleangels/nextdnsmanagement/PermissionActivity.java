@@ -32,9 +32,9 @@ import java.util.Locale;
 @RequiresApi(api = Build.VERSION_CODES.TIRAMISU)
 public class PermissionActivity extends AppCompatActivity {
 
-    // Notification permission constant.
+    // Notification permission constant
     private static final String POST_NOTIFICATIONS = android.Manifest.permission.POST_NOTIFICATIONS;
-    // Sentry manager instance for capturing errors.
+    // Sentry manager instance for capturing errors
     private SentryManager sentryManager;
 
     /**
@@ -48,19 +48,19 @@ public class PermissionActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // Set the layout for this activity.
+        // Set the layout for this activity
         setContentView(R.layout.activity_permission);
 
-        // Initialize the SentryManager.
+        // Initialize the SentryManager
         sentryManager = new SentryManager(this);
         try {
-            // Initialize Sentry if it is enabled.
+            // Initialize Sentry if it is enabled
             if (sentryManager.isEnabled()) {
                 SentryInitializer.initialize(this);
             }
-            // Configure the status bar appearance.
+            // Configure the status bar appearance
             setupStatusBarForActivity();
-            // If notification permission is required, request it.
+            // If notification permission is required, request it
             if (needsNotificationPermission()) {
                 requestNotificationPermission();
             }
@@ -68,7 +68,7 @@ public class PermissionActivity extends AppCompatActivity {
             sentryManager.captureException(e);
         }
 
-        // Set up the RecyclerView to display the list of permissions.
+        // Set up the RecyclerView to display the list of permissions
         RecyclerView recyclerView = findViewById(R.id.permissionRecyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         List<PermissionInfo> permissions = getPermissionsList(sentryManager);
@@ -82,12 +82,12 @@ public class PermissionActivity extends AppCompatActivity {
      */
     @Override
     protected void onDestroy() {
-        // Remove the adapter from RecyclerView to free resources.
+        // Remove the adapter from RecyclerView to free resources
         RecyclerView recyclerView = findViewById(R.id.permissionRecyclerView);
         if (recyclerView != null) {
             recyclerView.setAdapter(null);
         }
-        // Release SentryManager.
+        // Release SentryManager
         if (sentryManager != null) {
             sentryManager = null;
         }
@@ -102,14 +102,14 @@ public class PermissionActivity extends AppCompatActivity {
      */
     @Override
     protected void attachBaseContext(Context newBase) {
-        // Retrieve the current configuration.
+        // Retrieve the current configuration
         Configuration config = newBase.getResources().getConfiguration();
-        // Get the primary locale or default locale if none exists.
+        // Get the primary locale or default locale if none exists
         Locale newLocale = (!config.getLocales().isEmpty()) ? config.getLocales().get(0) : Locale.getDefault();
-        // Create a new configuration overriding the locale.
+        // Create a new configuration overriding the locale
         Configuration overrideConfig = new Configuration(config);
         overrideConfig.setLocale(newLocale);
-        // Create a localized context with the override configuration.
+        // Create a localized context with the override configuration
         Context localizedContext = newBase.createConfigurationContext(overrideConfig);
         super.attachBaseContext(localizedContext);
     }
@@ -154,14 +154,14 @@ public class PermissionActivity extends AppCompatActivity {
      * dark).
      */
     private void setupStatusBarForActivity() {
-        // Check if the Android version supports WindowInsetsController.
+        // Check if the Android version supports WindowInsetsController
         if (Build.VERSION.SDK_INT > Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             WindowInsetsController insetsController = getWindow().getInsetsController();
             if (insetsController != null) {
-                // Determine if the system is in light theme mode.
+                // Determine if the system is in light theme mode
                 boolean isLightTheme = (getResources().getConfiguration().uiMode
                         & Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_NO;
-                // Set the appearance of the system bars based on the theme.
+                // Set the appearance of the system bars based on the theme
                 insetsController.setSystemBarsAppearance(
                         isLightTheme ? WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS : 0,
                         WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS);
@@ -194,11 +194,11 @@ public class PermissionActivity extends AppCompatActivity {
     private List<PermissionInfo> getPermissionsList(SentryManager sentryManager) {
         List<PermissionInfo> permissions = new ArrayList<>();
         try {
-            // Retrieve package info with requested permissions.
+            // Retrieve package info with requested permissions
             PackageInfo packageInfo = getPackageManager().getPackageInfo(
                     getPackageName(),
                     PackageManager.GET_PERMISSIONS);
-            // If there are any requested permissions, add them to the list.
+            // If there are any requested permissions, add them to the list
             if (packageInfo.requestedPermissions != null) {
                 for (String permission : packageInfo.requestedPermissions) {
                     PermissionInfo permissionInfo = getPackageManager().getPermissionInfo(permission, 0);

@@ -97,11 +97,11 @@ public class SentryManager {
         }
 
         if (isEnabled()) {
-            // When enabled, capture the exception in Sentry for remote error tracking.
+            // When enabled, capture the exception in Sentry for remote error tracking
             Sentry.captureException(e);
             Log.e(TAG, "Got error:", e);
         } else {
-            // If not enabled, just log the error locally.
+            // If not enabled, just log the error locally
             Log.e(TAG, "Got error:", e);
         }
     }
@@ -123,7 +123,7 @@ public class SentryManager {
             return;
         }
 
-        // In a static context, we assume Sentry is enabled.
+        // In a static context, we assume Sentry is enabled
         Sentry.captureException(e);
         Log.e(TAG, "Got error:", e);
     }
@@ -137,11 +137,11 @@ public class SentryManager {
     public void captureMessage(String message) {
         if (isEnabled()) {
             // If Sentry is enabled, add a breadcrumb (a trail of events leading to a crash
-            // or issue).
+            // or issue)
             Sentry.addBreadcrumb(message);
             Log.d(TAG, message);
         } else {
-            // Otherwise, log the message locally.
+            // Otherwise, log the message locally
             Log.d(TAG, message);
         }
     }
