@@ -10,40 +10,6 @@ import com.doubleangels.nextdnsmanagement.sentry.SentryManager;
 
 import java.util.concurrent.Executor;
 
-/**
- * A helper class that wraps Biometric + Device Credential authentication logic.
- * Usage:
- * 1. Create an instance in your Activity:
- * BiometricLock biometricLock = new BiometricLock(this);
- * 2. Check if you can authenticate:
- * if (biometricLock.canAuthenticate()) {
- * // 3. Show the prompt:
- * biometricLock.showPrompt(
- * "Secure Login",
- * "Use biometric or device lock",
- * "Authenticate with fingerprint, face, or device PIN/pattern",
- * new BiometricLockCallback() {
- * 
- * @Override
- *           public void onAuthenticationSucceeded() {
- *           // Access granted!
- *           }
- *
- * @Override
- *           public void onAuthenticationError(String error) {
- *           // Error or user canceled
- *           }
- *
- * @Override
- *           public void onAuthenticationFailed() {
- *           // Biometric not recognized
- *           }
- *           }
- *           );
- *           } else {
- *           // Handle fallback or show a message
- *           }
- */
 public class BiometricLock {
 
     private final AppCompatActivity activity;

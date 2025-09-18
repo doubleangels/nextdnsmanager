@@ -381,7 +381,7 @@ public class SettingsActivity extends AppCompatActivity {
                         // Enabling app lock or other changes don't require authentication
                         SharedPreferencesManager.putBoolean("app_lock_enable", newValueBoolean);
                         new SentryManager(requireContext())
-                                .captureMessage("App lock set to " + newValue.toString() + ".");
+                                .captureMessage("App lock set to " + newValue + ".");
                     }
                 } catch (Exception e) {
                     new SentryManager(requireContext()).captureException(e);
