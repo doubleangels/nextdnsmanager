@@ -26,25 +26,26 @@ import java.util.Locale;
 /**
  * Activity that displays the list of permissions requested by the application.
  * <p>
- * This activity initializes Sentry for error logging, sets up the status bar appearance,
+ * This activity initializes Sentry for error logging, sets up the status bar
+ * appearance,
  * and populates a RecyclerView with the application's permissions.
  * </p>
  */
 @RequiresApi(api = Build.VERSION_CODES.TIRAMISU)
 public class PermissionActivity extends AppCompatActivity {
 
-    // Request code for notification permission (if needed in the future).
-    private static final int REQUEST_POST_NOTIFICATIONS = 100;
     // SentryManager instance for capturing exceptions and logging messages.
     private SentryManager sentryManager;
 
     /**
      * Called when the activity is created.
      * <p>
-     * Initializes Sentry, sets up the status bar, and configures the RecyclerView to display permissions.
+     * Initializes Sentry, sets up the status bar, and configures the RecyclerView
+     * to display permissions.
      * </p>
      *
-     * @param savedInstanceState Bundle containing the activity's previously saved state, if any.
+     * @param savedInstanceState Bundle containing the activity's previously saved
+     *                           state, if any.
      */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -77,7 +78,8 @@ public class PermissionActivity extends AppCompatActivity {
     /**
      * Called when the activity is about to be destroyed.
      * <p>
-     * Cleans up resources by removing the adapter from the RecyclerView and releasing the SentryManager instance.
+     * Cleans up resources by removing the adapter from the RecyclerView and
+     * releasing the SentryManager instance.
      * </p>
      */
     @Override
@@ -95,7 +97,8 @@ public class PermissionActivity extends AppCompatActivity {
     }
 
     /**
-     * Attaches a new base context with the locale configured based on the device settings.
+     * Attaches a new base context with the locale configured based on the device
+     * settings.
      *
      * @param newBase The new base context.
      */
@@ -103,7 +106,8 @@ public class PermissionActivity extends AppCompatActivity {
     protected void attachBaseContext(Context newBase) {
         // Get the current configuration.
         Configuration config = newBase.getResources().getConfiguration();
-        // Determine the primary locale from the configuration, or use the default locale.
+        // Determine the primary locale from the configuration, or use the default
+        // locale.
         Locale newLocale = (!config.getLocales().isEmpty()) ? config.getLocales().get(0) : Locale.getDefault();
         // Create a new configuration with the desired locale.
         Configuration overrideConfig = new Configuration(config);
@@ -116,7 +120,8 @@ public class PermissionActivity extends AppCompatActivity {
     /**
      * Called when the user responds to a permission request.
      * <p>
-     * If the notification permission was requested, the permissions list is refreshed.
+     * If the notification permission was requested, the permissions list is
+     * refreshed.
      * </p>
      *
      * @param requestCode  The request code passed in requestPermissions().
@@ -125,17 +130,18 @@ public class PermissionActivity extends AppCompatActivity {
      */
     @Override
     public void onRequestPermissionsResult(int requestCode,
-                                           @NonNull String[] permissions,
-                                           @NonNull int[] grantResults) {
+            @NonNull String[] permissions,
+            @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         // Check if the notification permission request was handled.
-        if (requestCode == REQUEST_POST_NOTIFICATIONS) {
+        if (requestCode == 100) {
             refreshPermissionsList();
         }
     }
 
     /**
-     * Configures the status bar appearance based on the current UI mode (light or dark).
+     * Configures the status bar appearance based on the current UI mode (light or
+     * dark).
      */
     private void setupStatusBarForActivity() {
         // Check if the Android version supports WindowInsetsController.
@@ -148,8 +154,7 @@ public class PermissionActivity extends AppCompatActivity {
                 // Set system bars appearance based on the theme.
                 insetsController.setSystemBarsAppearance(
                         isLightTheme ? WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS : 0,
-                        WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS
-                );
+                        WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS);
             }
         }
     }
@@ -175,7 +180,8 @@ public class PermissionActivity extends AppCompatActivity {
      * Retrieves the list of permissions requested by the application.
      *
      * @param sentryManager SentryManager instance for capturing exceptions.
-     * @return List of PermissionInfo objects representing the app's requested permissions.
+     * @return List of PermissionInfo objects representing the app's requested
+     *         permissions.
      */
     private List<PermissionInfo> getPermissionsList(SentryManager sentryManager) {
         List<PermissionInfo> permissions = new ArrayList<>();
@@ -183,8 +189,7 @@ public class PermissionActivity extends AppCompatActivity {
             // Get the package info including the requested permissions.
             PackageInfo packageInfo = getPackageManager().getPackageInfo(
                     getPackageName(),
-                    PackageManager.GET_PERMISSIONS
-            );
+                    PackageManager.GET_PERMISSIONS);
             // If requested permissions are present, iterate and add them to the list.
             if (packageInfo.requestedPermissions != null) {
                 for (String permission : packageInfo.requestedPermissions) {

@@ -44,33 +44,37 @@ import com.doubleangels.nextdnsmanagement.webview.WebAppInterface;
 import java.util.Locale;
 
 /**
- * Main Activity class that handles initialization of the UI, WebView, and various settings
- * such as dark mode, locale, biometric re-authentication, and notification permission checks.
+ * Main Activity class that handles initialization of the UI, WebView, and
+ * various settings
+ * such as dark mode, locale, biometric re-authentication, and notification
+ * permission checks.
  */
 public class MainActivity extends AppCompatActivity {
 
     // Main WebView for displaying web content.
     private WebView webView;
-    // SwipeRefreshLayout wrapping the WebView to enable pull-to-refresh functionality.
+    // SwipeRefreshLayout wrapping the WebView to enable pull-to-refresh
+    // functionality.
     private SwipeRefreshLayout swipeRefreshLayout;
     // Flag indicating whether dark mode is enabled.
     private Boolean darkModeEnabled = false;
     // Flag to avoid re-initializing the WebView if it has already been set up.
     private Boolean isWebViewInitialized = false;
-    // Bundle used to store and restore the WebView state across configuration changes.
+    // Bundle used to store and restore the WebView state across configuration
+    // changes.
     private Bundle webViewState = null;
     // Biometric authentication timeout in milliseconds (5 minutes).
     private static final long AUTH_TIMEOUT_MS = 5 * 60 * 1000;
     // Timestamp (in ms) of the last successful biometric authentication.
     private long lastAuthenticatedTime = 0;
-    // Request code for notification permission.
 
     // Flags to control when to display the biometric prompt.
     private boolean pendingBiometricPrompt = false;
     private boolean isPageLoaded = false;
 
     /**
-     * Saves the current state of the activity, including the WebView state and dark mode flag.
+     * Saves the current state of the activity, including the WebView state and dark
+     * mode flag.
      *
      * @param outState Bundle in which to save the activity state.
      */
@@ -93,10 +97,12 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * Called when the activity is created.
-     * Initializes Sentry, messaging, UI components, language, dark mode, visual indicator,
+     * Initializes Sentry, messaging, UI components, language, dark mode, visual
+     * indicator,
      * swipe-to-refresh, and the WebView.
      *
-     * @param savedInstanceState Bundle containing the activity's previously saved state.
+     * @param savedInstanceState Bundle containing the activity's previously saved
+     *                           state.
      */
     @RequiresApi(api = Build.VERSION_CODES.TIRAMISU)
     @Override
@@ -233,7 +239,8 @@ public class MainActivity extends AppCompatActivity {
     /**
      * Determines whether biometric authentication is required based on the timeout.
      *
-     * @return true if the elapsed time since last authentication exceeds the timeout.
+     * @return true if the elapsed time since last authentication exceeds the
+     *         timeout.
      */
     private boolean shouldAuthenticate() {
         return System.currentTimeMillis() - lastAuthenticatedTime > AUTH_TIMEOUT_MS;
@@ -241,7 +248,8 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * Configures the status bar for the activity.
-     * For newer SDK versions, sets the background color using an OnApplyWindowInsetsListener.
+     * For newer SDK versions, sets the background color using an
+     * OnApplyWindowInsetsListener.
      */
     private void setupStatusBarForActivity() {
         if (Build.VERSION.SDK_INT > Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
@@ -254,7 +262,8 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * Sets up the toolbar for the activity.
-     * Configures the action bar and assigns a click listener to the connection status icon.
+     * Configures the action bar and assigns a click listener to the connection
+     * status icon.
      */
     private void setupToolbarForActivity() {
         Toolbar toolbar = findViewById(R.id.toolbar);
@@ -327,7 +336,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * Initializes a visual indicator (e.g., a network or loading indicator) using the VisualIndicator class.
+     * Initializes a visual indicator (e.g., a network or loading indicator) using
+     * the VisualIndicator class.
      *
      * @param sentryManager  SentryManager instance for logging.
      * @param lifecycleOwner LifecycleOwner to manage the indicator's lifecycle.
@@ -404,7 +414,8 @@ public class MainActivity extends AppCompatActivity {
                 }
                 // Mark that the page has finished loading.
                 isPageLoaded = true;
-                // Add a PreDraw listener to trigger the biometric prompt after the WebView is drawn.
+                // Add a PreDraw listener to trigger the biometric prompt after the WebView is
+                // drawn.
                 webView.getViewTreeObserver().addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener() {
                     @Override
                     public boolean onPreDraw() {
@@ -435,7 +446,8 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * Configures the SwipeRefreshLayout to allow pull-to-refresh on the WebView.
-     * Also adds a JavaScript interface to control swipe refresh behavior from web content.
+     * Also adds a JavaScript interface to control swipe refresh behavior from web
+     * content.
      */
     @SuppressLint("SetJavaScriptEnabled")
     private void setupSwipeToRefreshForActivity() {
@@ -452,7 +464,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * Configures the download manager to handle file downloads initiated within the WebView.
+     * Configures the download manager to handle file downloads initiated within the
+     * WebView.
      * Downloads are saved to the app's external downloads directory.
      */
     private void setupDownloadManagerForActivity() {
@@ -461,7 +474,8 @@ public class MainActivity extends AppCompatActivity {
                 // Create a new download request.
                 DownloadManager.Request request = new DownloadManager.Request(Uri.parse(url.trim()));
                 request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
-                request.setDestinationInExternalFilesDir(this, Environment.DIRECTORY_DOWNLOADS, "NextDNS-Configuration.mobileconfig");
+                request.setDestinationInExternalFilesDir(this, Environment.DIRECTORY_DOWNLOADS,
+                        "NextDNS-Configuration.mobileconfig");
                 DownloadManager downloadManager = (DownloadManager) getSystemService(DOWNLOAD_SERVICE);
                 if (downloadManager != null) {
                     // Enqueue the download request.
@@ -479,7 +493,8 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * Displays a biometric prompt to the user if authentication is available.
-     * On successful authentication, updates the last authentication time and, if necessary,
+     * On successful authentication, updates the last authentication time and, if
+     * necessary,
      * requests notification permission.
      */
     private void showBiometricPrompt() {
@@ -507,19 +522,8 @@ public class MainActivity extends AppCompatActivity {
                             // Finish the activity on authentication failure.
                             finish();
                         }
-                    }
-            );
+                    });
         }
-    }
-
-    /**
-     * Starts an activity specified by the target class.
-     *
-     * @param targetClass The class of the activity to launch.
-     */
-    private void startIntent(Class<?> targetClass) {
-        Intent intent = new Intent(this, targetClass);
-        startActivity(intent);
     }
 
     /**
@@ -563,7 +567,7 @@ public class MainActivity extends AppCompatActivity {
                 break;
             case R.id.pingNextDNS:
                 // Launch the PingActivity.
-                startIntent(PingActivity.class);
+                startActivity(new Intent(this, PingActivity.class));
                 break;
             case R.id.returnHome:
                 // Load the main URL in the WebView.
@@ -579,7 +583,7 @@ public class MainActivity extends AppCompatActivity {
                 break;
             case R.id.settings:
                 // Launch the SettingsActivity.
-                startIntent(SettingsActivity.class);
+                startActivity(new Intent(this, SettingsActivity.class));
                 break;
         }
         return super.onOptionsItemSelected(item);
