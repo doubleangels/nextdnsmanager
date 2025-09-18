@@ -59,10 +59,10 @@ public class BiometricLock {
 
         SentryManager sentryManager = new SentryManager(activity);
 
-        // 1. Executor that will handle callback events on the main thread.
+        // Executor that will handle callback events on the main thread
         Executor executor = ContextCompat.getMainExecutor(activity);
 
-        // 2. Create the BiometricPrompt with a callback.
+        // Create the BiometricPrompt with a callback
         BiometricPrompt biometricPrompt = new BiometricPrompt(activity,
                 executor,
                 new BiometricPrompt.AuthenticationCallback() {
@@ -91,7 +91,7 @@ public class BiometricLock {
                     }
                 });
 
-        // 3. Build the PromptInfo object.
+        // Build the PromptInfo object
         BiometricPrompt.PromptInfo promptInfo = new BiometricPrompt.PromptInfo.Builder()
                 .setTitle(title)
                 .setSubtitle(subtitle)
@@ -100,7 +100,7 @@ public class BiometricLock {
                         | BiometricManager.Authenticators.DEVICE_CREDENTIAL)
                 .build();
 
-        // 4. Show the prompt with error handling.
+        // Show the prompt with error handling
         try {
             biometricPrompt.authenticate(promptInfo);
         } catch (Exception e) {
