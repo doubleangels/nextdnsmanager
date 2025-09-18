@@ -55,7 +55,7 @@
     <string name="whitelist_domains">"Sentry'yi etkinleştirirseniz, lütfen bu alanları NextDNS yapılandırmanızda beyaz listeye alın."</string>
     <string name="whitelist_instructions">"Lütfen Sentry hata izleme sistemine katılmayı düşünün. Bu kişisel bilgi toplamaz ve uygulamayı daha iyi hale getirmeme yardımcı olur."</string>
     <string-array name="dark_mode_entries">
-        <item>Eşleştirme Sistemi</item>
+        <item>Sistemi takip et</item>
         <item>Açık</item>
         <item>Kapalı</item>
     </string-array>

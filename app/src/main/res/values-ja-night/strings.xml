@@ -21,9 +21,9 @@
     <string name="issues">"問題を報告する"</string>
     <string name="github_issues_summary">"タップして課題を報告するか、現在報告されている課題を表示します。"</string>
     <string name="help_green">"セキュア DNS が使用されており、デバイスが NextDNS に接続されています。"</string>
-    <string name="help_orange">"安全なDNSは使用されておらず、デバイスはNextDNSに接続されています。"</string>
+    <string name="help_orange">"セキュア DNS は使用されておらず、デバイスは NextDNS に接続されています。"</string>
     <string name="help_red">"セキュア DNS は使用されていません。"</string>
-    <string name="help_yellow">"セキュアDNSは使用されていますが、デバイスはNextDNSに接続されていません。"</string>
+    <string name="help_yellow">"セキュア DNS は使用されていますが、デバイスは NextDNS に接続されていません。"</string>
     <string name="home_title">"ホーム"</string>
     <string name="nextdns_privacy_policy">"ネクストDNSプライバシーポリシー"</string>
     <string name="nextdns_user_agreement">"ネクストDNSユーザー契約"</string>
@@ -42,20 +42,20 @@
     <string name="refresh_title">"リフレッシュ"</string>
     <string name="sentry_enable_instructions">"Sentry を有効にする"</string>
     <string name="sentry_info">"もっと詳しく"</string>
-    <string name="sentry_info_instructions">"項目の詳細については、タップしてください。"</string>
-    <string name="settings">"[設定]"</string>
-    <string name="settings_activity_title">"[設定]"</string>
+    <string name="sentry_info_instructions">"Sentry について詳しく知るには、タップしてください。"</string>
+    <string name="settings">"設定"</string>
+    <string name="settings_activity_title">"設定"</string>
     <string name="tally_issues">GitHubアカウントをお持ちでない場合は、ここから問題を報告できます。</string>
-    <string name="translate">"[翻訳]"</string>
+    <string name="translate">"翻訳"</string>
     <string name="translate_summary">"間違った翻訳が表示された場合は、こちらで修正してください。"</string>
     <string name="unlock_description">設定にアクセスし、変更するには認証してください</string>
     <string name="unlock_title">解除</string>
     <string name="user_agreement">"ユーザー契約"</string>
-    <string name="version">"[バージョン]"</string>
+    <string name="version">"バージョン"</string>
     <string name="whitelist_domains">"Sentryを有効にする場合は、NextDNS設定でこれらのドメインをホワイトリストに登録してください。"</string>
     <string name="whitelist_instructions">"Sentry error trackingへの参加を検討してください。これは個人情報を収集するものではなく、アプリを改善するのに役立ちます。"</string>
     <string-array name="dark_mode_entries">
-        <item>システムに一致</item>
+        <item>システムに従う</item>
         <item>オン</item>
         <item>オフ</item>
     </string-array>

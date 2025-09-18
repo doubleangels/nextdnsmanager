@@ -53,10 +53,10 @@
     <string name="user_agreement">"Umowa użytkownika"</string>
     <string name="version">"Wersja"</string>
     <string name="whitelist_domains">"Jeśli włączysz Sentry proszę dodać te domeny do konfiguracji NextDNS."</string>
-    <string name="whitelist_instructions">"Proszę zastanowić się nad opcją śledzenia błędów Sentry . To nie zbiera żadnych danych osobowych i pomaga mi ulepszyć aplikację."</string>
+    <string name="whitelist_instructions">"Proszę zastanowić się nad opcją śledzenia błędów Sentry. To nie zbiera żadnych danych osobowych i pomaga mi ulepszyć aplikację."</string>
     <string-array name="dark_mode_entries">
-        <item>Dopasuj System</item>
+        <item>Dopasuj do systemu</item>
         <item>Włączone</item>
-        <item>Wyłączony</item>
+        <item>Wyłączone</item>
     </string-array>
 </resources>

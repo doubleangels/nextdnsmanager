@@ -53,9 +53,10 @@
     <string name="user_agreement">"Käyttäjäsopimus"</string>
     <string name="version">"Versio"</string>
     <string name="whitelist_domains">"Jos otat Sentryn käyttöön, ole hyvä ja salli nämä verkkotunnukset NextDNS-asetuksessasi."</string>
-    <string name="whitelist_instructions">"Harkitse valintaa Etsintävirheiden seurantaan. Tämä ei kerää henkilökohtaisia tietoja ja auttaa minua tekemään sovelluksesta paremman."</string>  <string-array name="dark_mode_entries">
-    <item>Sovita Järjestelmä</item>
-    <item>Päällä</item>
-    <item>Pois</item>
-</string-array>
+    <string name="whitelist_instructions">"Harkitse valintaa Sentry-virheiden seurantaan. Tämä ei kerää henkilökohtaisia tietoja ja auttaa minua tekemään sovelluksesta paremman."</string>
+    <string-array name="dark_mode_entries">
+        <item>Seuraa järjestelmää</item>
+        <item>Päällä</item>
+        <item>Pois</item>
+    </string-array>
 </resources>

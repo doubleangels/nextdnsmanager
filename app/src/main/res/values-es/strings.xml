@@ -30,7 +30,7 @@
     <string name="other">"Otros"</string>
     <string name="permission">"Pulsa para ver los permisos de esta aplicación."</string>
     <string name="permission_details">"Esta aplicación utiliza los siguientes permisos:"</string>
-    <string name="permission_question">"Si tiene alguna pregunta sobre estos permisos, por favor abra un problema en Github."</string>
+    <string name="permission_question">"Si tienes alguna pregunta sobre estos permisos, por favor abre un problema en Github."</string>
     <string name="permission_title">"Permisos"</string>
     <string name="ping_disabled">"Esta acción no está disponible en este momento."</string>
     <string name="ping_long">"Comprueba rápidamente los tiempos de ping en los servidores de NextDNS."</string>
@@ -52,11 +52,11 @@
     <string name="unlock_title">Desbloquear</string>
     <string name="user_agreement">"Acuerdo de usuario"</string>
     <string name="version">"Versión"</string>
-    <string name="whitelist_domains">"Si activa Sentry, por favor incluya estos dominios en su configuración NextDNS."</string>
-    <string name="whitelist_instructions">"Por favor, considere optar por el seguimiento de errores de Sentry. Esto no recopila ninguna información personal y me ayuda a mejorar la aplicación."</string>
+    <string name="whitelist_domains">"Si activas Sentry, por favor incluye estos dominios en tu configuración NextDNS."</string>
+    <string name="whitelist_instructions">"Por favor, considera optar por el seguimiento de errores de Sentry. Esto no recopila ninguna información personal y me ayuda a mejorar la aplicación."</string>
     <string-array name="dark_mode_entries">
-        <item>Coincidir Sistema</item>
-        <item>En</item>
-        <item>Apagado</item>
+        <item>Seguir Sistema</item>
+        <item>Activado</item>
+        <item>Desactivado</item>
     </string-array>
 </resources>

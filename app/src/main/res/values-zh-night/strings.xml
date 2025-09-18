@@ -54,7 +54,7 @@
     <string name="version">"版本"</string>
     <string name="whitelist_domains">"如果您启用了 Sentry，请在您的NextDNS 配置中将这些域名加入白名单。"</string>
     <string-array name="dark_mode_entries">
-        <item>匹配系统</item>
+        <item>跟随系统</item>
         <item>开启</item>
         <item>关闭</item>
     </string-array>
