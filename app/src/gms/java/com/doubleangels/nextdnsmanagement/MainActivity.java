@@ -78,6 +78,8 @@ public class MainActivity extends AppCompatActivity {
     private boolean isPageLoaded = false;
     // Blur overlay view to hide content during biometric authentication.
     private View blurOverlay;
+    // SentryManager instance for error logging.
+    private SentryManager sentryManager;
 
     /**
      * Saves the current state of the activity, including the WebView state and dark
@@ -127,7 +129,7 @@ public class MainActivity extends AppCompatActivity {
 
         // Initialize Sentry for error logging, Firebase Messaging, and
         // SharedPreferences.
-        final SentryManager sentryManager = new SentryManager(this);
+        sentryManager = new SentryManager(this);
         MessagingInitializer.initialize(this);
         SharedPreferencesManager.init(this);
 
@@ -261,6 +263,8 @@ public class MainActivity extends AppCompatActivity {
             setupWebViewForActivity(getString(R.string.main_url));
         }
         SharedPreferencesManager.init(this);
+        // Refresh dark mode settings when returning from settings
+        setupDarkModeForActivity(sentryManager, SharedPreferencesManager.getString("dark_mode", "match"));
         // Check if app lock is enabled and if biometric authentication is needed.
         if (SharedPreferencesManager.getBoolean("app_lock_enable", true)) {
             if (shouldAuthenticate()) {

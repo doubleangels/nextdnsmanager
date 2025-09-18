@@ -114,7 +114,7 @@ public class SettingsActivity extends AppCompatActivity {
      *
      * @param darkMode The dark mode setting value from shared preferences.
      */
-    private void setupDarkModeForActivity(String darkMode) {
+    public void setupDarkModeForActivity(String darkMode) {
         // Only set dark mode for Android versions below TIRAMISU.
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
             sentryManager.captureMessage("Dark mode setting: " + darkMode);
@@ -315,6 +315,11 @@ public class SettingsActivity extends AppCompatActivity {
                     new SentryManager(requireContext())
                             .captureMessage("Dark mode set to " + newValue.toString() + ".");
                     SharedPreferencesManager.putString("dark_mode", newValue.toString());
+
+                    // Apply the dark mode change immediately
+                    if (getActivity() instanceof SettingsActivity) {
+                        ((SettingsActivity) getActivity()).setupDarkModeForActivity(newValue.toString());
+                    }
                 } catch (Exception e) {
                     new SentryManager(requireContext()).captureException(e);
                 }
