@@ -12,6 +12,8 @@ import android.provider.Settings;
 import android.view.ContextThemeWrapper;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import jp.wasabeef.blurry.Blurry;
 import android.view.ViewGroup;
 import android.webkit.CookieManager;
 import android.webkit.WebChromeClient;
@@ -69,6 +71,8 @@ public class MainActivity extends AppCompatActivity {
 
     // Flag to track if page has loaded.
     private boolean isPageLoaded = false;
+    // Blur overlay view to hide content during biometric authentication.
+    private View blurOverlay;
 
     /**
      * Saves the current state of the activity, including the WebView state and dark
@@ -112,6 +116,9 @@ public class MainActivity extends AppCompatActivity {
             darkModeEnabled = savedInstanceState.getBoolean("darkModeEnabled");
         }
         setContentView(R.layout.activity_main);
+
+        // Initialize blur overlay
+        blurOverlay = findViewById(R.id.blurOverlay);
 
         // Initialize Sentry for error logging and SharedPreferences.
         final SentryManager sentryManager = new SentryManager(this);
@@ -495,6 +502,69 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
+     * Shows the blur overlay to hide WebView content during biometric
+     * authentication.
+     */
+    private void showBlurOverlay() {
+        if (blurOverlay != null) {
+            try {
+                // Apply blur effect to the entire content behind the overlay
+                Blurry.with(this)
+                        .radius(25)
+                        .sampling(4)
+                        .color(android.graphics.Color.argb(66, 255, 255, 255))
+                        .async()
+                        .animate(300)
+                        .onto((ViewGroup) findViewById(android.R.id.content));
+
+                blurOverlay.setVisibility(View.VISIBLE);
+                blurOverlay.setScaleX(0.95f);
+                blurOverlay.setScaleY(0.95f);
+                blurOverlay.animate()
+                        .alpha(1.0f)
+                        .scaleX(1.0f)
+                        .scaleY(1.0f)
+                        .setDuration(300)
+                        .start();
+            } catch (Exception e) {
+                // Fallback: simple white overlay
+                blurOverlay.setBackgroundColor(android.graphics.Color.WHITE);
+                blurOverlay.setVisibility(View.VISIBLE);
+                blurOverlay.animate()
+                        .alpha(1.0f)
+                        .setDuration(300)
+                        .start();
+            }
+        }
+    }
+
+    /**
+     * Hides the blur overlay after biometric authentication is complete.
+     */
+    private void hideBlurOverlay() {
+        if (blurOverlay != null) {
+            try {
+                // Remove the blur effect
+                Blurry.delete((ViewGroup) findViewById(android.R.id.content));
+            } catch (Exception e) {
+                // Ignore errors when removing blur
+            }
+
+            blurOverlay.animate()
+                    .alpha(0.0f)
+                    .scaleX(1.05f)
+                    .scaleY(1.05f)
+                    .setDuration(300)
+                    .withEndAction(() -> {
+                        blurOverlay.setVisibility(View.GONE);
+                        blurOverlay.setScaleX(1.0f);
+                        blurOverlay.setScaleY(1.0f);
+                    })
+                    .start();
+        }
+    }
+
+    /**
      * Displays a biometric prompt to the user if authentication is available.
      * On successful authentication, updates the last authentication time and, if
      * necessary,
@@ -503,6 +573,9 @@ public class MainActivity extends AppCompatActivity {
     private void showBiometricPrompt() {
         final BiometricLock biometricLock = new BiometricLock(this);
         if (biometricLock.canAuthenticate()) {
+            // Show blur overlay to hide WebView content
+            showBlurOverlay();
+
             biometricLock.showPrompt(
                     getString(R.string.unlock_title),
                     getString(R.string.unlock_description),
@@ -512,16 +585,22 @@ public class MainActivity extends AppCompatActivity {
                         public void onAuthenticationSucceeded() {
                             // Update the last authenticated time.
                             lastAuthenticatedTime = System.currentTimeMillis();
+                            // Hide blur overlay on successful authentication
+                            hideBlurOverlay();
                         }
 
                         @Override
                         public void onAuthenticationError(String error) {
+                            // Hide blur overlay before finishing
+                            hideBlurOverlay();
                             // Finish the activity on authentication error.
                             finish();
                         }
 
                         @Override
                         public void onAuthenticationFailed() {
+                            // Hide blur overlay before finishing
+                            hideBlurOverlay();
                             // Finish the activity on authentication failure.
                             finish();
                         }
