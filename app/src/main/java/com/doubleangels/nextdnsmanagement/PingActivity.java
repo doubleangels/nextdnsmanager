@@ -208,7 +208,7 @@ public class PingActivity extends AppCompatActivity {
                     try {
                         // Check if the URL ends with .nextdns.io
                         String url = request.getUrl().toString();
-                        if (url != null && url.endsWith(".nextdns.io")) {
+                        if (url.endsWith(".nextdns.io")) {
                             // Load NextDNS URLs in the WebView
                             return false;
                         } else {

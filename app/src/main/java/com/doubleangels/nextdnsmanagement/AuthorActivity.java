@@ -129,7 +129,7 @@ public class AuthorActivity extends AppCompatActivity {
     }
 
     /**
-     * Initializes and sets up personal link buttons (GitHub, email, website) in the
+     * Initializes and sets up personal link buttons (GitHub, email) in the
      * UI.
      * Each button launches an intent when clicked.
      *
@@ -140,7 +140,6 @@ public class AuthorActivity extends AppCompatActivity {
         // Find the ImageView buttons by their ID
         ImageView githubButton = findViewById(R.id.githubImageView);
         ImageView emailButton = findViewById(R.id.emailImageView);
-        ImageView websiteButton = findViewById(R.id.websiteImageView);
 
         // Set click listener for GitHub button
         githubButton.setOnClickListener(view -> {
@@ -161,7 +160,7 @@ public class AuthorActivity extends AppCompatActivity {
         emailButton.setOnClickListener(view -> {
             // Create an intent for sending an email
             Intent emailIntent = new Intent(Intent.ACTION_SENDTO);
-            emailIntent.setData(Uri.parse("mailto:nextdns@doubleangels.com"));
+            emailIntent.setData(Uri.parse("mailto:jzgm2llm@addy.io"));
             try {
                 // Start an email chooser activity
                 startActivity(Intent.createChooser(emailIntent, "Send Email"));
@@ -171,19 +170,5 @@ public class AuthorActivity extends AppCompatActivity {
             }
         });
 
-        // Set click listener for website button
-        websiteButton.setOnClickListener(view -> {
-            // Get the author's website URL from resources
-            String url = getString(R.string.author_url);
-            // Create an intent to view the website
-            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-            try {
-                // Start the activity to view the website
-                startActivity(intent);
-            } catch (Exception e) {
-                // Capture and log any exception that occurs when launching the website intent
-                sentryManager.captureException(e);
-            }
-        });
     }
 }
