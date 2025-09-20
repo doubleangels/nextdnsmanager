@@ -5,7 +5,7 @@ on:
 
 jobs:
   delete-runs:
-    runs-on: ubuntu-20.04
+    runs-on: debian-11
     permissions:
       actions: write
       contents: read

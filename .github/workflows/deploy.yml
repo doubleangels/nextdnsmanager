@@ -11,7 +11,7 @@ on:
 
 jobs:
   build-gms-flavor-for-github:
-    runs-on: ubuntu-20.04
+    runs-on: debian-11
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -71,7 +71,7 @@ jobs:
           path: app/build/outputs/apk/gms/release/app-release.apk
 
   build-foss-flavor-for-github:
-    runs-on: ubuntu-20.04
+    runs-on: debian-11
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -131,7 +131,7 @@ jobs:
           path: app/build/outputs/apk/foss/release/app-release-foss.apk
 
   build-gms-flavor-for-google-play:
-    runs-on: ubuntu-20.04
+    runs-on: debian-11
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -195,7 +195,7 @@ jobs:
         "build-foss-flavor-for-github",
         "build-gms-flavor-for-google-play",
       ]
-    runs-on: ubuntu-20.04
+    runs-on: debian-11
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -281,7 +281,7 @@ jobs:
         "build-foss-flavor-for-github",
         "build-gms-flavor-for-google-play",
       ]
-    runs-on: ubuntu-20.04
+    runs-on: debian-11
     if: ${{ !inputs.skip_appsweep }}
     steps:
       - name: Checkout
@@ -306,7 +306,7 @@ jobs:
         "publish-built-files",
         "appsweep-scan",
       ]
-    runs-on: ubuntu-20.04
+    runs-on: debian-11
     if: always()
     steps:
       - name: Delete workflow runs

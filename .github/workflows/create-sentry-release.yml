@@ -7,7 +7,7 @@ on:
 
 jobs:
   create-sentry-release:
-    runs-on: ubuntu-20.04
+    runs-on: debian-11
     steps:
       - name: Checkout code
         uses: actions/checkout@v5

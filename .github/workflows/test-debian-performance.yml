@@ -1,15 +1,10 @@
-name: Test pull request
+name: Test Debian Performance
 
 on:
-  pull_request:
-    types:
-      - opened
-    branches:
-      - "dependabot/**"
   workflow_dispatch:
 
 jobs:
-  build-gms-flavor-debug:
+  test-debian:
     runs-on: debian-11
     steps:
       - name: Checkout
@@ -33,27 +28,14 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
 
-      - name: Cache Android SDK
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.android/build-cache
-            ~/.android/cache
-          key: ${{ runner.os }}-android-sdk-${{ hashFiles('**/build.gradle*') }}
-          restore-keys: |
-            ${{ runner.os }}-android-sdk-
-
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Build debug APK with Gradle
+      - name: Build APK with Gradle (Debian)
         run: ./gradlew assembleGmsDebug --parallel --build-cache --configuration-cache
 
-      - name: Build debug bundle with Gradle
-        run: ./gradlew bundleGmsDebug --parallel --build-cache --configuration-cache
-
-  build-gms-flavor-release:
-    runs-on: debian-11
+  test-ubuntu:
+    runs-on: ubuntu-20.04
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -76,21 +58,8 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
 
-      - name: Cache Android SDK
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.android/build-cache
-            ~/.android/cache
-          key: ${{ runner.os }}-android-sdk-${{ hashFiles('**/build.gradle*') }}
-          restore-keys: |
-            ${{ runner.os }}-android-sdk-
-
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Build release APK with Gradle
-        run: ./gradlew assembleGmsRelease --parallel --build-cache --configuration-cache
-
-      - name: Build release bundle with Gradle
-        run: ./gradlew bundleGmsRelease --parallel --build-cache --configuration-cache
+      - name: Build APK with Gradle (Ubuntu)
+        run: ./gradlew assembleGmsDebug --parallel --build-cache --configuration-cache
