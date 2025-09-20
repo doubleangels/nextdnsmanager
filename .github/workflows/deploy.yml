@@ -2,6 +2,12 @@ name: Deploy release
 
 on:
   workflow_dispatch:
+    inputs:
+      skip_appsweep:
+        description: "Skip AppSweep security scan"
+        required: false
+        default: false
+        type: boolean
 
 jobs:
   build-gms-flavor-for-github:
@@ -17,20 +23,38 @@ jobs:
           distribution: "temurin"
           cache: gradle
 
-      - name: Cache gradle dependencies
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          packages: "platform-tools platforms;android-36 build-tools;34.0.0"
+          accept-android-sdk-licenses: true
+
+      - name: Cache Gradle dependencies
         uses: actions/cache@v4
         with:
           path: |
-            ~/.gradle
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+            ~/.gradle/daemon
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
           restore-keys: |
             ${{ runner.os }}-gradle-
+
+      - name: Cache Android SDK
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.android/build-cache
+            ~/.android/cache
+          key: ${{ runner.os }}-android-sdk-${{ hashFiles('**/build.gradle*') }}
+          restore-keys: |
+            ${{ runner.os }}-android-sdk-
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
       - name: Build APK for Github release
-        run: ./gradlew assembleGmsRelease
+        run: ./gradlew assembleGmsRelease --parallel --build-cache --configuration-cache
 
       - name: Sign APK for Github release
         uses: r0adkll/sign-android-release@v1
@@ -65,20 +89,38 @@ jobs:
           distribution: "temurin"
           cache: gradle
 
-      - name: Cache gradle dependencies
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          packages: "platform-tools platforms;android-36 build-tools;34.0.0"
+          accept-android-sdk-licenses: true
+
+      - name: Cache Gradle dependencies
         uses: actions/cache@v4
         with:
           path: |
-            ~/.gradle
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+            ~/.gradle/daemon
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
           restore-keys: |
             ${{ runner.os }}-gradle-
+
+      - name: Cache Android SDK
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.android/build-cache
+            ~/.android/cache
+          key: ${{ runner.os }}-android-sdk-${{ hashFiles('**/build.gradle*') }}
+          restore-keys: |
+            ${{ runner.os }}-android-sdk-
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
       - name: Build APK for Github release
-        run: ./gradlew assembleFossRelease
+        run: ./gradlew assembleFossRelease --parallel --build-cache --configuration-cache
 
       - name: Sign APK for Github release
         uses: r0adkll/sign-android-release@v1
@@ -113,20 +155,38 @@ jobs:
           distribution: "temurin"
           cache: gradle
 
-      - name: Cache gradle dependencies
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          packages: "platform-tools platforms;android-36 build-tools;34.0.0"
+          accept-android-sdk-licenses: true
+
+      - name: Cache Gradle dependencies
         uses: actions/cache@v4
         with:
           path: |
-            ~/.gradle
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+            ~/.gradle/daemon
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
           restore-keys: |
             ${{ runner.os }}-gradle-
+
+      - name: Cache Android SDK
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.android/build-cache
+            ~/.android/cache
+          key: ${{ runner.os }}-android-sdk-${{ hashFiles('**/build.gradle*') }}
+          restore-keys: |
+            ${{ runner.os }}-android-sdk-
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
       - name: Build bundle for Google Play release
-        run: ./gradlew bundleGmsRelease
+        run: ./gradlew bundleGmsRelease --parallel --build-cache --configuration-cache
 
       - name: Sign bundle for Google Play release
         uses: r0adkll/sign-android-release@v1
@@ -240,6 +300,7 @@ jobs:
         "build-gms-flavor-for-google-play",
       ]
     runs-on: ubuntu-latest
+    if: ${{ !inputs.skip_appsweep }}
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -254,7 +315,6 @@ jobs:
         with:
           appsweep_api_key: ${{ secrets.APPSWEEP_API_KEY }}
           input_file: app-release.apk
-          commit_hash: ${{ github.sha }}
 
   delete-workflow-runs:
     needs:
@@ -265,6 +325,7 @@ jobs:
         "appsweep-scan",
       ]
     runs-on: ubuntu-latest
+    if: always()
     steps:
       - name: Delete workflow runs
         uses: Mattraks/delete-workflow-runs@v2
