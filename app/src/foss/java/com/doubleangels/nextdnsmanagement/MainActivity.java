@@ -16,6 +16,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.CookieManager;
 import android.webkit.WebChromeClient;
+import android.webkit.WebChromeClient.CustomViewCallback;
+import android.webkit.WebChromeClient.FileChooserParams;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
@@ -408,6 +410,13 @@ public class MainActivity extends AppCompatActivity {
         webViewSettings.setAllowFileAccess(false);
         webViewSettings.setAllowContentAccess(false);
 
+        // Improve text selection and scrolling behavior
+        webViewSettings.setBuiltInZoomControls(false);
+        webViewSettings.setDisplayZoomControls(false);
+        webViewSettings.setSupportZoom(false);
+        webViewSettings.setLoadWithOverviewMode(true);
+        webViewSettings.setUseWideViewPort(true);
+
         // Set a custom WebViewClient to handle page events
         webView.setWebViewClient(new WebViewClient() {
             @Override
@@ -437,8 +446,9 @@ public class MainActivity extends AppCompatActivity {
                     CookieManager.getInstance().setAcceptCookie(true);
                     CookieManager.getInstance().acceptCookie();
                     CookieManager.getInstance().flush();
-                    // Inject JavaScript to monitor modal dialogs and disable/enable swipe refresh
+                    // Inject JavaScript to improve text selection and scrolling behavior
                     String js = "setInterval(function() {" +
+                            "   // Handle modal dialogs and swipe refresh" +
                             "   var modal = document.querySelector('.modal-dialog.modal-lg.modal-dialog-scrollable');" +
                             "   if (modal) {" +
                             "       if (!modal.getAttribute('data-listeners-attached')) {" +
@@ -451,6 +461,20 @@ public class MainActivity extends AppCompatActivity {
                             "           });" +
                             "       }" +
                             "   }" +
+                            "   " +
+                            "   // Improve text selection behavior" +
+                            "   var textElements = document.querySelectorAll('p, span, div, td, th, li');" +
+                            "   textElements.forEach(function(element) {" +
+                            "       element.style.webkitUserSelect = 'text';" +
+                            "       element.style.userSelect = 'text';" +
+                            "   });" +
+                            "   " +
+                            "   // Fix scrolling issues with account/equipment menu" +
+                            "   var accountMenu = document.querySelector('.account-menu, .equipment-menu');" +
+                            "   if (accountMenu) {" +
+                            "       accountMenu.style.position = 'relative';" +
+                            "       accountMenu.style.zIndex = '1000';" +
+                            "   }" +
                             "}, 500);";
                     view.evaluateJavascript(js, null);
                 } catch (Exception e) {
@@ -459,8 +483,27 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        // Set a WebChromeClient to handle JavaScript dialogs and progress updates
-        webView.setWebChromeClient(new WebChromeClient());
+        // Set a custom WebChromeClient to handle text selection and scrolling
+        webView.setWebChromeClient(new WebChromeClient() {
+            @Override
+            public void onShowCustomView(android.view.View view, CustomViewCallback callback) {
+                // Handle custom view display
+                super.onShowCustomView(view, callback);
+            }
+
+            @Override
+            public void onHideCustomView() {
+                // Handle custom view hiding
+                super.onHideCustomView();
+            }
+
+            @Override
+            public boolean onShowFileChooser(WebView webView, android.webkit.ValueCallback<Uri[]> filePathCallback,
+                    FileChooserParams fileChooserParams) {
+                // Handle file chooser
+                return super.onShowFileChooser(webView, filePathCallback, fileChooserParams);
+            }
+        });
 
         // Enable algorithmic darkening if dark mode is enabled and supported
         if (Boolean.TRUE.equals(darkModeEnabled)) {
@@ -490,6 +533,10 @@ public class MainActivity extends AppCompatActivity {
             webView.reload();
             swipeRefreshLayout.setRefreshing(false);
         });
+
+        // Improve SwipeRefreshLayout behavior with WebView
+        swipeRefreshLayout.setDistanceToTriggerSync(200);
+        swipeRefreshLayout.setSlingshotDistance(200);
     }
 
     /**
