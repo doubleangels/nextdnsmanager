@@ -43,9 +43,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
-            ~/.android/build-cache
-            ~/.android/cache
-          key: ${{ runner.os }}-android-sdk-${{ hashFiles('**/build.gradle*') }}
+            ~/.android
+            $ANDROID_HOME
+          key: ${{ runner.os }}-android-sdk-36-34.0.0
           restore-keys: |
             ${{ runner.os }}-android-sdk-
 
@@ -90,9 +90,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
-            ~/.android/build-cache
-            ~/.android/cache
-          key: ${{ runner.os }}-android-sdk-${{ hashFiles('**/build.gradle*') }}
+            ~/.android
+            $ANDROID_HOME
+          key: ${{ runner.os }}-android-sdk-36-34.0.0
           restore-keys: |
             ${{ runner.os }}-android-sdk-
 
@@ -140,9 +140,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
-            ~/.android/build-cache
-            ~/.android/cache
-          key: ${{ runner.os }}-android-sdk-${{ hashFiles('**/build.gradle*') }}
+            ~/.android
+            $ANDROID_HOME
+          key: ${{ runner.os }}-android-sdk-36-34.0.0
           restore-keys: |
             ${{ runner.os }}-android-sdk-
 
