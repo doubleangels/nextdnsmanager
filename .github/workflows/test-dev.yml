@@ -9,7 +9,6 @@ on:
 jobs:
   lint-gms-flavor:
     runs-on: ubuntu-latest
-    container: debian:11-slim
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -20,6 +19,12 @@ jobs:
           java-version: "21"
           distribution: "temurin"
           cache: gradle
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          api-level: 36
+          build-tools: 34.0.0
 
       - name: Cache Gradle dependencies
         uses: actions/cache@v4
@@ -41,7 +46,6 @@ jobs:
 
   lint-foss-flavor:
     runs-on: ubuntu-latest
-    container: debian:11-slim
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -52,6 +56,12 @@ jobs:
           java-version: "21"
           distribution: "temurin"
           cache: gradle
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          api-level: 36
+          build-tools: 34.0.0
 
       - name: Cache Gradle dependencies
         uses: actions/cache@v4
