@@ -9,6 +9,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.view.ViewGroup;
 import android.view.WindowInsetsController;
+import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -203,9 +204,10 @@ public class PingActivity extends AppCompatActivity {
             // Set a WebViewClient to handle page navigation
             webView.setWebViewClient(new WebViewClient() {
                 @Override
-                public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                     try {
                         // Check if the URL ends with .nextdns.io
+                        String url = request.getUrl().toString();
                         if (url != null && url.endsWith(".nextdns.io")) {
                             // Load NextDNS URLs in the WebView
                             return false;
