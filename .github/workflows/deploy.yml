@@ -19,7 +19,7 @@ jobs:
 
       - name: Set up JDK 21
         uses: actions/setup-java@v5
-        with:gio
+        with:
           java-version: "21"
           distribution: "temurin"
           cache: gradle
