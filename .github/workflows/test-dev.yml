@@ -23,7 +23,7 @@ jobs:
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
         with:
-          packages: "platform-tools platforms;android-36 build-tools;34.0.0"
+          packages: "platform-tools platforms;android-35 build-tools;34.0.0"
           accept-android-sdk-licenses: true
 
       - name: Cache Gradle dependencies
@@ -43,15 +43,12 @@ jobs:
           path: |
             ~/.android
             /usr/local/lib/android/sdk
-          key: ${{ runner.os }}-android-sdk-36-34.0.0
+          key: ${{ runner.os }}-android-sdk-35-34.0.0
           restore-keys: |
             ${{ runner.os }}-android-sdk-
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
-
-      - name: Warm up Gradle cache
-        run: ./gradlew assembleGmsDebug --parallel --build-cache --configuration-cache
 
   lint-gms-flavor:
     needs: cache-dependencies
@@ -70,7 +67,7 @@ jobs:
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
         with:
-          packages: "platform-tools platforms;android-36 build-tools;34.0.0"
+          packages: "platform-tools platforms;android-35 build-tools;34.0.0"
           accept-android-sdk-licenses: true
 
       - name: Cache Gradle dependencies
@@ -108,7 +105,7 @@ jobs:
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
         with:
-          packages: "platform-tools platforms;android-36 build-tools;34.0.0"
+          packages: "platform-tools platforms;android-35 build-tools;34.0.0"
           accept-android-sdk-licenses: true
 
       - name: Cache Gradle dependencies
