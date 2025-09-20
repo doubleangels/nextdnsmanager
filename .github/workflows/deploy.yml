@@ -45,7 +45,7 @@ jobs:
         with:
           path: |
             ~/.android
-            $ANDROID_HOME
+            /usr/local/lib/android/sdk
           key: ${{ runner.os }}-android-sdk-36-34.0.0
           restore-keys: |
             ${{ runner.os }}-android-sdk-
@@ -92,7 +92,7 @@ jobs:
         with:
           path: |
             ~/.android
-            $ANDROID_HOME
+            /usr/local/lib/android/sdk
           key: ${{ runner.os }}-android-sdk-36-34.0.0
           restore-keys: |
             ${{ runner.os }}-android-sdk-
@@ -159,7 +159,7 @@ jobs:
         with:
           path: |
             ~/.android
-            $ANDROID_HOME
+            /usr/local/lib/android/sdk
           key: ${{ runner.os }}-android-sdk-36-34.0.0
           restore-keys: |
             ${{ runner.os }}-android-sdk-
@@ -226,7 +226,7 @@ jobs:
         with:
           path: |
             ~/.android
-            $ANDROID_HOME
+            /usr/local/lib/android/sdk
           key: ${{ runner.os }}-android-sdk-36-34.0.0
           restore-keys: |
             ${{ runner.os }}-android-sdk-
