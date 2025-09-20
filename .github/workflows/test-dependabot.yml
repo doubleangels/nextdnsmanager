@@ -20,24 +20,43 @@ jobs:
         with:
           java-version: "21"
           distribution: "temurin"
+          cache: gradle
 
-      - name: Cache gradle dependencies
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          packages: "platform-tools platforms;android-36 build-tools;34.0.0"
+          accept-android-sdk-licenses: true
+
+      - name: Cache Gradle dependencies
         uses: actions/cache@v4
         with:
           path: |
-            ~/.gradle
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+            ~/.gradle/daemon
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
           restore-keys: |
             ${{ runner.os }}-gradle-
+
+      - name: Cache Android SDK
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.android/build-cache
+            ~/.android/cache
+          key: ${{ runner.os }}-android-sdk-${{ hashFiles('**/build.gradle*') }}
+          restore-keys: |
+            ${{ runner.os }}-android-sdk-
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
       - name: Build debug APK with Gradle
-        run: ./gradlew assembleGmsDebug
+        run: ./gradlew assembleGmsDebug --parallel --build-cache --configuration-cache
 
       - name: Build debug bundle with Gradle
-        run: ./gradlew bundleGmsDebug
+        run: ./gradlew bundleGmsDebug --parallel --build-cache --configuration-cache
 
   build-gms-flavor-release:
     runs-on: ubuntu-latest
@@ -50,21 +69,40 @@ jobs:
         with:
           java-version: "21"
           distribution: "temurin"
+          cache: gradle
 
-      - name: Cache gradle dependencies
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          packages: "platform-tools platforms;android-36 build-tools;34.0.0"
+          accept-android-sdk-licenses: true
+
+      - name: Cache Gradle dependencies
         uses: actions/cache@v4
         with:
           path: |
-            ~/.gradle
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+            ~/.gradle/daemon
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
           restore-keys: |
             ${{ runner.os }}-gradle-
+
+      - name: Cache Android SDK
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.android/build-cache
+            ~/.android/cache
+          key: ${{ runner.os }}-android-sdk-${{ hashFiles('**/build.gradle*') }}
+          restore-keys: |
+            ${{ runner.os }}-android-sdk-
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
       - name: Build release APK with Gradle
-        run: ./gradlew assembleGmsRelease
+        run: ./gradlew assembleGmsRelease --parallel --build-cache --configuration-cache
 
       - name: Build release bundle with Gradle
-        run: ./gradlew bundleGmsRelease
+        run: ./gradlew bundleGmsRelease --parallel --build-cache --configuration-cache
