@@ -11,14 +11,15 @@ on:
 
 jobs:
   build-gms-flavor-for-github:
-    runs-on: debian-11
+    runs-on: ubuntu-latest
+    container: debian:11-slim
     steps:
       - name: Checkout
         uses: actions/checkout@v5
 
       - name: Set up JDK 21
         uses: actions/setup-java@v5
-        with:
+        with:gio
           java-version: "21"
           distribution: "temurin"
           cache: gradle
@@ -71,7 +72,8 @@ jobs:
           path: app/build/outputs/apk/gms/release/app-release.apk
 
   build-foss-flavor-for-github:
-    runs-on: debian-11
+    runs-on: ubuntu-latest
+    container: debian:11-slim
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -131,7 +133,8 @@ jobs:
           path: app/build/outputs/apk/foss/release/app-release-foss.apk
 
   build-gms-flavor-for-google-play:
-    runs-on: debian-11
+    runs-on: ubuntu-latest
+    container: debian:11-slim
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -195,7 +198,8 @@ jobs:
         "build-foss-flavor-for-github",
         "build-gms-flavor-for-google-play",
       ]
-    runs-on: debian-11
+    runs-on: ubuntu-latest
+    container: debian:11-slim
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -281,7 +285,8 @@ jobs:
         "build-foss-flavor-for-github",
         "build-gms-flavor-for-google-play",
       ]
-    runs-on: debian-11
+    runs-on: ubuntu-latest
+    container: debian:11-slim
     if: ${{ !inputs.skip_appsweep }}
     steps:
       - name: Checkout
@@ -306,7 +311,8 @@ jobs:
         "publish-built-files",
         "appsweep-scan",
       ]
-    runs-on: debian-11
+    runs-on: ubuntu-latest
+    container: debian:11-slim
     if: always()
     steps:
       - name: Delete workflow runs

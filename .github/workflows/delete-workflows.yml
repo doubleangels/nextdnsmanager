@@ -5,7 +5,8 @@ on:
 
 jobs:
   delete-runs:
-    runs-on: debian-11
+    runs-on: ubuntu-latest
+    container: debian:11-slim
     permissions:
       actions: write
       contents: read

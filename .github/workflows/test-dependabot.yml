@@ -10,7 +10,8 @@ on:
 
 jobs:
   build-gms-flavor-debug:
-    runs-on: debian-11
+    runs-on: ubuntu-latest
+    container: debian:11-slim
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -53,7 +54,8 @@ jobs:
         run: ./gradlew bundleGmsDebug --parallel --build-cache --configuration-cache
 
   build-gms-flavor-release:
-    runs-on: debian-11
+    runs-on: ubuntu-latest
+    container: debian:11-slim
     steps:
       - name: Checkout
         uses: actions/checkout@v5

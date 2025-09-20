@@ -8,7 +8,8 @@ on:
 
 jobs:
   lint-gms-flavor:
-    runs-on: debian-11
+    runs-on: ubuntu-latest
+    container: debian:11-slim
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -39,7 +40,8 @@ jobs:
         continue-on-error: false
 
   lint-foss-flavor:
-    runs-on: debian-11
+    runs-on: ubuntu-latest
+    container: debian:11-slim
     steps:
       - name: Checkout
         uses: actions/checkout@v5
