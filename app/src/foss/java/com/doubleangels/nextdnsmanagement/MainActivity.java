@@ -410,6 +410,25 @@ public class MainActivity extends AppCompatActivity {
         // Set a custom WebViewClient to handle page events
         webView.setWebViewClient(new WebViewClient() {
             @Override
+            public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                try {
+                    // Check if the URL ends with .nextdns.io
+                    if (url != null && url.endsWith(".nextdns.io")) {
+                        // Load NextDNS URLs in the WebView
+                        return false;
+                    } else {
+                        // Open all other URLs in the default browser
+                        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                        startActivity(intent);
+                        return true;
+                    }
+                } catch (Exception e) {
+                    SentryManager.captureStaticException(e);
+                    return false;
+                }
+            }
+
+            @Override
             public void onPageFinished(WebView view, String url) {
                 try {
                     // Enable and flush cookies

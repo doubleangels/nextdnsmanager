@@ -2,7 +2,9 @@ package com.doubleangels.nextdnsmanagement;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.Intent;
 import android.content.res.Configuration;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.ViewGroup;
@@ -199,7 +201,26 @@ public class PingActivity extends AppCompatActivity {
             settings.setAllowFileAccess(false);
             settings.setAllowContentAccess(false);
             // Set a WebViewClient to handle page navigation
-            webView.setWebViewClient(new WebViewClient());
+            webView.setWebViewClient(new WebViewClient() {
+                @Override
+                public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                    try {
+                        // Check if the URL ends with .nextdns.io
+                        if (url != null && url.endsWith(".nextdns.io")) {
+                            // Load NextDNS URLs in the WebView
+                            return false;
+                        } else {
+                            // Open all other URLs in the default browser
+                            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                            startActivity(intent);
+                            return true;
+                        }
+                    } catch (Exception e) {
+                        SentryManager.captureStaticException(e);
+                        return false;
+                    }
+                }
+            });
         } catch (Exception e) {
             // Capture any exception that occurs during WebView configuration
             sentryManager.captureException(e);
