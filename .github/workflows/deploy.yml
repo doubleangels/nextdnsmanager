@@ -254,7 +254,6 @@ jobs:
         with:
           appsweep_api_key: ${{ secrets.APPSWEEP_API_KEY }}
           input_file: app-release.apk
-          commit_hash: ${{ github.sha }}
 
   delete-workflow-runs:
     needs:
