@@ -48,7 +48,7 @@
     <string name="tally_issues">Wenn Sie keinen GitHub-Account haben, können Sie hier ein Problem melden.</string>
     <string name="translate">"Übersetzen"</string>
     <string name="translate_summary">"Wenn Sie falsche Übersetzungen sehen, helfen Sie mir bitte, sie hier zu reparieren."</string>
-    <string name="unlock_description">Authentifizieren Sie sich, um auf Ihre Einstellungen zuzugreifen und sie zu ändern</string>
+    <string name="unlock_description">Authentifizieren Sie sich, um auf Ihre Einstellungen zuzugreifen und sie zu ändern.</string>
     <string name="unlock_title">Entsperren</string>
     <string name="user_agreement">"Benutzervereinbarung"</string>
     <string name="version">"Version"</string>
