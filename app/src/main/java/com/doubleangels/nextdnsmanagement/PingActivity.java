@@ -52,6 +52,11 @@ public class PingActivity extends AppCompatActivity {
         // Set the layout for this activity
         setContentView(R.layout.activity_ping);
 
+        // Enable hardware acceleration programmatically
+        getWindow().setFlags(
+                android.view.WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED,
+                android.view.WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED);
+
         // Initialize the SentryManager for error logging
         sentryManager = new SentryManager(this);
         try {
@@ -80,9 +85,43 @@ public class PingActivity extends AppCompatActivity {
     }
 
     /**
+     * Pauses WebViews when the activity is paused.
+     * Also pauses JavaScript execution and timers to save battery.
+     */
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (webView != null) {
+            webView.onPause();
+            webView.pauseTimers();
+        }
+        if (webView2 != null) {
+            webView2.onPause();
+            webView2.pauseTimers();
+        }
+    }
+
+    /**
+     * Resumes WebViews when the activity is resumed.
+     * Also resumes JavaScript execution and timers.
+     */
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (webView != null) {
+            webView.onResume();
+            webView.resumeTimers();
+        }
+        if (webView2 != null) {
+            webView2.onResume();
+            webView2.resumeTimers();
+        }
+    }
+
+    /**
      * Called when the activity is about to be destroyed.
      * Cleans up WebView resources by removing them from their parent and destroying
-     * them.
+     * them. Enhanced with comprehensive memory management.
      */
     @Override
     protected void onDestroy() {
@@ -94,6 +133,10 @@ public class PingActivity extends AppCompatActivity {
                     ((ViewGroup) webView.getParent()).removeView(webView);
                 }
                 webView.setWebViewClient(new WebViewClient());
+                // Clear WebView cache and data
+                webView.clearCache(true);
+                webView.clearHistory();
+                webView.clearFormData();
                 webView.destroy();
                 webView = null;
             }
@@ -103,15 +146,23 @@ public class PingActivity extends AppCompatActivity {
                     ((ViewGroup) webView2.getParent()).removeView(webView2);
                 }
                 webView2.setWebViewClient(new WebViewClient());
+                // Clear WebView cache and data
+                webView2.clearCache(true);
+                webView2.clearHistory();
+                webView2.clearFormData();
                 webView2.destroy();
                 webView2 = null;
             }
+            // Clear sentry manager reference
+            sentryManager = null;
         } catch (Exception e) {
             // Capture any exception using a static method
             SentryManager.captureStaticException(e);
         } finally {
-            // Ensure webView is set to null
+            // Ensure webViews and references are set to null
             webView = null;
+            webView2 = null;
+            sentryManager = null;
         }
     }
 
@@ -201,6 +252,9 @@ public class PingActivity extends AppCompatActivity {
             // Disable file and content access for enhanced security
             settings.setAllowFileAccess(false);
             settings.setAllowContentAccess(false);
+
+            // Use modern caching approach for better performance
+            settings.setCacheMode(WebSettings.LOAD_DEFAULT);
             // Set a WebViewClient to handle page navigation
             webView.setWebViewClient(new WebViewClient() {
                 @Override

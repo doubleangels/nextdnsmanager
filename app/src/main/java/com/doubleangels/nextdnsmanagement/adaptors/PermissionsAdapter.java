@@ -70,6 +70,9 @@ public class PermissionsAdapter extends RecyclerView.Adapter<PermissionsAdapter.
     @SuppressLint("SetTextI18n")
     @Override
     public void onBindViewHolder(@NonNull PermissionViewHolder holder, int position) {
+        // Clear previous content to prevent memory leaks and improve recycling
+        holder.clear();
+
         // Get the PermissionInfo at the current position
         PermissionInfo permissionInfo = permissions.get(position);
 
@@ -137,6 +140,7 @@ public class PermissionsAdapter extends RecyclerView.Adapter<PermissionsAdapter.
      * Inner ViewHolder class that holds references to each view in a single item
      * layout.
      * This improves performance by avoiding repeated calls to findViewById.
+     * Enhanced with proper view recycling and memory management.
      */
     public static class PermissionViewHolder extends RecyclerView.ViewHolder {
 
@@ -154,6 +158,31 @@ public class PermissionsAdapter extends RecyclerView.Adapter<PermissionsAdapter.
             super(itemView);
             permissionName = itemView.findViewById(R.id.permissionName);
             permissionDescription = itemView.findViewById(R.id.permissionDescription);
+        }
+
+        /**
+         * Clears the view content to prepare for recycling.
+         * This helps prevent memory leaks and improves performance.
+         */
+        public void clear() {
+            if (permissionName != null) {
+                permissionName.setText("");
+                permissionName.setTag(null);
+            }
+            if (permissionDescription != null) {
+                permissionDescription.setText("");
+                permissionDescription.setTag(null);
+            }
+        }
+
+        /**
+         * Releases all references to prevent memory leaks.
+         * Should be called when the ViewHolder is no longer needed.
+         */
+        public void release() {
+            clear();
+            permissionName = null;
+            permissionDescription = null;
         }
     }
 }
