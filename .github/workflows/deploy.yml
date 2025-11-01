@@ -47,7 +47,7 @@ jobs:
         run: mv app/build/outputs/apk/gms/release/app-gms-release-unsigned-signed.apk app/build/outputs/apk/gms/release/app-release.apk
 
       - name: Upload APK to Github release artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: github-release-apk
           path: app/build/outputs/apk/gms/release/app-release.apk
@@ -95,7 +95,7 @@ jobs:
         run: mv app/build/outputs/apk/foss/release/app-foss-release-unsigned-signed.apk app/build/outputs/apk/foss/release/app-release-foss.apk
 
       - name: Upload APK to Github release artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: github-foss-release-apk
           path: app/build/outputs/apk/foss/release/app-release-foss.apk
@@ -141,7 +141,7 @@ jobs:
         run: mv app/build/outputs/bundle/gmsRelease/app-gms-release.aab app/build/outputs/bundle/gmsRelease/app-release.aab
 
       - name: Upload bundle to Github release artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: google-play-bundle
           path: app/build/outputs/bundle/gmsRelease/app-release.aab
