@@ -48,7 +48,7 @@
     <string name="tally_issues">Se non hai un account GitHub, puoi segnalare un problema qui.</string>
     <string name="translate">"Tradurre"</string>
     <string name="translate_summary">"Se vedi delle traduzioni errate, per favore aiutami a correggerle qui."</string>
-    <string name="unlock_description">Autenticati per accedere e modificare le tue impostazioni</string>
+    <string name="unlock_description">Autenticati per accedere e modificare le tue impostazioni.</string>
     <string name="unlock_title">Sblocca</string>
     <string name="user_agreement">"Accordo con l'utente"</string>
     <string name="version">"Versione"</string>

@@ -125,12 +125,22 @@ public class MainActivity extends AppCompatActivity {
         }
         setContentView(R.layout.activity_main);
 
+        // Enable hardware acceleration programmatically
+        getWindow().setFlags(
+                android.view.WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED,
+                android.view.WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED);
+
         // Initialize blur overlay
         blurOverlay = findViewById(R.id.blurOverlay);
 
         // Initialize Sentry for error logging, Firebase Messaging, and
         // SharedPreferences
         sentryManager = new SentryManager(this);
+
+        // Log hardware acceleration status for debugging (after sentryManager is
+        // initialized)
+        boolean isHardwareAccelerated = getWindow().getDecorView().isHardwareAccelerated();
+        sentryManager.captureMessage("Hardware acceleration enabled: " + isHardwareAccelerated);
         MessagingInitializer.initialize(this);
         SharedPreferencesManager.init(this);
 
@@ -189,6 +199,7 @@ public class MainActivity extends AppCompatActivity {
     /**
      * Called when the activity is destroyed.
      * Cleans up the WebView and SwipeRefreshLayout to avoid memory leaks.
+     * Enhanced with comprehensive memory management.
      */
     @Override
     protected void onDestroy() {
@@ -196,7 +207,7 @@ public class MainActivity extends AppCompatActivity {
         try {
             webViewState = null;
             // Remove WebView from its parent if attached
-            if (webView.getParent() != null) {
+            if (webView != null && webView.getParent() != null) {
                 ((ViewGroup) webView.getParent()).removeView(webView);
             }
             if (webView != null) {
@@ -205,6 +216,10 @@ public class MainActivity extends AppCompatActivity {
                 webView.setWebViewClient(new WebViewClient());
                 webView.setWebChromeClient(new WebChromeClient());
                 webView.setDownloadListener(null);
+                // Clear WebView cache and data
+                webView.clearCache(true);
+                webView.clearHistory();
+                webView.clearFormData();
                 // Destroy the WebView
                 webView.destroy();
                 webView = null;
@@ -214,21 +229,31 @@ public class MainActivity extends AppCompatActivity {
                 swipeRefreshLayout.setOnRefreshListener(null);
                 swipeRefreshLayout = null;
             }
+            // Clear blur overlay reference
+            blurOverlay = null;
+            // Clear sentry manager reference
+            sentryManager = null;
         } catch (Exception e) {
             SentryManager.captureStaticException(e);
         } finally {
             webView = null;
+            swipeRefreshLayout = null;
+            blurOverlay = null;
+            sentryManager = null;
         }
     }
 
     /**
      * Pauses the WebView when the activity is paused.
+     * Also pauses JavaScript execution and timers to save battery.
      */
     @Override
     protected void onPause() {
         super.onPause();
         if (webView != null) {
             webView.onPause();
+            // Pause JavaScript execution and timers to save battery
+            webView.pauseTimers();
         }
     }
 
@@ -256,6 +281,8 @@ public class MainActivity extends AppCompatActivity {
         // Resume WebView if it exists; otherwise, initialize it
         if (webView != null) {
             webView.onResume();
+            // Resume JavaScript execution and timers
+            webView.resumeTimers();
         } else if (!isWebViewInitialized) {
             setupWebViewForActivity(getString(R.string.main_url));
         }
@@ -424,6 +451,9 @@ public class MainActivity extends AppCompatActivity {
         webViewSettings.setSupportZoom(false);
         webViewSettings.setLoadWithOverviewMode(true);
         webViewSettings.setUseWideViewPort(true);
+
+        // Use modern caching approach for better performance
+        webViewSettings.setCacheMode(WebSettings.LOAD_DEFAULT);
 
         // Set a custom WebViewClient to handle page events
         webView.setWebViewClient(new WebViewClient() {

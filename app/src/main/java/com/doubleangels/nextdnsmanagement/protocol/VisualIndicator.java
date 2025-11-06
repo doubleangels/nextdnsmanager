@@ -264,6 +264,7 @@ public class VisualIndicator {
 
     /**
      * Helper method to update the connection status icon and its color.
+     * Uses optimized image loading for better performance and memory management.
      *
      * @param connectionStatus The ImageView to update.
      * @param drawableResId    The drawable resource (icon) to set.
@@ -274,7 +275,8 @@ public class VisualIndicator {
             int drawableResId,
             int colorResId,
             Context context) {
-        connectionStatus.setImageResource(drawableResId);
+        // Use optimized image loading
+        com.doubleangels.nextdnsmanagement.utils.ImageLoader.loadDrawable(context, connectionStatus, drawableResId);
         connectionStatus.setColorFilter(ContextCompat.getColor(context, colorResId));
     }
 

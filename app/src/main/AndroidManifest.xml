@@ -16,6 +16,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         android:localeConfig="@xml/locales_config"
+        android:hardwareAccelerated="true"
         tools:targetApi="tiramisu"
         android:enableOnBackInvokedCallback="true">
         <service
@@ -47,7 +48,8 @@
             android:theme="@style/PreferenceTheme" />
         <activity
             android:name=".PingActivity"
-            android:exported="false" />
+            android:exported="false"
+            android:hardwareAccelerated="true" />
         <activity
             android:name=".StatusActivity"
             android:exported="false" />
@@ -57,7 +59,8 @@
             android:exported="false" />
         <activity
             android:name=".MainActivity"
-            android:exported="true">
+            android:exported="true"
+            android:hardwareAccelerated="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
