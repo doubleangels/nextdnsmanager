@@ -2,7 +2,7 @@ name: Auto-merge Dependabot PRs
 
 on:
     workflow_run:
-        workflows: ["Test development build"]
+        workflows: ["Test development builds"]
         types:
             - completed
 
