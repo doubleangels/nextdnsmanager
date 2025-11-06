@@ -1,4 +1,4 @@
-name: Deploy release
+name: Deploy releases
 
 on:
   workflow_dispatch:
@@ -248,12 +248,24 @@ jobs:
         uses: actions/download-artifact@v6
         with:
           name: github-release-apk
-          path: .
+          path: ./apk
 
-      - uses: guardsquare/appsweep-action@main
+      - name: Verify APK file exists
+        run: |
+          if [ ! -f ./apk/app-release.apk ]; then
+            echo "APK file not found. Listing directory contents:"
+            find . -name "*.apk" -type f
+            ls -la ./apk/ 2>/dev/null || echo "apk directory does not exist"
+            exit 1
+          fi
+          echo "APK file found: $(ls -lh ./apk/app-release.apk)"
+
+      - name: Run AppSweep scan
+        uses: guardsquare/appsweep-action@v1
         with:
           appsweep_api_key: ${{ secrets.APPSWEEP_API_KEY }}
-          input_file: app-release.apk
+          input_file: ./apk/app-release.apk
+          tag: ${{ github.ref_name }}
 
   delete-workflow-runs:
     needs:
