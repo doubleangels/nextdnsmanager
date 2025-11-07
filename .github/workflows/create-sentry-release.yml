@@ -1,4 +1,4 @@
-name: Create sentry releases
+name: Sentry Release Generation
 
 on:
   push:
