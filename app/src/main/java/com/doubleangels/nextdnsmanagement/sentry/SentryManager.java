@@ -1,10 +1,9 @@
 package com.doubleangels.nextdnsmanagement.sentry;
 
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.util.Log;
 
-import androidx.preference.PreferenceManager;
+import com.doubleangels.nextdnsmanagement.sharedpreferences.SharedPreferencesManager;
 
 import java.lang.ref.WeakReference;
 
@@ -46,11 +45,6 @@ public class SentryManager {
     private final WeakReference<Context> contextRef;
 
     /**
-     * Reference to SharedPreferences where Sentry enable/disable setting is stored.
-     */
-    public SharedPreferences sharedPreferences;
-
-    /**
      * Constructs a new SentryManager instance.
      *
      * @param context The context used to access preferences and other
@@ -58,6 +52,15 @@ public class SentryManager {
      */
     public SentryManager(Context context) {
         this.contextRef = new WeakReference<>(context);
+        // Ensure SharedPreferencesManager is initialized
+        if (context != null) {
+            try {
+                SharedPreferencesManager.init(context);
+            } catch (Exception e) {
+                // If initialization fails, log but don't throw
+                Log.e(TAG, "Failed to initialize SharedPreferencesManager", e);
+            }
+        }
     }
 
     /**
@@ -160,7 +163,14 @@ public class SentryManager {
         if (context == null) {
             return false; // Context has been garbage collected
         }
-        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
-        return sharedPreferences.getBoolean("sentry_enable", false);
+        try {
+            // Ensure SharedPreferencesManager is initialized
+            SharedPreferencesManager.init(context);
+            return SharedPreferencesManager.getBoolean("sentry_enable", false);
+        } catch (Exception e) {
+            // If there's an error accessing preferences, default to disabled
+            Log.e(TAG, "Error checking Sentry enable status", e);
+            return false;
+        }
     }
 }
