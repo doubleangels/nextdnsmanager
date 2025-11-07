@@ -1,9 +1,9 @@
 package com.doubleangels.nextdnsmanagement.firebasemessaging;
 
 import android.content.Context;
-import android.content.SharedPreferences;
 
 import com.doubleangels.nextdnsmanagement.sentry.SentryManager;
+import com.doubleangels.nextdnsmanagement.sharedpreferences.SharedPreferencesManager;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.messaging.FirebaseMessaging;
 
@@ -12,9 +12,6 @@ import com.google.firebase.messaging.FirebaseMessaging;
  * and subscribes the device to a default topic ("general").
  */
 public class MessagingInitializer {
-
-    // Name of the shared preferences file
-    private static final String PREFS_NAME = "MyAppPreferences";
 
     // Key for storing the FCM token in shared preferences
     private static final String KEY_FCM_TOKEN = "fcmToken";
@@ -29,6 +26,14 @@ public class MessagingInitializer {
      */
     public static void initialize(Context context) {
         SentryManager sentryManager = new SentryManager(context);
+
+        // Initialize SharedPreferencesManager
+        try {
+            SharedPreferencesManager.init(context);
+        } catch (Exception e) {
+            sentryManager.captureException(e);
+            return;
+        }
 
         // Initialize Firebase (Required before using Firebase services)
         try {
@@ -61,8 +66,7 @@ public class MessagingInitializer {
                         sentryManager.captureMessage("FCM Token retrieved: " + token);
 
                         // Store the token in SharedPreferences for future use
-                        SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-                        prefs.edit().putString(KEY_FCM_TOKEN, token).apply();
+                        SharedPreferencesManager.putString(KEY_FCM_TOKEN, token);
 
                         // Subscribe the user to the "general" topic
                         FirebaseMessaging.getInstance().subscribeToTopic("general")

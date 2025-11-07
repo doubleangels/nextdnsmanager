@@ -1,6 +1,6 @@
 plugins {
     id "com.android.application"
-    id "io.sentry.android.gradle" version "5.12.1"
+    id "io.sentry.android.gradle" version "5.12.2"
     id "com.google.gms.google-services"
 }
 
@@ -10,8 +10,8 @@ android {
         applicationId "com.doubleangels.nextdnsmanagement"
         minSdkVersion 32
         targetSdk = 35
-        versionCode 265
-        versionName "5.5.16"
+        versionCode 266
+        versionName "5.5.17"
         resourceConfigurations += ["en", "zh", "nl", "fi", "fr", "de", "in", "it", "ja", "pl", "pt", "es", "sv", "tr"]
     }
 
@@ -65,8 +65,9 @@ android {
 dependencies {
     implementation "androidx.activity:activity:1.11.0"
     implementation 'androidx.appcompat:appcompat:1.7.1'
-    implementation "androidx.biometric:biometric:1.4.0-alpha04"
+    implementation 'androidx.biometric:biometric:1.1.0'
     implementation 'androidx.preference:preference:1.2.1'
+    implementation 'androidx.security:security-crypto:1.1.0-alpha06'
     implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0'
     implementation 'androidx.webkit:webkit:1.14.0'
     implementation 'com.google.android.material:material:1.13.0'
