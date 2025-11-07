@@ -1,4 +1,4 @@
-name: Release Deploymentgit
+name: Release Deployment
 
 on:
   workflow_dispatch:
