@@ -261,7 +261,7 @@ jobs:
           echo "APK file found: $(ls -lh ./apk/app-release.apk)"
 
       - name: Run AppSweep scan
-        uses: guardsquare/appsweep-action@v1
+        uses: guardsquare/appsweep-action@main
         with:
           appsweep_api_key: ${{ secrets.APPSWEEP_API_KEY }}
           input_file: ./apk/app-release.apk
