@@ -1,6 +1,6 @@
 plugins {
     id "com.android.application"
-    id "io.sentry.android.gradle" version "5.12.1"
+    id "io.sentry.android.gradle" version "5.12.2"
     id "com.google.gms.google-services"
 }
 
@@ -67,6 +67,7 @@ dependencies {
     implementation 'androidx.appcompat:appcompat:1.7.1'
     implementation 'androidx.biometric:biometric:1.1.0'
     implementation 'androidx.preference:preference:1.2.1'
+    implementation 'androidx.security:security-crypto:1.1.0-alpha06'
     implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0'
     implementation 'androidx.webkit:webkit:1.14.0'
     implementation 'com.google.android.material:material:1.13.0'
