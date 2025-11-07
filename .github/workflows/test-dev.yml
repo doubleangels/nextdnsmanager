@@ -11,6 +11,10 @@ on:
       - reopened
   workflow_dispatch:
 
+permissions:
+  pull-requests: write
+  contents: write
+
 jobs:
   lint-gms-flavor:
     if: |
@@ -103,3 +107,25 @@ jobs:
       - name: Build FOSS Release
         run: ./gradlew assembleFossRelease
         continue-on-error: false
+
+  automerge:
+    needs:
+      [lint-gms-flavor, build-gms-flavor, lint-foss-flavor, build-foss-flavor]
+    if: >
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.user.login == 'dependabot[bot]' &&
+      needs.lint-gms-flavor.result == 'success' &&
+      needs.build-gms-flavor.result == 'success' &&
+      needs.lint-foss-flavor.result == 'success' &&
+      needs.build-foss-flavor.result == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      contents: write
+    steps:
+      - name: Enable auto-merge for Dependabot PRs
+        uses: peter-evans/enable-pull-request-automerge@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          pull-request-number: ${{ github.event.pull_request.number }}
+          merge-method: merge
