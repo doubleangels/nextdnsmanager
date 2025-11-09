@@ -189,7 +189,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         // Check biometric authentication on app start
-        if (SharedPreferencesManager.getBoolean("app_lock_enable", true)) {
+        if (SharedPreferencesManager.getBoolean("app_lock_enable", false)) {
             if (shouldAuthenticate()) {
                 showBiometricPrompt();
             }
@@ -265,7 +265,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         // Check biometric authentication when returning from other activities
-        if (SharedPreferencesManager.getBoolean("app_lock_enable", true)) {
+        if (SharedPreferencesManager.getBoolean("app_lock_enable", false)) {
             if (shouldAuthenticate()) {
                 showBiometricPrompt();
             }
@@ -290,7 +290,7 @@ public class MainActivity extends AppCompatActivity {
         // Refresh dark mode settings when returning from settings
         setupDarkModeForActivity(sentryManager, SharedPreferencesManager.getString("dark_mode", "match"));
         // Check if app lock is enabled and if biometric authentication is needed
-        if (SharedPreferencesManager.getBoolean("app_lock_enable", true)) {
+        if (SharedPreferencesManager.getBoolean("app_lock_enable", false)) {
             if (shouldAuthenticate()) {
                 // Show biometric prompt immediately - don't wait for WebView state
                 showBiometricPrompt();

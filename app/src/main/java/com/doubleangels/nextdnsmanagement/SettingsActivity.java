@@ -337,7 +337,7 @@ public class SettingsActivity extends AppCompatActivity {
             setting.setOnPreferenceChangeListener((preference, newValue) -> {
                 try {
                     boolean newValueBoolean = (Boolean) newValue;
-                    boolean currentValue = SharedPreferencesManager.getBoolean("app_lock_enable", true);
+                    boolean currentValue = SharedPreferencesManager.getBoolean("app_lock_enable", false);
 
                     // If trying to disable app lock, require biometric authentication
                     if (currentValue && !newValueBoolean) {
