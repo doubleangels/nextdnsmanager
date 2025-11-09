@@ -19,6 +19,7 @@ Unless NextDNS/Android make major changes, there are a few features that won't b
 - Changes (additions, removals, edits) to block lists or any of the parental control features.
 - Addition of [NXEnhanced](https://github.com/hjk789/NXEnhanced)-like features. The developer of NXEnhanced has ceased development of his project after attempting to work with NextDNS and recieving no response.
 - Changes (additions, removals, edits) of NextDNS payment methods.
+- Changing of core features or functionality of NextDNS.
 
 ## Is this app secure? Can you access my account or view my DNS queries?
 
@@ -31,10 +32,10 @@ No. [Sentry](https://github.com/getsentry/sentry) is a service for developers th
 
 ## I am new to using NextDNS and I don't understand how to use it, can you teach me?
 
-Because NextDNS support and communication from the developers is lacking, I am happy to try and help any users that open an issue or discussions post. For simple setup/configuration questions or specific questions about this app and its features, I will do whatever I can to help users get to a point where their configuration is working. 
+Because NextDNS support and communication from the developers is lacking, I am happy to try and help any users that open an issue. For simple setup/configuration questions or specific questions about this app and its features, I will do whatever I can to help users get to a point where their configuration is working.
 
 I also recommend the r/nextdns community on Reddit, there are many knowledgeable people who can help as well.
 
 ## I've read all of this and still have a question, what now?
 
-Please open an [issue](https://github.com/doubleangels/NextDNSManager/issues) or [ask the community](https://github.com/doubleangels/NextDNSManager/discussions/categories/q-a).
+Please open an [issue](https://github.com/doubleangels/NextDNSManager/issues).

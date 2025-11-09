@@ -47,8 +47,7 @@ NextDNS Manager is an Android application that simplifies managing your [NextDNS
 
   - [I have multiple versions of NextDNS Manager on my phone after the 5.5.0 update!](#multiple-versions)
   - [What is Sentry, are you tracking me?](#sentry)
-  - [Why does F-Droid show an antifeature warning about Sentry?](#antifeature-warning)
-  - [Why doesn’t the app support Android versions before 12L?](#supported-android-versions)
+  - [Why doesn't the app support Android versions before 12L?](#supported-android-versions)
   - [Will you bring back support for older Android versions?](#add-supported-android-versions)
   - [What is FCM, and why is it disabled in F-Droid builds?](#fcm)
 
@@ -141,11 +140,7 @@ If you're wondering about Sentry, [check this](https://github.com/doubleangels/n
 
 This data is solely used to improve app stability by fixing bugs and errors. It remains anonymous, isn't shared with anyone else, and is not used for analytics.
 
-### <a id="antifeature-warning"></a>Why does F-Droid show an Antifeature warning about Sentry?
-
-This warning is misleading. Sentry is fully opt-in in multiple ways and does not collect any personal or identifiable information. I’m working with the F-Droid team to address and resolve this.
-
-### <a id="supported-android-versions"></a>Why doesn’t the app support Android versions before 12L?
+### <a id="supported-android-versions"></a>Why doesn't the app support Android versions before 12L?
 
 Android apps rely on API calls to interact with the operating system. Each new Android release introduces additional capabilities, which the app takes advantage of to enhance functionality, privacy, and security. Older Android versions lack support for these improvements, making them incompatible with the app’s implementation.
 
