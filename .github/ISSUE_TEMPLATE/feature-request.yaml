@@ -14,6 +14,16 @@ body:
       options:
         - "Yes"
         - "No"
+  - type: dropdown
+    id: build-flavor
+    attributes:
+      label: Build Flavor Preference
+      description: Which build(s) should this feature be available in?
+      options:
+        - GMS (Google Play)
+        - FOSS (F-Droid/GitHub)
+        - Both
+        - Not sure
   - type: textarea
     id: feature-description
     attributes:
@@ -35,8 +45,23 @@ body:
     attributes:
       label: Current Workarounds
       description: If there are ways to partially achieve this functionality now, mention them here.
+  - type: input
+    id: related-feature
+    attributes:
+      label: Related to Existing Feature
+      description: If this feature relates to or extends an existing feature, please mention it here.
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots/Mockups
+      description: If you have any mockups, screenshots, or visual examples of how this feature might look, please add them here. You can drag and drop images here.
   - type: textarea
     id: priority
     attributes:
       label: Priority
       description: How important is this feature to you? Explain why.
+  - type: textarea
+    id: additional-info
+    attributes:
+      label: Additional Information
+      description: Any other details that might be helpful.

@@ -1,11 +1,33 @@
 name: Feedback
-description: Share your thoughts and suggestions to help us improve.
+description: Share your thoughts and suggestions to help us improve. Please check the FAQ before submitting.
 title: "[Feedback] "
 labels: ["type: feedback"]
 assignees:
   - doubleangels
 
 body:
+  - type: dropdown
+    id: faq-check
+    attributes:
+      label: FAQ's Checked
+      description: Have you checked the FAQ's before opening this issue?
+      options:
+        - "Yes"
+        - "No"
+  - type: input
+    id: app-version
+    attributes:
+      label: App Version
+      description: What version of the app are you using? (You can usually find this in the app's settings)
+  - type: dropdown
+    id: build-flavor
+    attributes:
+      label: Build Flavor
+      description: Which build of the app are you using?
+      options:
+        - GMS (Google Play)
+        - FOSS (F-Droid/GitHub)
+        - Not sure
   - type: dropdown
     id: feedback-type
     attributes:
@@ -14,6 +36,7 @@ body:
       options:
         - General Feedback
         - Performance
+        - UI/UX
         - Other
   - type: textarea
     id: feedback
@@ -31,5 +54,5 @@ body:
   - type: textarea
     id: additional-info
     attributes:
-      label: Additional Information (Optional)
-      description: Any screenshots, links, or other details that could help us understand your feedback.
+      label: Additional Information
+      description: Any screenshots, links, or other details that could help us understand your feedback. You can drag and drop images here.
