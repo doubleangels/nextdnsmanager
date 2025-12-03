@@ -1,0 +1,62 @@
+name: Improvement Request
+description: Suggest a new feature or improvement to the project. Please check the FAQ before submitting.
+title: "[Improvement] "
+labels: ["type: improvement"]
+assignees:
+  - doubleangels
+
+body:
+  - type: dropdown
+    id: faq-check
+    attributes:
+      label: FAQ's Checked
+      description: Have you checked the FAQ's before opening this issue?
+      options:
+        - "Yes"
+        - "No"
+  - type: input
+    id: feature-being-improved
+    attributes:
+      label: Feature Being Improved
+      description: Which existing feature or area of the app would this improvement affect?
+  - type: dropdown
+    id: build-flavor
+    attributes:
+      label: Build Flavor Preference
+      description: Which build(s) should this improvement be available in?
+      options:
+        - GMS (Google Play)
+        - FOSS (F-Droid/GitHub)
+        - Both
+        - Not sure
+  - type: textarea
+    id: feature-description
+    attributes:
+      label: Describe the Improvement
+      description: Clearly explain the improvement you're suggesting.
+  - type: textarea
+    id: use-case
+    attributes:
+      label: Use Case
+      description: Describe how this improvement would be used and how it would benefit users.
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: If you have any ideas about how this might be implemented, or alternative solutions, please share them here.
+  - type: textarea
+    id: priority
+    attributes:
+      label: Priority
+      description: How important is this improvement to you? Explain why.
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots/Mockups
+      description: If you have any mockups, screenshots, or visual examples of how this improvement might look, please add them here. You can drag and drop images here.
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Information
+      description: Any other relevant information, links to similar features in other projects, etc.
+

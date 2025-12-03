@@ -19,7 +19,7 @@
         <SwitchPreference
             app:key="app_lock_enable"
             app:title="@string/app_lock"
-            app:defaultValue="true" />
+            app:defaultValue="false" />
     </PreferenceCategory>
     <PreferenceCategory
         app:key="sentry"

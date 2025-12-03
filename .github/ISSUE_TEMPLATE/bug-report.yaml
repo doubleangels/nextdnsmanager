@@ -25,33 +25,66 @@ body:
         - High
         - Critical
   - type: input
+    id: app-version
+    attributes:
+      label: App Version
+      description: What version of the app are you using? (You can usually find this in the app's settings)
+  - type: input
     id: android-version
     attributes:
       label: Android Version
-      description: What is your Android version? (e.g., Android 10)
+      description: What is your Android version? (e.g., Android 12L)
   - type: input
     id: device
     attributes:
       label: Device Model
       description: What kind of device do you have? (e.g., Samsung Galaxy S22)
-  - type: input
-    id: app-version
+  - type: dropdown
+    id: build-flavor
     attributes:
-      label: App Version
-      description: What version of the app are you using? (You can usually find this in the app's settings)
+      label: Build Flavor
+      description: Which build of the app are you using?
+      options:
+        - GMS (Google Play)
+        - FOSS (F-Droid/GitHub)
+        - Not sure
   - type: textarea
-    id: problem
+    id: expected-behavior
     attributes:
-      label: Describe the Issue
-      description: Please provide a clear and detailed description of the bug or issue.
+      label: Expected Behavior
+      description: What should happen? Describe the expected behavior.
+  - type: textarea
+    id: actual-behavior
+    attributes:
+      label: Actual Behavior
+      description: What actually happens? Describe the bug or issue you're experiencing.
   - type: textarea
     id: steps
     attributes:
       label: Steps to Reproduce
       description: If possible, outline the steps to reproduce the bug or issue.
-
+  - type: dropdown
+    id: frequency
+    attributes:
+      label: Frequency
+      description: How often does this issue occur?
+      options:
+        - Always
+        - Sometimes
+        - Once
+        - Not sure
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots/Videos
+      description: If applicable, add screenshots or videos to help explain the problem. You can drag and drop images here.
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs/Crash Reports
+      description: If you have any relevant logs, crash reports, or error messages, please paste them here.
   - type: textarea
     id: additional-info
     attributes:
       label: Additional Information
-      description: Any other details that might be helpful (screenshots, logs, etc.)
+      description: Any other details that might be helpful.

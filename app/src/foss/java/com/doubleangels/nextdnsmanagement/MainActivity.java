@@ -179,7 +179,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         // Check biometric authentication on app start
-        if (SharedPreferencesManager.getBoolean("app_lock_enable", true)) {
+        if (SharedPreferencesManager.getBoolean("app_lock_enable", false)) {
             if (shouldAuthenticate()) {
                 showBiometricPrompt();
             }
@@ -255,7 +255,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         // Check biometric authentication when returning from other activities
-        if (SharedPreferencesManager.getBoolean("app_lock_enable", true)) {
+        if (SharedPreferencesManager.getBoolean("app_lock_enable", false)) {
             if (shouldAuthenticate()) {
                 showBiometricPrompt();
             }
@@ -280,7 +280,7 @@ public class MainActivity extends AppCompatActivity {
         // Refresh dark mode settings when returning from settings
         setupDarkModeForActivity(sentryManager, SharedPreferencesManager.getString("dark_mode", "match"));
         // Check if app lock is enabled and if biometric authentication is needed
-        if (SharedPreferencesManager.getBoolean("app_lock_enable", true)) {
+        if (SharedPreferencesManager.getBoolean("app_lock_enable", false)) {
             if (shouldAuthenticate()) {
                 // Show biometric prompt immediately - don't wait for WebView state
                 showBiometricPrompt();
@@ -503,6 +503,58 @@ public class MainActivity extends AppCompatActivity {
                             "       accountMenu.style.position = 'relative';" +
                             "       accountMenu.style.zIndex = '1000';" +
                             "   }" +
+                            "   " +
+                            "   // Fix horizontal tab panel scroll stuttering" +
+                            "   // Target nav-item containers and their parent scroll containers" +
+                            "   var navItems = document.querySelectorAll('.nav-item');" +
+                            "   if (navItems.length > 0) {" +
+                            "       // Find the parent container that holds the nav-items" +
+                            "       var parentContainer = navItems[0].parentElement;" +
+                            "       while (parentContainer && parentContainer !== document.body) {" +
+                            "           if (parentContainer.scrollWidth > parentContainer.clientWidth || " +
+                            "               parentContainer.classList.contains('nav') || " +
+                            "               parentContainer.classList.contains('nav-tabs') || " +
+                            "               parentContainer.getAttribute('role') === 'tablist') {" +
+                            "               if (!parentContainer.getAttribute('data-scroll-optimized')) {" +
+                            "                   parentContainer.setAttribute('data-scroll-optimized', 'true');" +
+                            "                   // Enable hardware acceleration for smooth scrolling" +
+                            "                   parentContainer.style.webkitOverflowScrolling = 'touch';" +
+                            "                   parentContainer.style.overflowX = 'auto';" +
+                            "                   parentContainer.style.overflowY = 'hidden';" +
+                            "                   parentContainer.style.willChange = 'scroll-position';" +
+                            "                   parentContainer.style.transform = 'translateZ(0)';" +
+                            "                   parentContainer.style.backfaceVisibility = 'hidden';" +
+                            "                   parentContainer.style.perspective = '1000px';" +
+                            "                   // Prevent scroll chaining" +
+                            "                   parentContainer.style.overscrollBehaviorX = 'contain';" +
+                            "               }" +
+                            "               break;" +
+                            "           }" +
+                            "           parentContainer = parentContainer.parentElement;" +
+                            "       }" +
+                            "       // Also optimize the nav-items themselves" +
+                            "       navItems.forEach(function(navItem) {" +
+                            "           if (!navItem.getAttribute('data-scroll-optimized')) {" +
+                            "               navItem.setAttribute('data-scroll-optimized', 'true');" +
+                            "               navItem.style.flexShrink = '0';" +
+                            "               navItem.style.willChange = 'transform';" +
+                            "           }" +
+                            "       });" +
+                            "   }" +
+                            "   // Also check for other common tab panel selectors" +
+                            "   var tabPanels = document.querySelectorAll('nav[role=\"tablist\"], .nav-tabs, .nav-pills, .nav:not([data-scroll-optimized])');" +
+                            "   tabPanels.forEach(function(tabPanel) {" +
+                            "       if (!tabPanel.getAttribute('data-scroll-optimized')) {" +
+                            "           tabPanel.setAttribute('data-scroll-optimized', 'true');" +
+                            "           tabPanel.style.webkitOverflowScrolling = 'touch';" +
+                            "           tabPanel.style.overflowX = 'auto';" +
+                            "           tabPanel.style.overflowY = 'hidden';" +
+                            "           tabPanel.style.willChange = 'scroll-position';" +
+                            "           tabPanel.style.transform = 'translateZ(0)';" +
+                            "           tabPanel.style.backfaceVisibility = 'hidden';" +
+                            "           tabPanel.style.overscrollBehaviorX = 'contain';" +
+                            "       }" +
+                            "   });" +
                             "}, 500);";
                     view.evaluateJavascript(js, null);
                 } catch (Exception e) {

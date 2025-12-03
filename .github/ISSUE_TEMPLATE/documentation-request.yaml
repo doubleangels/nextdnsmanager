@@ -1,5 +1,5 @@
 name: Documentation Request
-description: Suggest improvements or additions to our documentation.
+description: Suggest improvements or additions to our documentation. Please check the FAQ before submitting.
 title: "[Documentation] "
 labels: ["type: documentation"]
 assignees:
@@ -7,15 +7,13 @@ assignees:
 
 body:
   - type: dropdown
-    id: severity
+    id: faq-check
     attributes:
-      label: Severity
-      description: How severely does this impact your use of the app?
+      label: FAQ's Checked
+      description: Have you checked the FAQ's before opening this issue?
       options:
-        - Low
-        - Medium
-        - High
-        - Critical
+        - "Yes"
+        - "No"
   - type: dropdown
     id: doc-type
     attributes:
@@ -31,6 +29,11 @@ body:
     attributes:
       label: Documentation Section/Page
       description: If applicable, specify the documentation section or link to the page.
+  - type: textarea
+    id: tried-to-find
+    attributes:
+      label: What You Tried to Find
+      description: What information were you looking for? What did you search for or where did you look? This helps identify documentation gaps.
   - type: textarea
     id: description
     attributes:

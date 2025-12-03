@@ -14,8 +14,42 @@ body:
       options:
         - "Yes"
         - "No"
+  - type: input
+    id: app-version
+    attributes:
+      label: App Version
+      description: What version of the app are you using? (You can usually find this in the app's settings)
+  - type: input
+    id: android-version
+    attributes:
+      label: Android Version
+      description: What is your Android version? (e.g., Android 12L)
+  - type: dropdown
+    id: build-flavor
+    attributes:
+      label: Build Flavor
+      description: Which build of the app are you using?
+      options:
+        - GMS (Google Play)
+        - FOSS (F-Droid/GitHub)
+        - Not sure
   - type: textarea
     id: question
     attributes:
       label: Your Question
       description: Clearly state your question. Be as specific as possible.
+  - type: textarea
+    id: tried
+    attributes:
+      label: What I've Already Tried
+      description: What have you already tried or researched? This helps avoid duplicate answers.
+  - type: input
+    id: related-feature
+    attributes:
+      label: Related Feature/Area
+      description: If your question relates to a specific feature or area of the app, please mention it here.
+  - type: textarea
+    id: additional-info
+    attributes:
+      label: Additional Information
+      description: Any other details that might be helpful.
