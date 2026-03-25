@@ -164,8 +164,6 @@ public class SentryManager {
             return false; // Context has been garbage collected
         }
         try {
-            // Ensure SharedPreferencesManager is initialized
-            SharedPreferencesManager.init(context);
             return SharedPreferencesManager.getBoolean("sentry_enable", false);
         } catch (Exception e) {
             // If there's an error accessing preferences, default to disabled

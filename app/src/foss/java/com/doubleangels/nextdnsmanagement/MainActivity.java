@@ -84,13 +84,10 @@ public class MainActivity extends AppCompatActivity {
     protected void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
         try {
-            // Save the WebView state if it exists
-            if (webView != null) {
-                Bundle webViewBundle = new Bundle();
-                webView.saveState(webViewBundle);
-                outState.putBundle("webViewState", webViewBundle);
-            }
-            // Save the dark mode flag
+            // We consciously avoid saving the WebView state to prevent
+            // TransactionTooLargeException which occurs when the WebView
+            // accumulates too much data (e.g. from single-page apps like nextdns.io)
+            // in its saved bundle.
             outState.putBoolean("darkModeEnabled", darkModeEnabled);
         } catch (Exception e) {
             SentryManager.captureStaticException(e);
@@ -225,11 +222,6 @@ public class MainActivity extends AppCompatActivity {
             sentryManager = null;
         } catch (Exception e) {
             SentryManager.captureStaticException(e);
-        } finally {
-            webView = null;
-            swipeRefreshLayout = null;
-            blurOverlay = null;
-            sentryManager = null;
         }
     }
 
@@ -461,6 +453,14 @@ public class MainActivity extends AppCompatActivity {
                         startActivity(intent);
                         return true;
                     }
+                } catch (android.content.ActivityNotFoundException e) {
+                    android.widget.Toast.makeText(view.getContext(), "No browser found to open link.", android.widget.Toast.LENGTH_LONG).show();
+                    SentryManager.captureStaticException(e);
+                    return false;
+                } catch (SecurityException e) {
+                    android.widget.Toast.makeText(view.getContext(), "Unable to open link due to security restrictions.", android.widget.Toast.LENGTH_LONG).show();
+                    SentryManager.captureStaticException(e);
+                    return false;
                 } catch (Exception e) {
                     SentryManager.captureStaticException(e);
                     return false;
@@ -681,15 +681,16 @@ public class MainActivity extends AppCompatActivity {
      */
     private void hideBlurOverlay() {
         if (blurOverlay != null) {
-            blurOverlay.animate()
+            View overlay = blurOverlay;
+            overlay.animate()
                     .alpha(0.0f)
                     .scaleX(1.05f)
                     .scaleY(1.05f)
                     .setDuration(300)
                     .withEndAction(() -> {
-                        blurOverlay.setVisibility(View.GONE);
-                        blurOverlay.setScaleX(1.0f);
-                        blurOverlay.setScaleY(1.0f);
+                        overlay.setVisibility(View.GONE);
+                        overlay.setScaleX(1.0f);
+                        overlay.setScaleY(1.0f);
                     })
                     .start();
         }

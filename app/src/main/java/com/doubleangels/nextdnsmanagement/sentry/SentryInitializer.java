@@ -73,6 +73,18 @@ public class SentryInitializer {
             // that may be more likely on rooted devices
             options.setEnableRootCheck(true);
 
+            // Filter out SentryHttpClientException thrown by SentryOkHttpInterceptor
+            // when NextDNS or other APIs return 5xx errors (e.g., 504).
+            // These are server-side availability issues, not app crashes.
+            options.setBeforeSend((event, hint) -> {
+                if (event.getThrowable() != null) {
+                    if (event.getThrowable().getClass().getSimpleName().equals("SentryHttpClientException")) {
+                        return null; // Drop the event
+                    }
+                }
+                return event;
+            });
+
         })).start(); // Start the thread, so the initialization does not block the main thread
     }
 }

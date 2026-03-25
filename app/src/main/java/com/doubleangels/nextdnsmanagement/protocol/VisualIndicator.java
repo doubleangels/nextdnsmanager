@@ -20,11 +20,12 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 import java.io.IOException;
-import java.util.Arrays;
+import java.util.Collections;
 
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.OkHttpClient;
+import okhttp3.Protocol;
 import okhttp3.Request;
 import okhttp3.Response;
 
@@ -39,7 +40,7 @@ public class VisualIndicator {
     private final SentryManager sentryManager;
 
     // OkHttpClient instance for making network calls (to check NextDNS status,
-    // etc)
+    // etc.)
     private final OkHttpClient httpClient;
 
     // Manages network connections and can register callbacks for connectivity
@@ -57,7 +58,18 @@ public class VisualIndicator {
      */
     public VisualIndicator(Context context) {
         this.sentryManager = new SentryManager(context);
-        this.httpClient = new OkHttpClient();
+        // Initialize OkHttpClient and restrict to HTTP/1.1 to avoid HTTP/2 issues with the NextDNS test server.
+        // We also add an interceptor to catch ProxySelector port -1 IllegalArgumentExceptions which crash OkHttp threads.
+        this.httpClient = new OkHttpClient.Builder()
+                .protocols(Collections.singletonList(Protocol.HTTP_1_1))
+                .addInterceptor(chain -> {
+                    try {
+                        return chain.proceed(chain.request());
+                    } catch (IllegalArgumentException e) {
+                        throw new IOException("Proxy setup failed due to IllegalArgumentException", e);
+                    }
+                })
+                .build();
     }
 
     /**
@@ -238,7 +250,13 @@ public class VisualIndicator {
 
                     // Determine which protocol is used and if it is deemed secure
                     String nextdnsProtocol = testResponse.getAsJsonPrimitive(nextDnsProtocolKey).getAsString();
-                    boolean isSecure = Arrays.asList(secureProtocols).contains(nextdnsProtocol);
+                    boolean isSecure = false;
+                    for (String secureProtocol : secureProtocols) {
+                        if (secureProtocol.equals(nextdnsProtocol)) {
+                            isSecure = true;
+                            break;
+                        }
+                    }
 
                     // Update the icon with either green for secure, or failure/orange otherwise
                     ImageView connectionStatus = activity.findViewById(R.id.connectionStatus);
@@ -286,6 +304,14 @@ public class VisualIndicator {
      * @param e The caught exception.
      */
     private void catchNetworkErrors(@NonNull Exception e) {
+        if (e.getMessage() != null) {
+            String msg = e.getMessage().toLowerCase();
+            if (msg.contains("canceled") || msg.contains("cancel") || 
+                msg.contains("port out of range") || msg.contains("exhausted all routes") ||
+                msg.contains("failed to connect") || msg.contains("timeout")) {
+                return;
+            }
+        }
         sentryManager.captureException(e);
     }
 }

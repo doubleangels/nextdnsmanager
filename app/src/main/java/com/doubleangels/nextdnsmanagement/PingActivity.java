@@ -158,11 +158,6 @@ public class PingActivity extends AppCompatActivity {
         } catch (Exception e) {
             // Capture any exception using a static method
             SentryManager.captureStaticException(e);
-        } finally {
-            // Ensure webViews and references are set to null
-            webView = null;
-            webView2 = null;
-            sentryManager = null;
         }
     }
 
@@ -252,9 +247,6 @@ public class PingActivity extends AppCompatActivity {
             // Disable file and content access for enhanced security
             settings.setAllowFileAccess(false);
             settings.setAllowContentAccess(false);
-
-            // Use modern caching approach for better performance
-            settings.setCacheMode(WebSettings.LOAD_DEFAULT);
             // Set a WebViewClient to handle page navigation
             webView.setWebViewClient(new WebViewClient() {
                 @Override
@@ -271,6 +263,14 @@ public class PingActivity extends AppCompatActivity {
                             startActivity(intent);
                             return true;
                         }
+                    } catch (android.content.ActivityNotFoundException e) {
+                        android.widget.Toast.makeText(view.getContext(), "No browser found to open link.", android.widget.Toast.LENGTH_LONG).show();
+                        SentryManager.captureStaticException(e);
+                        return false;
+                    } catch (SecurityException e) {
+                        android.widget.Toast.makeText(view.getContext(), "Unable to open link due to security restrictions.", android.widget.Toast.LENGTH_LONG).show();
+                        SentryManager.captureStaticException(e);
+                        return false;
                     } catch (Exception e) {
                         SentryManager.captureStaticException(e);
                         return false;

@@ -174,15 +174,5 @@ public class PermissionsAdapter extends RecyclerView.Adapter<PermissionsAdapter.
                 permissionDescription.setTag(null);
             }
         }
-
-        /**
-         * Releases all references to prevent memory leaks.
-         * Should be called when the ViewHolder is no longer needed.
-         */
-        public void release() {
-            clear();
-            permissionName = null;
-            permissionDescription = null;
-        }
     }
 }

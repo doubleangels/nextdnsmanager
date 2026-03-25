@@ -145,6 +145,9 @@ public class SettingsActivity extends AppCompatActivity {
      */
     public static class SettingsFragment extends PreferenceFragmentCompat {
 
+        // Shared SentryManager instance for this fragment — avoids repeated instantiation
+        private SentryManager sentryManager;
+
         /**
          * Called during fragment creation to initialize the preference hierarchy from
          * an XML resource.
@@ -154,23 +157,24 @@ public class SettingsActivity extends AppCompatActivity {
          */
         @Override
         public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
+            sentryManager = new SentryManager(requireContext());
             try {
                 // Load preferences from the XML resource
                 setPreferencesFromResource(R.xml.root_preferences, rootKey);
             } catch (Exception e) {
-                new SentryManager(requireContext()).captureException(e);
+                sentryManager.captureException(e);
             }
             try {
                 // Initialize shared preferences for the fragment
                 SharedPreferencesManager.init(requireContext());
             } catch (Exception e) {
-                new SentryManager(requireContext()).captureException(e);
+                sentryManager.captureException(e);
             }
             try {
                 // Set the initial visibility of Sentry-related preferences
                 setInitialSentryVisibility(SharedPreferencesManager.getBoolean("sentry_enable", false));
             } catch (Exception e) {
-                new SentryManager(requireContext()).captureException(e);
+                sentryManager.captureException(e);
             }
             try {
                 // Retrieve references to various preferences
@@ -216,8 +220,17 @@ public class SettingsActivity extends AppCompatActivity {
                     versionPreference.setSummary(versionName);
                 }
             } catch (Exception e) {
-                new SentryManager(requireContext()).captureException(e);
+                sentryManager.captureException(e);
             }
+        }
+
+        /**
+         * Releases resources when the fragment's view is destroyed.
+         */
+        @Override
+        public void onDestroyView() {
+            super.onDestroyView();
+            sentryManager = null;
         }
 
         /**
@@ -269,8 +282,20 @@ public class SettingsActivity extends AppCompatActivity {
                             Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(getString(textResource)));
                             startActivity(intent);
                         }
+                    } catch (android.content.ActivityNotFoundException e) {
+                        Toast.makeText(getContext(), "No browser found to open link.", Toast.LENGTH_LONG).show();
+                        if (getContext() != null) {
+                            new SentryManager(getContext()).captureException(e);
+                        }
+                    } catch (SecurityException e) {
+                        Toast.makeText(getContext(), "Unable to open link due to security restrictions.", Toast.LENGTH_LONG).show();
+                        if (getContext() != null) {
+                            new SentryManager(getContext()).captureException(e);
+                        }
                     } catch (Exception e) {
-                        new SentryManager(requireContext()).captureException(e);
+                        if (getContext() != null) {
+                            new SentryManager(getContext()).captureException(e);
+                        }
                     }
                     return true;
                 });
@@ -295,8 +320,20 @@ public class SettingsActivity extends AppCompatActivity {
                             Intent intent = new Intent(getContext(), PermissionActivity.class);
                             startActivity(intent);
                         }
+                    } catch (android.content.ActivityNotFoundException e) {
+                        Toast.makeText(getContext(), "Activity not found.", Toast.LENGTH_LONG).show();
+                        if (getContext() != null) {
+                            new SentryManager(getContext()).captureException(e);
+                        }
+                    } catch (SecurityException e) {
+                        Toast.makeText(getContext(), "Unable to open activity due to security restrictions.", Toast.LENGTH_LONG).show();
+                        if (getContext() != null) {
+                            new SentryManager(getContext()).captureException(e);
+                        }
                     } catch (Exception e) {
-                        new SentryManager(requireContext()).captureException(e);
+                        if (getContext() != null) {
+                            new SentryManager(getContext()).captureException(e);
+                        }
                     }
                     return true;
                 });
@@ -321,7 +358,7 @@ public class SettingsActivity extends AppCompatActivity {
                         ((SettingsActivity) getActivity()).setupDarkModeForActivity(newValue.toString());
                     }
                 } catch (Exception e) {
-                    new SentryManager(requireContext()).captureException(e);
+                    sentryManager.captureException(e);
                 }
                 return true;
             });
@@ -354,7 +391,7 @@ public class SettingsActivity extends AppCompatActivity {
                                             SharedPreferencesManager.putBoolean("app_lock_enable", false);
                                             // Update the UI toggle to reflect the change
                                             setting.setChecked(false);
-                                            new SentryManager(requireContext())
+                                            sentryManager
                                                     .captureMessage(
                                                             "App lock disabled after biometric authentication.");
                                         }
@@ -363,7 +400,7 @@ public class SettingsActivity extends AppCompatActivity {
                                         public void onAuthenticationError(String error) {
                                             // Authentication failed, revert the change
                                             setting.setChecked(true);
-                                            new SentryManager(requireContext())
+                                            sentryManager
                                                     .captureMessage(
                                                             "App lock disable failed - authentication error: " + error);
                                         }
@@ -372,25 +409,25 @@ public class SettingsActivity extends AppCompatActivity {
                                         public void onAuthenticationFailed() {
                                             // Authentication failed, revert the change
                                             setting.setChecked(true);
-                                            new SentryManager(requireContext())
+                                            sentryManager
                                                     .captureMessage("App lock disable failed - authentication failed");
                                         }
                                     });
                         } else {
                             // No biometric available, don't allow disabling
                             setting.setChecked(true);
-                            new SentryManager(requireContext())
+                            sentryManager
                                     .captureMessage("Cannot disable app lock - biometric authentication not available");
                         }
                         return false; // Don't apply the change yet
                     } else {
                         // Enabling app lock or other changes don't require authentication
                         SharedPreferencesManager.putBoolean("app_lock_enable", newValueBoolean);
-                        new SentryManager(requireContext())
+                        sentryManager
                                 .captureMessage("App lock set to " + newValue + ".");
                     }
                 } catch (Exception e) {
-                    new SentryManager(requireContext()).captureException(e);
+                    sentryManager.captureException(e);
                 }
                 return true;
             });
@@ -406,7 +443,7 @@ public class SettingsActivity extends AppCompatActivity {
                 switchPreference.setOnPreferenceChangeListener((preference, newValue) -> {
                     try {
                         // Log and update the Sentry preference
-                        new SentryManager(requireContext())
+                        sentryManager
                                 .captureMessage("Sentry set to " + newValue.toString() + ".");
                         boolean isEnabled = (boolean) newValue;
                         SharedPreferencesManager.putBoolean("sentry_enable", isEnabled);
@@ -415,7 +452,7 @@ public class SettingsActivity extends AppCompatActivity {
                         setPreferenceVisibility("whitelist_domain_1_button", isEnabled);
                         setPreferenceVisibility("whitelist_domain_2_button", isEnabled);
                     } catch (Exception e) {
-                        new SentryManager(requireContext()).captureException(e);
+                        sentryManager.captureException(e);
                     }
                     return true;
                 });

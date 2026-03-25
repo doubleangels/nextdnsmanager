@@ -150,6 +150,12 @@ public class AuthorActivity extends AppCompatActivity {
             try {
                 // Start the activity to view the GitHub profile
                 startActivity(intent);
+            } catch (android.content.ActivityNotFoundException e) {
+                android.widget.Toast.makeText(this, "No browser found to open link.", android.widget.Toast.LENGTH_LONG).show();
+                sentryManager.captureException(e);
+            } catch (SecurityException e) {
+                android.widget.Toast.makeText(this, "Unable to open link due to security restrictions.", android.widget.Toast.LENGTH_LONG).show();
+                sentryManager.captureException(e);
             } catch (Exception e) {
                 // Capture and log any exception that occurs when launching the intent
                 sentryManager.captureException(e);
@@ -164,6 +170,12 @@ public class AuthorActivity extends AppCompatActivity {
             try {
                 // Start an email chooser activity
                 startActivity(Intent.createChooser(emailIntent, "Send Email"));
+            } catch (android.content.ActivityNotFoundException e) {
+                android.widget.Toast.makeText(this, "No email client found.", android.widget.Toast.LENGTH_LONG).show();
+                sentryManager.captureException(e);
+            } catch (SecurityException e) {
+                android.widget.Toast.makeText(this, "Unable to open email client due to security restrictions.", android.widget.Toast.LENGTH_LONG).show();
+                sentryManager.captureException(e);
             } catch (Exception e) {
                 // Capture and log any exception that occurs when launching the email intent
                 sentryManager.captureException(e);
