@@ -25,6 +25,7 @@ import java.util.Arrays;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.OkHttpClient;
+import okhttp3.Protocol;
 import okhttp3.Request;
 import okhttp3.Response;
 
@@ -57,7 +58,18 @@ public class VisualIndicator {
      */
     public VisualIndicator(Context context) {
         this.sentryManager = new SentryManager(context);
-        this.httpClient = new OkHttpClient();
+        // Initialize OkHttpClient and restrict to HTTP/1.1 to avoid HTTP/2 issues with the NextDNS test server.
+        // We also add an interceptor to catch ProxySelector port -1 IllegalArgumentExceptions which crash OkHttp threads.
+        this.httpClient = new OkHttpClient.Builder()
+                .protocols(Collections.singletonList(Protocol.HTTP_1_1))
+                .addInterceptor(chain -> {
+                    try {
+                        return chain.proceed(chain.request());
+                    } catch (IllegalArgumentException e) {
+                        throw new IOException("Proxy setup failed due to IllegalArgumentException", e);
+                    }
+                })
+                .build();
     }
 
     /**
@@ -286,6 +298,14 @@ public class VisualIndicator {
      * @param e The caught exception.
      */
     private void catchNetworkErrors(@NonNull Exception e) {
+        if (e.getMessage() != null) {
+            String msg = e.getMessage().toLowerCase();
+            if (msg.contains("canceled") || msg.contains("cancel") || 
+                msg.contains("port out of range") || msg.contains("exhausted all routes") ||
+                msg.contains("failed to connect") || msg.contains("timeout")) {
+                return;
+            }
+        }
         sentryManager.captureException(e);
     }
 }

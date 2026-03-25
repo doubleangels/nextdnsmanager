@@ -269,8 +269,20 @@ public class SettingsActivity extends AppCompatActivity {
                             Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(getString(textResource)));
                             startActivity(intent);
                         }
+                    } catch (android.content.ActivityNotFoundException e) {
+                        Toast.makeText(getContext(), "No browser found to open link.", Toast.LENGTH_LONG).show();
+                        if (getContext() != null) {
+                            new SentryManager(getContext()).captureException(e);
+                        }
+                    } catch (SecurityException e) {
+                        Toast.makeText(getContext(), "Unable to open link due to security restrictions.", Toast.LENGTH_LONG).show();
+                        if (getContext() != null) {
+                            new SentryManager(getContext()).captureException(e);
+                        }
                     } catch (Exception e) {
-                        new SentryManager(requireContext()).captureException(e);
+                        if (getContext() != null) {
+                            new SentryManager(getContext()).captureException(e);
+                        }
                     }
                     return true;
                 });
@@ -295,8 +307,20 @@ public class SettingsActivity extends AppCompatActivity {
                             Intent intent = new Intent(getContext(), PermissionActivity.class);
                             startActivity(intent);
                         }
+                    } catch (android.content.ActivityNotFoundException e) {
+                        Toast.makeText(getContext(), "Activity not found.", Toast.LENGTH_LONG).show();
+                        if (getContext() != null) {
+                            new SentryManager(getContext()).captureException(e);
+                        }
+                    } catch (SecurityException e) {
+                        Toast.makeText(getContext(), "Unable to open activity due to security restrictions.", Toast.LENGTH_LONG).show();
+                        if (getContext() != null) {
+                            new SentryManager(getContext()).captureException(e);
+                        }
                     } catch (Exception e) {
-                        new SentryManager(requireContext()).captureException(e);
+                        if (getContext() != null) {
+                            new SentryManager(getContext()).captureException(e);
+                        }
                     }
                     return true;
                 });

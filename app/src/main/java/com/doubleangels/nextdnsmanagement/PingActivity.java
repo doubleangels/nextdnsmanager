@@ -271,6 +271,14 @@ public class PingActivity extends AppCompatActivity {
                             startActivity(intent);
                             return true;
                         }
+                    } catch (android.content.ActivityNotFoundException e) {
+                        android.widget.Toast.makeText(view.getContext(), "No browser found to open link.", android.widget.Toast.LENGTH_LONG).show();
+                        SentryManager.captureStaticException(e);
+                        return false;
+                    } catch (SecurityException e) {
+                        android.widget.Toast.makeText(view.getContext(), "Unable to open link due to security restrictions.", android.widget.Toast.LENGTH_LONG).show();
+                        SentryManager.captureStaticException(e);
+                        return false;
                     } catch (Exception e) {
                         SentryManager.captureStaticException(e);
                         return false;

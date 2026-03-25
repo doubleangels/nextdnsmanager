@@ -193,8 +193,12 @@ public class PermissionActivity extends AppCompatActivity {
             // If requested permissions are present, iterate and add them to the list
             if (packageInfo.requestedPermissions != null) {
                 for (String permission : packageInfo.requestedPermissions) {
-                    PermissionInfo permissionInfo = getPackageManager().getPermissionInfo(permission, 0);
-                    permissions.add(permissionInfo);
+                    try {
+                        PermissionInfo permissionInfo = getPackageManager().getPermissionInfo(permission, 0);
+                        permissions.add(permissionInfo);
+                    } catch (PackageManager.NameNotFoundException ignored) {
+                        // Ignore permissions not found on older Android versions
+                    }
                 }
             }
         } catch (PackageManager.NameNotFoundException e) {
