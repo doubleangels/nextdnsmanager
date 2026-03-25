@@ -20,7 +20,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 import java.io.IOException;
-import java.util.Arrays;
+import java.util.Collections;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -40,7 +40,7 @@ public class VisualIndicator {
     private final SentryManager sentryManager;
 
     // OkHttpClient instance for making network calls (to check NextDNS status,
-    // etc)
+    // etc.)
     private final OkHttpClient httpClient;
 
     // Manages network connections and can register callbacks for connectivity
@@ -250,7 +250,13 @@ public class VisualIndicator {
 
                     // Determine which protocol is used and if it is deemed secure
                     String nextdnsProtocol = testResponse.getAsJsonPrimitive(nextDnsProtocolKey).getAsString();
-                    boolean isSecure = Arrays.asList(secureProtocols).contains(nextdnsProtocol);
+                    boolean isSecure = false;
+                    for (String secureProtocol : secureProtocols) {
+                        if (secureProtocol.equals(nextdnsProtocol)) {
+                            isSecure = true;
+                            break;
+                        }
+                    }
 
                     // Update the icon with either green for secure, or failure/orange otherwise
                     ImageView connectionStatus = activity.findViewById(R.id.connectionStatus);

@@ -222,11 +222,6 @@ public class MainActivity extends AppCompatActivity {
             sentryManager = null;
         } catch (Exception e) {
             SentryManager.captureStaticException(e);
-        } finally {
-            webView = null;
-            swipeRefreshLayout = null;
-            blurOverlay = null;
-            sentryManager = null;
         }
     }
 

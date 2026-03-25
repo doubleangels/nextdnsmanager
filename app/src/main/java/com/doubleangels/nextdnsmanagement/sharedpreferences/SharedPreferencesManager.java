@@ -125,8 +125,9 @@ public class SharedPreferencesManager {
 
             // Migrate all existing key-value pairs.
             boolean hasData = false;
-            for (String key : unencryptedPrefs.getAll().keySet()) {
-                Object value = unencryptedPrefs.getAll().get(key);
+            java.util.Map<String, ?> allPrefs = unencryptedPrefs.getAll();
+            for (String key : allPrefs.keySet()) {
+                Object value = allPrefs.get(key);
                 if (value instanceof String) {
                     encryptedEditor.putString(key, (String) value);
                     hasData = true;
