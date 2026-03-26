@@ -15,7 +15,7 @@ permissions:
   contents: read
 
 jobs:
-  lint-gms-flavor:
+  test-gms-flavor:
     if: |
       (github.event_name == 'push' && github.actor != 'dependabot[bot]') ||
       (github.event_name == 'pull_request' && github.actor == 'dependabot[bot]') ||
@@ -27,45 +27,19 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Set up JDK 21
-        uses: actions/setup-java@v5
-        with:
-          java-version: "21"
-          distribution: "temurin"
-          cache: gradle
-
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
+      - name: Setup Android Environment
+        uses: ./.github/actions/setup-android-env
 
       - name: Run Lint
         run: ./gradlew lintGmsRelease
         continue-on-error: false
 
-  build-gms-flavor:
-    if: github.event_name == 'pull_request' && github.actor == 'dependabot[bot]'
-    needs: lint-gms-flavor
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
-          persist-credentials: false
-
-      - name: Set up JDK 21
-        uses: actions/setup-java@v5
-        with:
-          java-version: "21"
-          distribution: "temurin"
-          cache: gradle
-
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
-
       - name: Build GMS Release
+        if: github.event_name == 'pull_request' && github.actor == 'dependabot[bot]'
         run: ./gradlew assembleGmsRelease
         continue-on-error: false
 
-  lint-foss-flavor:
+  test-foss-flavor:
     if: |
       (github.event_name == 'push' && github.actor != 'dependabot[bot]') ||
       (github.event_name == 'pull_request' && github.actor == 'dependabot[bot]') ||
@@ -77,54 +51,26 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Set up JDK 21
-        uses: actions/setup-java@v5
-        with:
-          java-version: "21"
-          distribution: "temurin"
-          cache: gradle
-
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
+      - name: Setup Android Environment
+        uses: ./.github/actions/setup-android-env
 
       - name: Run Lint
         run: ./gradlew lintFossRelease
         continue-on-error: false
 
-  build-foss-flavor:
-    if: github.event_name == 'pull_request' && github.actor == 'dependabot[bot]'
-    needs: lint-foss-flavor
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
-          persist-credentials: false
-
-      - name: Set up JDK 21
-        uses: actions/setup-java@v5
-        with:
-          java-version: "21"
-          distribution: "temurin"
-          cache: gradle
-
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
-
       - name: Build FOSS Release
+        if: github.event_name == 'pull_request' && github.actor == 'dependabot[bot]'
         run: ./gradlew assembleFossRelease
         continue-on-error: false
 
   automerge:
     needs:
-      [lint-gms-flavor, build-gms-flavor, lint-foss-flavor, build-foss-flavor]
+      [test-gms-flavor, test-foss-flavor]
     if: >
       github.event_name == 'pull_request' &&
       github.event.pull_request.user.login == 'dependabot[bot]' &&
-      needs.lint-gms-flavor.result == 'success' &&
-      needs.build-gms-flavor.result == 'success' &&
-      needs.lint-foss-flavor.result == 'success' &&
-      needs.build-foss-flavor.result == 'success'
+      needs.test-gms-flavor.result == 'success' &&
+      needs.test-foss-flavor.result == 'success'
     runs-on: ubuntu-latest
     permissions:
       pull-requests: write
