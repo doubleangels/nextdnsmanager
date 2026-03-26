@@ -637,6 +637,29 @@ public class MainActivity extends AppCompatActivity {
     private void setupDownloadManagerForActivity() {
         webView.setDownloadListener((url, userAgent, contentDisposition, mimetype, contentLength) -> {
             try {
+                if (url != null && url.startsWith("data:")) {
+                    String[] parts = url.split(",");
+                    if (parts.length > 1) {
+                        String dataString = parts[1];
+                        byte[] fileData;
+                        if (parts[0].contains(";base64")) {
+                            fileData = android.util.Base64.decode(dataString, android.util.Base64.DEFAULT);
+                        } else {
+                            fileData = java.net.URLDecoder.decode(dataString, "UTF-8").getBytes("UTF-8");
+                        }
+                        java.io.File downloadDir = getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS);
+                        if (downloadDir != null) {
+                            java.io.File file = new java.io.File(downloadDir, "NextDNS-Configuration.mobileconfig");
+                            try (java.io.FileOutputStream fos = new java.io.FileOutputStream(file)) {
+                                fos.write(fileData);
+                                fos.flush();
+                            }
+                            Toast.makeText(getApplicationContext(), "Configuration saved to Downloads!", Toast.LENGTH_LONG).show();
+                            return;
+                        }
+                    }
+                }
+
                 // Create a new download request
                 DownloadManager.Request request = new DownloadManager.Request(Uri.parse(url.trim()));
                 request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);

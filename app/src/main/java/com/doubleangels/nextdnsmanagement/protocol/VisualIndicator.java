@@ -69,6 +69,7 @@ public class VisualIndicator {
                         throw new IOException("Proxy setup failed due to IllegalArgumentException", e);
                     }
                 })
+                .retryOnConnectionFailure(true)
                 .build();
     }
 
@@ -213,6 +214,7 @@ public class VisualIndicator {
                 .url("https://test.nextdns.io")
                 .header("Accept", "application/json")
                 .header("Cache-Control", "no-cache")
+                .header("Connection", "close")
                 .build();
 
         // Execute the request asynchronously
@@ -308,7 +310,8 @@ public class VisualIndicator {
             String msg = e.getMessage().toLowerCase();
             if (msg.contains("canceled") || msg.contains("cancel") || 
                 msg.contains("port out of range") || msg.contains("exhausted all routes") ||
-                msg.contains("failed to connect") || msg.contains("timeout")) {
+                msg.contains("failed to connect") || msg.contains("timeout") ||
+                msg.contains("unexpected end of stream")) {
                 return;
             }
         }
