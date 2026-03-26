@@ -27,7 +27,7 @@ jobs:
           echo "VERSION_NAME=$VERSION_NAME" >> $GITHUB_OUTPUT
 
       - name: Build APK & Bundle for Github and Google Play
-        run: ./gradlew assembleGmsRelease bundleGmsRelease --parallel --build-cache --configuration-cache
+        run: ./gradlew assembleGmsRelease bundleGmsRelease --no-daemon --parallel --build-cache --configuration-cache
 
       - name: Sign APK for Github release
         uses: r0adkll/sign-android-release@v1
@@ -79,7 +79,7 @@ jobs:
         uses: ./.github/actions/setup-android-env
 
       - name: Build APK for Github release
-        run: ./gradlew assembleFossRelease --parallel --build-cache --configuration-cache
+        run: ./gradlew assembleFossRelease --no-daemon --parallel --build-cache --configuration-cache
 
       - name: Sign APK for Github release
         uses: r0adkll/sign-android-release@v1

@@ -31,12 +31,12 @@ jobs:
         uses: ./.github/actions/setup-android-env
 
       - name: Run Lint
-        run: ./gradlew lintGmsRelease
+        run: ./gradlew lintGmsRelease --no-daemon
         continue-on-error: false
 
       - name: Build GMS Release
         if: github.event_name == 'pull_request' && github.actor == 'dependabot[bot]'
-        run: ./gradlew assembleGmsRelease
+        run: ./gradlew assembleGmsRelease --no-daemon
         continue-on-error: false
 
   test-foss-flavor:
@@ -55,12 +55,12 @@ jobs:
         uses: ./.github/actions/setup-android-env
 
       - name: Run Lint
-        run: ./gradlew lintFossRelease
+        run: ./gradlew lintFossRelease --no-daemon
         continue-on-error: false
 
       - name: Build FOSS Release
         if: github.event_name == 'pull_request' && github.actor == 'dependabot[bot]'
-        run: ./gradlew assembleFossRelease
+        run: ./gradlew assembleFossRelease --no-daemon
         continue-on-error: false
 
   automerge:
