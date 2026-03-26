@@ -804,43 +804,37 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         // Determine action based on selected menu item
-        switch (item.getItemId()) {
-            case R.id.back:
-                // Navigate back in the WebView history
-                if (webView == null) {
-                    setupWebViewForActivity(getString(R.string.main_url));
-                } else {
-                    webView.goBack();
-                }
-                break;
-            case R.id.refreshNextDNS:
-                // Reload the WebView
-                if (webView == null) {
-                    setupWebViewForActivity(getString(R.string.main_url));
-                } else {
-                    webView.reload();
-                }
-                break;
-            case R.id.pingNextDNS:
-                // Launch the PingActivity
-                startActivity(new Intent(this, PingActivity.class));
-                break;
-            case R.id.returnHome:
-                // Load the main URL in the WebView
-                if (webView == null) {
-                    setupWebViewForActivity(getString(R.string.main_url));
-                } else {
-                    webView.loadUrl(getString(R.string.main_url));
-                }
-                break;
-            case R.id.privateDNS:
-                // Open wireless settings
-                startActivity(new Intent(Settings.ACTION_WIRELESS_SETTINGS));
-                break;
-            case R.id.settings:
-                // Launch the SettingsActivity
-                startActivity(new Intent(this, SettingsActivity.class));
-                break;
+        int itemId = item.getItemId();
+        if (itemId == R.id.back) {
+            // Navigate back in the WebView history
+            if (webView == null) {
+                setupWebViewForActivity(getString(R.string.main_url));
+            } else {
+                webView.goBack();
+            }
+        } else if (itemId == R.id.refreshNextDNS) {
+            // Reload the WebView
+            if (webView == null) {
+                setupWebViewForActivity(getString(R.string.main_url));
+            } else {
+                webView.reload();
+            }
+        } else if (itemId == R.id.pingNextDNS) {
+            // Launch the PingActivity
+            startActivity(new Intent(this, PingActivity.class));
+        } else if (itemId == R.id.returnHome) {
+            // Load the main URL in the WebView
+            if (webView == null) {
+                setupWebViewForActivity(getString(R.string.main_url));
+            } else {
+                webView.loadUrl(getString(R.string.main_url));
+            }
+        } else if (itemId == R.id.privateDNS) {
+            // Open wireless settings
+            startActivity(new Intent(Settings.ACTION_WIRELESS_SETTINGS));
+        } else if (itemId == R.id.settings) {
+            // Launch the SettingsActivity
+            startActivity(new Intent(this, SettingsActivity.class));
         }
         return super.onOptionsItemSelected(item);
     }
