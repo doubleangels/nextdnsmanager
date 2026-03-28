@@ -211,6 +211,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          fetch-tags: true
 
       - name: Download APK from Github release artifacts
         uses: actions/download-artifact@v8
@@ -236,6 +239,29 @@ jobs:
         with:
           apk-path: app-release.apk
 
+      # release-drafter only lists merged PRs (GitHub API). Plain `git merge`
+      # commits are not linked to PRs, so add them from git for the same range.
+      - name: Summarize git merge commits since last tag
+        id: git_merges
+        shell: bash
+        run: |
+          set -euo pipefail
+          delim="git_merges_${GITHUB_RUN_ID}_${GITHUB_RUN_ATTEMPT}_EOF"
+          {
+            echo "footer<<${delim}"
+            prev=$(git describe --tags --abbrev=0 2>/dev/null || true)
+            if [[ -n "${prev}" ]]; then
+              extra=$(git log "${prev}..HEAD" --merges --pretty=format:'- %s (%h)' \
+                | grep -vE '^- Merge pull request #[0-9]+' || true)
+              if [[ -n "${extra}" ]]; then
+                echo ""
+                echo "### Git merges"
+                echo "${extra}"
+              fi
+            fi
+            echo "${delim}"
+          } >> "${GITHUB_OUTPUT}"
+
       - name: Create Github release using release-drafter
         id: create_release
         uses: release-drafter/release-drafter@v7
@@ -244,6 +270,7 @@ jobs:
         with:
           tag: v${{ steps.android_version.outputs.version-name }}
           name: v${{ steps.android_version.outputs.version-name }}
+          footer: ${{ steps.git_merges.outputs.footer }}
 
       - name: Upload APK to Github release
         id: upload_release_asset
