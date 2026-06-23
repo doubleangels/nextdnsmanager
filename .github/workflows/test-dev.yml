@@ -33,6 +33,12 @@ jobs:
           distribution: "temurin"
           cache: gradle
 
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v4
+        with:
+          packages: "platform-tools platforms;android-36 build-tools;36.0.0"
+          accept-android-sdk-licenses: true
+
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
@@ -54,6 +60,12 @@ jobs:
           java-version: "21"
           distribution: "temurin"
           cache: gradle
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v4
+        with:
+          packages: "platform-tools platforms;android-36 build-tools;36.0.0"
+          accept-android-sdk-licenses: true
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
@@ -79,6 +91,12 @@ jobs:
           distribution: "temurin"
           cache: gradle
 
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v4
+        with:
+          packages: "platform-tools platforms;android-36 build-tools;36.0.0"
+          accept-android-sdk-licenses: true
+
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
@@ -100,6 +118,12 @@ jobs:
           java-version: "21"
           distribution: "temurin"
           cache: gradle
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v4
+        with:
+          packages: "platform-tools platforms;android-36 build-tools;36.0.0"
+          accept-android-sdk-licenses: true
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew

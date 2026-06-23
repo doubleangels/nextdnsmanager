@@ -50,9 +50,8 @@ public class SentryInitializer {
             // Attach the full view hierarchy for debugging layout or view-related issues
             options.setAttachViewHierarchy(true);
 
-            // Sets the sample rate for performance tracing (transactions)
-            // 1.0 means all transactions are captured
-            options.setTracesSampleRate(1.0);
+            // Sample 20% of performance transactions to reduce overhead.
+            options.setTracesSampleRate(0.2);
 
             // Enables application start profiling, which measures cold/warm start
             // performance
@@ -69,9 +68,6 @@ public class SentryInitializer {
             // Enables frames tracking for performance monitoring
             // Tracks dropped or slow frames to measure UI responsiveness
             options.setEnableFramesTracking(true);
-
-            // This is set again (likely redundant, but ensures it's explicitly enabled)
-            options.setEnableAppStartProfiling(true);
 
             // Check if the device is rooted, adding extra context for debugging certain
             // crashes

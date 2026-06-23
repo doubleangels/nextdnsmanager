@@ -141,7 +141,9 @@ public class AuthorActivity extends AppCompatActivity {
         // Find the ImageView buttons by their ID
         ImageView githubButton = findViewById(R.id.githubImageView);
         ImageView emailButton = findViewById(R.id.emailImageView);
-
+        if (githubButton == null || emailButton == null) {
+            return;
+        }
         // Set click listener for GitHub button
         githubButton.setOnClickListener(view -> ExternalLinkHandler.openExternalLink(this,
                 Uri.parse(getString(R.string.github_profile_url))));

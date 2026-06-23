@@ -210,9 +210,19 @@ public class SentryManager {
             return;
         }
 
-        // In a static context, we assume Sentry is enabled
-        Sentry.captureException(e);
+        if (isSentryEnabledStatic()) {
+            Sentry.captureException(e);
+        }
         Log.e(TAG, "Got error:", e);
+    }
+
+    private static boolean isSentryEnabledStatic() {
+        try {
+            return SharedPreferencesManager.getBoolean("sentry_enable", false);
+        } catch (Exception e) {
+            Log.e(TAG, "Error checking Sentry enable status", e);
+            return false;
+        }
     }
 
     /**

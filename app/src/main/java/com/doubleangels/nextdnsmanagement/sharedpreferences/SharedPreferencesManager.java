@@ -1,6 +1,5 @@
 package com.doubleangels.nextdnsmanagement.sharedpreferences;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.util.Log;
@@ -181,18 +180,16 @@ public class SharedPreferencesManager {
     }
 
     /**
-     * Saves a String value into the SharedPreferences, committing the change
-     * immediately.
+     * Saves a String value into the SharedPreferences asynchronously.
      * If an error occurs, it is captured via SentryManager.
      *
      * @param key   The preference key under which the value is stored.
      * @param value The string value to store.
      */
-    @SuppressLint("ApplySharedPref")
     public static void putString(String key, String value) {
         checkInitialization();
         try {
-            sharedPreferences.edit().putString(key, value).commit();
+            sharedPreferences.edit().putString(key, value).apply();
         } catch (Exception e) {
             new SentryManager(appContext).captureException(e);
         }
@@ -218,18 +215,16 @@ public class SharedPreferencesManager {
     }
 
     /**
-     * Saves a boolean value into the SharedPreferences, committing the change
-     * immediately.
+     * Saves a boolean value into the SharedPreferences asynchronously.
      * If an error occurs, it is captured via SentryManager.
      *
      * @param key   The preference key under which the value is stored.
      * @param value The boolean value to store.
      */
-    @SuppressLint("ApplySharedPref")
     public static void putBoolean(String key, boolean value) {
         checkInitialization();
         try {
-            sharedPreferences.edit().putBoolean(key, value).commit();
+            sharedPreferences.edit().putBoolean(key, value).apply();
         } catch (Exception e) {
             new SentryManager(appContext).captureException(e);
         }
@@ -248,6 +243,25 @@ public class SharedPreferencesManager {
         checkInitialization();
         try {
             return sharedPreferences.getBoolean(key, defaultValue);
+        } catch (Exception e) {
+            new SentryManager(appContext).captureException(e);
+            return defaultValue;
+        }
+    }
+
+    public static void putLong(String key, long value) {
+        checkInitialization();
+        try {
+            sharedPreferences.edit().putLong(key, value).apply();
+        } catch (Exception e) {
+            new SentryManager(appContext).captureException(e);
+        }
+    }
+
+    public static long getLong(String key, long defaultValue) {
+        checkInitialization();
+        try {
+            return sharedPreferences.getLong(key, defaultValue);
         } catch (Exception e) {
             new SentryManager(appContext).captureException(e);
             return defaultValue;

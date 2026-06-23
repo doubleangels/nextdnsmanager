@@ -83,6 +83,7 @@ public class MainActivity extends AppCompatActivity {
     // Biometric authentication timeout in milliseconds (5 minutes)
     private static final long AUTH_TIMEOUT_MS = 5 * 60 * 1000;
     private static final String LAST_WEBVIEW_URL_KEY = "last_webview_url";
+    private static final String LAST_AUTH_TIME_KEY = "last_authenticated_time";
     // Timestamp (in ms) of the last successful biometric authentication
     private long lastAuthenticatedTime = 0;
     private boolean isBiometricPromptShowing = false;
@@ -94,6 +95,7 @@ public class MainActivity extends AppCompatActivity {
 
     // Blur overlay view to hide content during biometric authentication
     private View blurOverlay;
+    private View webViewErrorView;
     // SentryManager instance for error logging
     private SentryManager sentryManager;
 
@@ -129,6 +131,8 @@ public class MainActivity extends AppCompatActivity {
     @RequiresApi(api = Build.VERSION_CODES.TIRAMISU)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        androidx.core.splashscreen.SplashScreen splashScreen =
+                androidx.core.splashscreen.SplashScreen.installSplashScreen(this);
         super.onCreate(savedInstanceState);
         // Restore previously saved state if available
         if (savedInstanceState != null) {
@@ -144,17 +148,30 @@ public class MainActivity extends AppCompatActivity {
 
         // Initialize blur overlay
         blurOverlay = findViewById(R.id.blurOverlay);
+        webViewErrorView = findViewById(R.id.webViewErrorView);
 
-        // Initialize Sentry for error logging, Firebase Messaging, and
-        // SharedPreferences
         sentryManager = new SentryManager(this);
 
         // Log hardware acceleration status for debugging (after sentryManager is
         // initialized)
         boolean isHardwareAccelerated = getWindow().getDecorView().isHardwareAccelerated();
         sentryManager.captureMessage("Hardware acceleration enabled: " + isHardwareAccelerated);
-        MessagingInitializer.initialize(this);
-        SharedPreferencesManager.init(this);
+
+        AppStartupHelper.initializePreferencesAsync(this, splashScreen, this::finishStartup);
+    }
+
+    private void finishStartup() {
+        if (isFinishing()) {
+            return;
+        }
+
+        lastAuthenticatedTime = SharedPreferencesManager.getLong(LAST_AUTH_TIME_KEY, 0);
+
+        try {
+            MessagingInitializer.initialize(this);
+        } catch (Exception e) {
+            sentryManager.captureException(e);
+        }
 
         try {
             if (sentryManager.isEnabled()) {
@@ -199,7 +216,11 @@ public class MainActivity extends AppCompatActivity {
         } catch (Exception e) {
             sentryManager.captureException(e);
         }
+    }
 
+    private void persistLastAuthenticatedTime() {
+        lastAuthenticatedTime = System.currentTimeMillis();
+        SharedPreferencesManager.putLong(LAST_AUTH_TIME_KEY, lastAuthenticatedTime);
     }
 
     /**
@@ -218,7 +239,7 @@ public class MainActivity extends AppCompatActivity {
             }
             if (webView != null) {
                 // Remove JavaScript interfaces and clients
-                webView.removeJavascriptInterface("SwipeToRefreshInterface");
+                webView.removeJavascriptInterface("AndroidInterface");
                 webView.setWebViewClient(new WebViewClient());
                 webView.setWebChromeClient(new WebChromeClient());
                 webView.setDownloadListener(null);
@@ -283,11 +304,20 @@ public class MainActivity extends AppCompatActivity {
             // Resume JavaScript execution and timers
             webView.resumeTimers();
         } else if (!isWebViewInitialized) {
-            setupWebViewForActivity(getString(R.string.main_url));
+            try {
+                setupWebViewForActivity(getString(R.string.main_url));
+            } catch (Exception e) {
+                if (sentryManager != null) {
+                    sentryManager.captureException(e);
+                } else {
+                    SentryManager.captureStaticException(e);
+                }
+            }
         }
         SharedPreferencesManager.init(this);
-        // Refresh dark mode settings when returning from settings
-        setupDarkModeForActivity(sentryManager, SharedPreferencesManager.getString("dark_mode", "match"));
+        if (sentryManager != null) {
+            setupDarkModeForActivity(sentryManager, SharedPreferencesManager.getString("dark_mode", "match"));
+        }
         maybeShowBiometricPrompt();
     }
 
@@ -336,7 +366,9 @@ public class MainActivity extends AppCompatActivity {
         }
         // Launch StatusActivity when the connection status icon is clicked
         ImageView imageView = findViewById(R.id.connectionStatus);
-        imageView.setOnClickListener(v -> startActivity(new Intent(this, StatusActivity.class)));
+        if (imageView != null) {
+            imageView.setOnClickListener(v -> startActivity(new Intent(this, StatusActivity.class)));
+        }
     }
 
     /**
@@ -347,7 +379,9 @@ public class MainActivity extends AppCompatActivity {
      */
     private String setupLanguageForActivity() {
         Configuration config = getResources().getConfiguration();
-        Locale appLocale = config.getLocales().get(0);
+        Locale appLocale = !config.getLocales().isEmpty()
+                ? config.getLocales().get(0)
+                : Locale.getDefault();
         Locale.setDefault(appLocale);
         Configuration newConfig = new Configuration(config);
         newConfig.setLocale(appLocale);
@@ -420,121 +454,132 @@ public class MainActivity extends AppCompatActivity {
     @SuppressLint("SetJavaScriptEnabled")
     public void setupWebViewForActivity(String url) {
         webView = findViewById(R.id.webView);
+        if (webView == null) {
+            SentryManager.captureStaticException(new IllegalStateException("WebView not found in layout"));
+            return;
+        }
+
         try {
+            WebSettings webViewSettings = webView.getSettings();
+            webViewSettings.setJavaScriptEnabled(true);
+            webViewSettings.setDomStorageEnabled(true);
+            webViewSettings.setDatabaseEnabled(true);
+            webViewSettings.setCacheMode(WebSettings.LOAD_DEFAULT);
+            webViewSettings.setAllowFileAccess(false);
+            webViewSettings.setAllowContentAccess(false);
+            webViewSettings.setBuiltInZoomControls(false);
+            webViewSettings.setDisplayZoomControls(false);
+            webViewSettings.setSupportZoom(false);
+            webViewSettings.setLoadWithOverviewMode(true);
+            webViewSettings.setUseWideViewPort(true);
+
+            CookieManager.getInstance().setAcceptThirdPartyCookies(webView, true);
+
+            webView.setWebViewClient(new WebViewClient() {
+                @Override
+                public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
+                    Uri uri = request.getUrl();
+                    if (uri == null) {
+                        return false;
+                    }
+                    if (ExternalLinkHandler.isNextDnsHost(uri)) {
+                        return false;
+                    }
+                    return ExternalLinkHandler.openExternalLink(view.getContext(), view, uri);
+                }
+
+                @Override
+                public void onPageStarted(WebView view, String pageUrl, android.graphics.Bitmap favicon) {
+                    hideWebViewError();
+                }
+
+                @Override
+                public void onPageFinished(WebView view, String pageUrl) {
+                    try {
+                        hideWebViewError();
+                        if (swipeRefreshLayout != null) {
+                            swipeRefreshLayout.setRefreshing(false);
+                        }
+                        if (isValidNextDnsUrl(pageUrl)) {
+                            SharedPreferencesManager.putString(LAST_WEBVIEW_URL_KEY, pageUrl);
+                        }
+                        CookieManager.getInstance().setAcceptCookie(true);
+                        CookieManager.getInstance().acceptCookie();
+                        CookieManager.getInstance().flush();
+                        view.evaluateJavascript(WebViewInteractionScript.PAGE_FINISHED_SCRIPT, null);
+                    } catch (Exception e) {
+                        SentryManager.captureStaticException(e);
+                    }
+                }
+
+                @Override
+                public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
+                    if (request.isForMainFrame()) {
+                        showWebViewError();
+                        if (sentryManager != null) {
+                            sentryManager.captureMessage(
+                                    "WebView error: " + error.getDescription() + " url=" + request.getUrl());
+                        }
+                    }
+                }
+
+                @Override
+                public void onReceivedHttpError(WebView view, WebResourceRequest request,
+                        WebResourceResponse errorResponse) {
+                    if (request.isForMainFrame()) {
+                        showWebViewError();
+                        if (sentryManager != null) {
+                            sentryManager.captureMessage(
+                                    "WebView HTTP error: " + errorResponse.getStatusCode()
+                                            + " url=" + request.getUrl());
+                        }
+                    }
+                }
+
+                @Override
+                public boolean onRenderProcessGone(WebView view, RenderProcessGoneDetail detail) {
+                    if (sentryManager != null) {
+                        sentryManager.captureMessage(
+                                "WebView render process gone, didCrash=" + detail.didCrash());
+                    }
+                    teardownWebViewForRecovery();
+                    setupWebViewForActivity(getString(R.string.main_url));
+                    return true;
+                }
+            });
+
+            webView.setWebChromeClient(new WebChromeClient() {
+                @Override
+                public void onShowCustomView(android.view.View view, CustomViewCallback callback) {
+                    super.onShowCustomView(view, callback);
+                }
+
+                @Override
+                public void onHideCustomView() {
+                    super.onHideCustomView();
+                }
+
+                @Override
+                public boolean onShowFileChooser(WebView webView, android.webkit.ValueCallback<Uri[]> filePathCallback,
+                        FileChooserParams fileChooserParams) {
+                    return super.onShowFileChooser(webView, filePathCallback, fileChooserParams);
+                }
+            });
+
+            if (Boolean.TRUE.equals(darkModeEnabled)) {
+                if (WebViewFeature.isFeatureSupported(WebViewFeature.ALGORITHMIC_DARKENING)) {
+                    WebSettingsCompat.setAlgorithmicDarkeningAllowed(webView.getSettings(), true);
+                }
+            }
+
+            setupDownloadManagerForActivity();
+            setupWebViewTouchHandling();
+            hideWebViewError();
             loadWebViewUrl(webView, url);
+            isWebViewInitialized = true;
         } catch (Exception e) {
             SentryManager.captureStaticException(e);
         }
-        // Configure WebView settings
-        WebSettings webViewSettings = webView.getSettings();
-        webViewSettings.setJavaScriptEnabled(true);
-        webViewSettings.setDomStorageEnabled(true);
-        webViewSettings.setDatabaseEnabled(true);
-        webViewSettings.setCacheMode(WebSettings.LOAD_DEFAULT);
-        webViewSettings.setAllowFileAccess(false);
-        webViewSettings.setAllowContentAccess(false);
-
-        // Improve text selection and scrolling behavior
-        webViewSettings.setBuiltInZoomControls(false);
-        webViewSettings.setDisplayZoomControls(false);
-        webViewSettings.setSupportZoom(false);
-        webViewSettings.setLoadWithOverviewMode(true);
-        webViewSettings.setUseWideViewPort(true);
-
-        CookieManager.getInstance().setAcceptThirdPartyCookies(webView, true);
-
-        // Set a custom WebViewClient to handle page events
-        webView.setWebViewClient(new WebViewClient() {
-            @Override
-            public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
-                Uri uri = request.getUrl();
-                if (uri == null) {
-                    return false;
-                }
-                if (ExternalLinkHandler.isNextDnsHost(uri)) {
-                    return false;
-                }
-                return ExternalLinkHandler.openExternalLink(view.getContext(), view, uri);
-            }
-
-            @Override
-            public void onPageFinished(WebView view, String url) {
-                try {
-                    if (isValidNextDnsUrl(url)) {
-                        SharedPreferencesManager.putString(LAST_WEBVIEW_URL_KEY, url);
-                    }
-                    // Enable and flush cookies
-                    CookieManager.getInstance().setAcceptCookie(true);
-                    CookieManager.getInstance().acceptCookie();
-                    CookieManager.getInstance().flush();
-                    view.evaluateJavascript(WebViewInteractionScript.PAGE_FINISHED_SCRIPT, null);
-                } catch (Exception e) {
-                    SentryManager.captureStaticException(e);
-                }
-            }
-
-            @Override
-            public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
-                if (request.isForMainFrame() && sentryManager != null) {
-                    sentryManager.captureMessage(
-                            "WebView error: " + error.getDescription() + " url=" + request.getUrl());
-                }
-            }
-
-            @Override
-            public void onReceivedHttpError(WebView view, WebResourceRequest request,
-                    WebResourceResponse errorResponse) {
-                if (request.isForMainFrame() && sentryManager != null) {
-                    sentryManager.captureMessage(
-                            "WebView HTTP error: " + errorResponse.getStatusCode()
-                                    + " url=" + request.getUrl());
-                }
-            }
-
-            @Override
-            public boolean onRenderProcessGone(WebView view, RenderProcessGoneDetail detail) {
-                if (sentryManager != null) {
-                    sentryManager.captureMessage(
-                            "WebView render process gone, didCrash=" + detail.didCrash());
-                }
-                isWebViewInitialized = false;
-                setupWebViewForActivity(getString(R.string.main_url));
-                return true;
-            }
-        });
-
-        // Set a custom WebChromeClient to handle text selection and scrolling
-        webView.setWebChromeClient(new WebChromeClient() {
-            @Override
-            public void onShowCustomView(android.view.View view, CustomViewCallback callback) {
-                // Handle custom view display
-                super.onShowCustomView(view, callback);
-            }
-
-            @Override
-            public void onHideCustomView() {
-                // Handle custom view hiding
-                super.onHideCustomView();
-            }
-
-            @Override
-            public boolean onShowFileChooser(WebView webView, android.webkit.ValueCallback<Uri[]> filePathCallback,
-                    FileChooserParams fileChooserParams) {
-                // Handle file chooser
-                return super.onShowFileChooser(webView, filePathCallback, fileChooserParams);
-            }
-        });
-
-        // Enable algorithmic darkening if dark mode is enabled and supported
-        if (Boolean.TRUE.equals(darkModeEnabled)) {
-            if (WebViewFeature.isFeatureSupported(WebViewFeature.ALGORITHMIC_DARKENING)) {
-                WebSettingsCompat.setAlgorithmicDarkeningAllowed(webView.getSettings(), true);
-            }
-        }
-        // Setup file download handling
-        setupDownloadManagerForActivity();
-        setupWebViewTouchHandling();
-        isWebViewInitialized = true;
     }
 
     /**
@@ -542,20 +587,19 @@ public class MainActivity extends AppCompatActivity {
      * Also adds a JavaScript interface to control swipe refresh behavior from web
      * content.
      */
-    @SuppressLint("SetJavaScriptEnabled")
     private void setupSwipeToRefreshForActivity() {
         swipeRefreshLayout = findViewById(R.id.swipeRefreshLayout);
         webView = findViewById(R.id.webView);
+        if (webView == null || swipeRefreshLayout == null) {
+            return;
+        }
         webView.getSettings().setJavaScriptEnabled(true);
-        // Add a JavaScript interface for controlling swipe refresh
         webView.addJavascriptInterface(new WebAppInterface(this, swipeRefreshLayout), "AndroidInterface");
         swipeRefreshLayout.setOnRefreshListener(() -> {
-            // Reload the WebView when the user swipes to refresh
-            webView.reload();
-            swipeRefreshLayout.setRefreshing(false);
+            if (webView != null) {
+                webView.reload();
+            }
         });
-
-        // Improve SwipeRefreshLayout behavior with WebView
         swipeRefreshLayout.setDistanceToTriggerSync(200);
         swipeRefreshLayout.setSlingshotDistance(200);
     }
@@ -572,7 +616,7 @@ public class MainActivity extends AppCompatActivity {
                 DownloadManager.Request request = new DownloadManager.Request(Uri.parse(url.trim()));
                 request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
                 request.setDestinationInExternalFilesDir(this, Environment.DIRECTORY_DOWNLOADS,
-                        "NextDNS-Configuration.mobileconfig");
+                        "NextDNS-Configuration-" + System.currentTimeMillis() + ".mobileconfig");
                 DownloadManager downloadManager = (DownloadManager) getSystemService(DOWNLOAD_SERVICE);
                 if (downloadManager != null) {
                     // Enqueue the download request
@@ -674,7 +718,7 @@ public class MainActivity extends AppCompatActivity {
                     public void onAuthenticationSucceeded() {
                         isBiometricPromptShowing = false;
                         biometricErrorRetries = 0;
-                        lastAuthenticatedTime = System.currentTimeMillis();
+                        persistLastAuthenticatedTime();
                         hideBlurOverlay();
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                             if (ContextCompat.checkSelfPermission(MainActivity.this,
@@ -819,6 +863,50 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
         targetWebView.loadUrl(defaultUrl);
+    }
+
+    private void showWebViewError() {
+        if (webViewErrorView != null) {
+            webViewErrorView.setVisibility(View.VISIBLE);
+            webViewErrorView.setOnClickListener(v -> {
+                hideWebViewError();
+                if (webView != null) {
+                    webView.reload();
+                } else {
+                    setupWebViewForActivity(getString(R.string.main_url));
+                }
+            });
+        }
+        if (swipeRefreshLayout != null) {
+            swipeRefreshLayout.setRefreshing(false);
+        }
+    }
+
+    private void hideWebViewError() {
+        if (webViewErrorView != null) {
+            webViewErrorView.setVisibility(View.GONE);
+        }
+    }
+
+    private void teardownWebViewForRecovery() {
+        isWebViewInitialized = false;
+        if (webView == null) {
+            return;
+        }
+        try {
+            if (webView.getParent() != null) {
+                ((ViewGroup) webView.getParent()).removeView(webView);
+            }
+            webView.removeJavascriptInterface("AndroidInterface");
+            webView.setWebViewClient(new WebViewClient());
+            webView.setWebChromeClient(new WebChromeClient());
+            webView.setDownloadListener(null);
+            webView.destroy();
+        } catch (Exception e) {
+            SentryManager.captureStaticException(e);
+        } finally {
+            webView = null;
+        }
     }
 
     private boolean isValidNextDnsUrl(String url) {

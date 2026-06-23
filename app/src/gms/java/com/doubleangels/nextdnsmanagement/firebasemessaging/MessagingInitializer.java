@@ -13,21 +13,11 @@ import com.google.firebase.messaging.FirebaseMessaging;
  */
 public class MessagingInitializer {
 
-    // Key for storing the FCM token in shared preferences
     private static final String KEY_FCM_TOKEN = "fcmToken";
 
-    /**
-     * Initializes Firebase, retrieves the device's FCM registration token,
-     * stores it in shared preferences, and subscribes the device to the "general"
-     * topic.
-     *
-     * @param context The context from which this method is called (e.g., an
-     *                Application or Activity).
-     */
     public static void initialize(Context context) {
         SentryManager sentryManager = new SentryManager(context);
 
-        // Initialize SharedPreferencesManager
         try {
             SharedPreferencesManager.init(context);
         } catch (Exception e) {
@@ -35,7 +25,6 @@ public class MessagingInitializer {
             return;
         }
 
-        // Initialize Firebase (Required before using Firebase services)
         try {
             FirebaseApp.initializeApp(context);
         } catch (Exception e) {
@@ -43,8 +32,6 @@ public class MessagingInitializer {
             return;
         }
 
-        // Workaround for known Firebase Messaging issues where transient Play Services
-        // errors throw on an internal background thread and would otherwise crash the app.
         Thread.UncaughtExceptionHandler defaultHandler = Thread.getDefaultUncaughtExceptionHandler();
         Thread.setDefaultUncaughtExceptionHandler((thread, throwable) -> {
             if (SentryManager.isIgnored(throwable)) {
@@ -59,7 +46,6 @@ public class MessagingInitializer {
         });
 
         try {
-            // Retrieve the FCM registration token asynchronously
             FirebaseMessaging.getInstance().getToken()
                     .addOnCompleteListener(task -> {
                         try {
@@ -75,22 +61,20 @@ public class MessagingInitializer {
                                 } else {
                                     sentryManager.captureMessage("Fetching FCM registration token failed");
                                 }
+                                restoreDefaultExceptionHandler(defaultHandler);
                                 return;
                             }
 
-                            // Get the token result from the task
                             String token = task.getResult();
                             if (token == null) {
                                 sentryManager.captureMessage("FCM token is null");
+                                restoreDefaultExceptionHandler(defaultHandler);
                                 return;
                             }
 
-                            sentryManager.captureMessage("FCM Token retrieved: " + token);
-
-                            // Store the token in SharedPreferences for future use
+                            sentryManager.captureMessage("FCM token retrieved successfully");
                             SharedPreferencesManager.putString(KEY_FCM_TOKEN, token);
 
-                            // Subscribe the user to the "general" topic
                             FirebaseMessaging.getInstance().subscribeToTopic("general")
                                     .addOnCompleteListener(task1 -> {
                                         try {
@@ -111,14 +95,24 @@ public class MessagingInitializer {
                                             }
                                         } catch (Exception ex) {
                                             sentryManager.captureException(ex);
+                                        } finally {
+                                            restoreDefaultExceptionHandler(defaultHandler);
                                         }
                                     });
                         } catch (Exception ex) {
                             sentryManager.captureException(ex);
+                            restoreDefaultExceptionHandler(defaultHandler);
                         }
                     });
         } catch (Exception e) {
             sentryManager.captureException(e);
+            restoreDefaultExceptionHandler(defaultHandler);
+        }
+    }
+
+    private static void restoreDefaultExceptionHandler(Thread.UncaughtExceptionHandler defaultHandler) {
+        if (defaultHandler != null) {
+            Thread.setDefaultUncaughtExceptionHandler(defaultHandler);
         }
     }
 }

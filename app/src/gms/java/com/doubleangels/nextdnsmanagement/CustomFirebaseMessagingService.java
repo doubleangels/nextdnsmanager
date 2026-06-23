@@ -86,9 +86,9 @@ public class CustomFirebaseMessagingService extends FirebaseMessagingService {
             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
             PendingIntent pendingIntent = PendingIntent.getActivity(
                     this,
-                    0,
+                    (title + messageBody).hashCode(),
                     intent,
-                    PendingIntent.FLAG_ONE_SHOT | PendingIntent.FLAG_IMMUTABLE);
+                    PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
 
             // Build the notification
             NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this, CHANNEL_ID)
@@ -116,7 +116,7 @@ public class CustomFirebaseMessagingService extends FirebaseMessagingService {
                 }
                 // Show the notification
                 try {
-                    int notificationId = 0;
+                    int notificationId = (title + messageBody).hashCode();
                     notificationManager.notify(notificationId, notificationBuilder.build());
                 } catch (Exception e) {
                     // Capture any exception that occurs while displaying the notification
@@ -143,7 +143,7 @@ public class CustomFirebaseMessagingService extends FirebaseMessagingService {
         try {
             super.onNewToken(token);
             // Log the new token using Sentry
-            sentryManager.captureMessage("New FCM token: " + token);
+            sentryManager.captureMessage("New FCM token received");
         } catch (Exception e) {
             // Capture any exception that occurs while handling the new token
             sentryManager.captureException(e);

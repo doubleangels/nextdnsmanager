@@ -79,11 +79,11 @@ public class PermissionsAdapter extends RecyclerView.Adapter<PermissionsAdapter.
         // Initialize SentryManager using the current context
         SentryManager sentryManager = new SentryManager(holder.itemView.getContext());
 
-        // Determine if the permission has been granted (applies only for newer
-        // permissions like POST_NOTIFICATIONS)
+        // Determine if the permission has been granted (runtime permissions only)
         boolean isGranted = true;
-        if (permissionInfo.name.equals(android.Manifest.permission.POST_NOTIFICATIONS)) {
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+        boolean isRuntimePermission = permissionInfo.name.equals(android.Manifest.permission.POST_NOTIFICATIONS)
+                || permissionInfo.name.equals(android.Manifest.permission.ACCESS_NOTIFICATION_POLICY);
+        if (isRuntimePermission && android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
                 try {
                     isGranted = holder.itemView.getContext()
                             .checkSelfPermission(permissionInfo.name) == PackageManager.PERMISSION_GRANTED;
@@ -91,7 +91,6 @@ public class PermissionsAdapter extends RecyclerView.Adapter<PermissionsAdapter.
                     sentryManager.captureException(e);
                     isGranted = false;
                 }
-            }
         }
 
         // Load and set the permission name label from system resources, then make it
@@ -111,17 +110,23 @@ public class PermissionsAdapter extends RecyclerView.Adapter<PermissionsAdapter.
         try {
             CharSequence description = permissionInfo.loadDescription(holder.itemView.getContext().getPackageManager());
             if (description == null || description.toString().trim().isEmpty()) {
-                displayText = isGranted ? "(GRANTED)" : "(NOT GRANTED)";
+                displayText = isRuntimePermission
+                        ? (isGranted ? "(GRANTED)" : "(NOT GRANTED)")
+                        : "(DECLARED)";
             } else {
                 displayText = description.toString();
                 if (!displayText.endsWith(".")) {
                     displayText += ".";
                 }
-                displayText += isGranted ? " (GRANTED)" : " (NOT GRANTED)";
+                if (isRuntimePermission) {
+                    displayText += isGranted ? " (GRANTED)" : " (NOT GRANTED)";
+                }
             }
         } catch (Exception e) {
             sentryManager.captureException(e);
-            displayText = isGranted ? "(GRANTED)" : "(NOT GRANTED)";
+            displayText = isRuntimePermission
+                    ? (isGranted ? "(GRANTED)" : "(NOT GRANTED)")
+                    : "(DECLARED)";
         }
         holder.permissionDescription.setText(displayText);
     }

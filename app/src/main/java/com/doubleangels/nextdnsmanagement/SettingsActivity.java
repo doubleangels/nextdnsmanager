@@ -116,17 +116,15 @@ public class SettingsActivity extends AppCompatActivity {
      * @param darkMode The dark mode setting value from shared preferences.
      */
     public void setupDarkModeForActivity(String darkMode) {
-        // Only set dark mode for Android versions below TIRAMISU
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+        if (sentryManager != null) {
             sentryManager.captureMessage("Dark mode setting: " + darkMode);
-            // Set the night mode based on the darkMode string
-            if (darkMode.contains("match")) {
-                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
-            } else if (darkMode.contains("on")) {
-                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
-            } else {
-                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
-            }
+        }
+        if (darkMode.contains("match")) {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
+        } else if (darkMode.contains("on")) {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
+        } else {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
         }
     }
 
@@ -138,7 +136,7 @@ public class SettingsActivity extends AppCompatActivity {
         getSupportFragmentManager()
                 .beginTransaction()
                 .replace(R.id.settings, new SettingsFragment())
-                .commitNow();
+                .commit();
     }
 
     /**
@@ -371,52 +369,47 @@ public class SettingsActivity extends AppCompatActivity {
                     boolean newValueBoolean = (Boolean) newValue;
                     boolean currentValue = SharedPreferencesManager.getBoolean("app_lock_enable", false);
 
-                    // If trying to disable app lock, require biometric authentication
-                    if (currentValue && !newValueBoolean) {
+                    // Require biometric authentication to enable or disable app lock
+                    if (currentValue != newValueBoolean) {
                         final BiometricLock biometricLock = new BiometricLock((AppCompatActivity) requireContext());
                         if (biometricLock.canAuthenticate()) {
+                            String promptTitle = newValueBoolean ? "Enable App Lock" : "Disable App Lock";
+                            String promptSubtitle = newValueBoolean
+                                    ? "Authenticate to enable app lock"
+                                    : "Authenticate to disable app lock";
                             biometricLock.showPrompt(
-                                    "Disable App Lock",
-                                    "Authenticate to disable app lock",
+                                    promptTitle,
+                                    promptSubtitle,
                                     "Use biometric or device credentials to confirm this action",
                                     new BiometricLock.BiometricLockCallback() {
                                         @Override
                                         public void onAuthenticationSucceeded() {
-                                            // Authentication successful, allow the change
-                                            SharedPreferencesManager.putBoolean("app_lock_enable", false);
-                                            // Update the UI toggle to reflect the change
-                                            setting.setChecked(false);
+                                            SharedPreferencesManager.putBoolean("app_lock_enable", newValueBoolean);
+                                            setting.setChecked(newValueBoolean);
                                             captureMessageIfAvailable(
-                                                    "App lock disabled after biometric authentication.");
+                                                    "App lock set to " + newValueBoolean + " after biometric authentication.");
                                         }
 
                                         @Override
                                         public void onAuthenticationError(int errorCode, String error) {
-                                            // Authentication failed, revert the change
-                                            setting.setChecked(true);
+                                            setting.setChecked(currentValue);
                                             captureMessageIfAvailable(
-                                                    "App lock disable failed - authentication error: " + error);
+                                                    "App lock change failed - authentication error: " + error);
                                         }
 
                                         @Override
                                         public void onAuthenticationFailed() {
-                                            // Authentication failed, revert the change
-                                            setting.setChecked(true);
+                                            setting.setChecked(currentValue);
                                             captureMessageIfAvailable(
-                                                    "App lock disable failed - authentication failed");
+                                                    "App lock change failed - authentication failed");
                                         }
                                     });
                         } else {
-                            // No biometric available, don't allow disabling
-                            setting.setChecked(true);
+                            setting.setChecked(currentValue);
                             captureMessageIfAvailable(
-                                    "Cannot disable app lock - biometric authentication not available");
+                                    "Cannot change app lock - biometric authentication not available");
                         }
-                        return false; // Don't apply the change yet
-                    } else {
-                        // Enabling app lock or other changes don't require authentication
-                        SharedPreferencesManager.putBoolean("app_lock_enable", newValueBoolean);
-                        captureMessageIfAvailable("App lock set to " + newValue + ".");
+                        return false;
                     }
                 } catch (Exception e) {
                     captureExceptionIfAvailable(e);

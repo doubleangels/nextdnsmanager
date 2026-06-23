@@ -11,7 +11,7 @@
     </style>
     <style name="PopupTheme" parent="AppTheme">
         <item name="android:popupBackground">@color/white</item>
-        <item name="android:textColorPrimary">@color/white</item>
+        <item name="android:textColorPrimary">@color/black</item>
     </style>
     <style name="ToolbarTheme" parent="AppTheme">
         <item name="android:background">@color/main</item>
@@ -26,13 +26,13 @@
     <style name="StatusTheme" parent="AppTheme">
         <item name="android:background">@color/white</item>
     </style>
-    <style name="AuthorTheme">
+    <style name="AuthorTheme" parent="AppTheme">
         <item name="android:background">@color/white</item>
     </style>
-    <style name="PermissionTheme">
+    <style name="PermissionTheme" parent="AppTheme">
         <item name="android:background">@color/white</item>
     </style>
-    <style name="PingTheme">
+    <style name="PingTheme" parent="AppTheme">
         <item name="android:background">@color/white</item>
     </style>
 </resources>
