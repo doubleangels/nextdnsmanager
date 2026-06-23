@@ -77,6 +77,9 @@ public class MainActivity extends AppCompatActivity {
     private static final String LAST_WEBVIEW_URL_KEY = "last_webview_url";
     // Timestamp (in ms) of the last successful biometric authentication
     private long lastAuthenticatedTime = 0;
+    private boolean isBiometricPromptShowing = false;
+    private int biometricErrorRetries = 0;
+    private static final int MAX_BIOMETRIC_ERROR_RETRIES = 3;
     private float webViewTouchStartX;
     private float webViewTouchStartY;
     private int webViewTouchSlop;
@@ -187,12 +190,6 @@ public class MainActivity extends AppCompatActivity {
             sentryManager.captureException(e);
         }
 
-        // Check biometric authentication on app start
-        if (SharedPreferencesManager.getBoolean("app_lock_enable", false)) {
-            if (shouldAuthenticate()) {
-                showBiometricPrompt();
-            }
-        }
     }
 
     /**
@@ -261,12 +258,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        // Check biometric authentication when returning from other activities
-        if (SharedPreferencesManager.getBoolean("app_lock_enable", false)) {
-            if (shouldAuthenticate()) {
-                showBiometricPrompt();
-            }
-        }
+        maybeShowBiometricPrompt();
     }
 
     /**
@@ -286,13 +278,7 @@ public class MainActivity extends AppCompatActivity {
         SharedPreferencesManager.init(this);
         // Refresh dark mode settings when returning from settings
         setupDarkModeForActivity(sentryManager, SharedPreferencesManager.getString("dark_mode", "match"));
-        // Check if app lock is enabled and if biometric authentication is needed
-        if (SharedPreferencesManager.getBoolean("app_lock_enable", false)) {
-            if (shouldAuthenticate()) {
-                // Show biometric prompt immediately - don't wait for WebView state
-                showBiometricPrompt();
-            }
-        }
+        maybeShowBiometricPrompt();
     }
 
     /**
@@ -303,6 +289,12 @@ public class MainActivity extends AppCompatActivity {
      */
     private boolean shouldAuthenticate() {
         return System.currentTimeMillis() - lastAuthenticatedTime > AUTH_TIMEOUT_MS;
+    }
+
+    private void maybeShowBiometricPrompt() {
+        if (SharedPreferencesManager.getBoolean("app_lock_enable", false) && shouldAuthenticate()) {
+            showBiometricPrompt();
+        }
     }
 
     /**
@@ -650,42 +642,60 @@ public class MainActivity extends AppCompatActivity {
      * requests notification permission.
      */
     private void showBiometricPrompt() {
-        final BiometricLock biometricLock = new BiometricLock(this);
-        if (biometricLock.canAuthenticate()) {
-            // Show blur overlay to hide WebView content
-            showBlurOverlay();
-
-            biometricLock.showPrompt(
-                    getString(R.string.unlock_title),
-                    getString(R.string.unlock_description),
-                    "",
-                    new BiometricLock.BiometricLockCallback() {
-                        @Override
-                        public void onAuthenticationSucceeded() {
-                            // Update the last authenticated time
-                            lastAuthenticatedTime = System.currentTimeMillis();
-                            // Hide blur overlay on successful authentication
-                            hideBlurOverlay();
-                        }
-
-                        @Override
-                        public void onAuthenticationError(int errorCode, String error) {
-                            if (errorCode == BiometricPrompt.ERROR_USER_CANCELED
-                                    || errorCode == BiometricPrompt.ERROR_CANCELED
-                                    || errorCode == BiometricPrompt.ERROR_NEGATIVE_BUTTON) {
-                                hideBlurOverlay();
-                                finish();
-                            } else {
-                                showBiometricPrompt();
-                            }
-                        }
-
-                        @Override
-                        public void onAuthenticationFailed() {
-                            // Keep blur overlay visible; the system prompt allows retry.
-                        }
-                    });
+        if (isBiometricPromptShowing || isFinishing()) {
+            return;
         }
+
+        final BiometricLock biometricLock = new BiometricLock(this);
+        if (!biometricLock.canAuthenticate()) {
+            handleAppLockUnavailable();
+            return;
+        }
+
+        isBiometricPromptShowing = true;
+        showBlurOverlay();
+
+        biometricLock.showPrompt(
+                getString(R.string.unlock_title),
+                getString(R.string.unlock_description),
+                "",
+                new BiometricLock.BiometricLockCallback() {
+                    @Override
+                    public void onAuthenticationSucceeded() {
+                        isBiometricPromptShowing = false;
+                        biometricErrorRetries = 0;
+                        lastAuthenticatedTime = System.currentTimeMillis();
+                        hideBlurOverlay();
+                    }
+
+                    @Override
+                    public void onAuthenticationError(int errorCode, String error) {
+                        isBiometricPromptShowing = false;
+                        if (errorCode == BiometricPrompt.ERROR_USER_CANCELED
+                                || errorCode == BiometricPrompt.ERROR_CANCELED
+                                || errorCode == BiometricPrompt.ERROR_NEGATIVE_BUTTON) {
+                            hideBlurOverlay();
+                            finish();
+                        } else if (biometricErrorRetries < MAX_BIOMETRIC_ERROR_RETRIES) {
+                            biometricErrorRetries++;
+                            getWindow().getDecorView().post(MainActivity.this::showBiometricPrompt);
+                        } else {
+                            hideBlurOverlay();
+                            finish();
+                        }
+                    }
+
+                    @Override
+                    public void onAuthenticationFailed() {
+                        // Keep blur overlay visible; the system prompt allows retry.
+                    }
+                });
+    }
+
+    private void handleAppLockUnavailable() {
+        showBlurOverlay();
+        Toast.makeText(this, R.string.app_lock_unavailable, Toast.LENGTH_LONG).show();
+        finish();
     }
 
     /**
