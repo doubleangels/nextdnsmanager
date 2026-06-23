@@ -60,15 +60,6 @@ public class SentryManager {
      */
     public SentryManager(Context context) {
         this.contextRef = new WeakReference<>(context);
-        // Ensure SharedPreferencesManager is initialized
-        if (context != null) {
-            try {
-                SharedPreferencesManager.init(context);
-            } catch (Exception e) {
-                // If initialization fails, log but don't throw
-                Log.e(TAG, "Failed to initialize SharedPreferencesManager", e);
-            }
-        }
     }
 
     /**
@@ -217,6 +208,9 @@ public class SentryManager {
     }
 
     private static boolean isSentryEnabledStatic() {
+        if (!SharedPreferencesManager.isInitialized()) {
+            return false;
+        }
         try {
             return SharedPreferencesManager.getBoolean("sentry_enable", false);
         } catch (Exception e) {
@@ -254,13 +248,12 @@ public class SentryManager {
      */
     public boolean isEnabled() {
         Context context = contextRef.get();
-        if (context == null) {
-            return false; // Context has been garbage collected
+        if (context == null || !SharedPreferencesManager.isInitialized()) {
+            return false;
         }
         try {
             return SharedPreferencesManager.getBoolean("sentry_enable", false);
         } catch (Exception e) {
-            // If there's an error accessing preferences, default to disabled
             Log.e(TAG, "Error checking Sentry enable status", e);
             return false;
         }

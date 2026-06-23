@@ -54,6 +54,7 @@ import com.doubleangels.nextdnsmanagement.protocol.VisualIndicator;
 import com.doubleangels.nextdnsmanagement.sentry.SentryInitializer;
 import com.doubleangels.nextdnsmanagement.sentry.SentryManager;
 import com.doubleangels.nextdnsmanagement.utils.ExternalLinkHandler;
+import com.doubleangels.nextdnsmanagement.utils.StatusBarHelper;
 import com.doubleangels.nextdnsmanagement.sharedpreferences.SharedPreferencesManager;
 import com.doubleangels.nextdnsmanagement.webview.WebAppInterface;
 import com.doubleangels.nextdnsmanagement.webview.WebViewInteractionScript;
@@ -77,9 +78,6 @@ public class MainActivity extends AppCompatActivity {
     private Boolean darkModeEnabled = false;
     // Flag to avoid re-initializing the WebView if it has already been set up
     private Boolean isWebViewInitialized = false;
-    // Bundle used to store and restore the WebView state across configuration
-    // changes
-    private Bundle webViewState = null;
     // Biometric authentication timeout in milliseconds (5 minutes)
     private static final long AUTH_TIMEOUT_MS = 5 * 60 * 1000;
     private static final String LAST_WEBVIEW_URL_KEY = "last_webview_url";
@@ -128,15 +126,12 @@ public class MainActivity extends AppCompatActivity {
      * @param savedInstanceState Bundle containing the activity's previously saved
      *                           state.
      */
-    @RequiresApi(api = Build.VERSION_CODES.TIRAMISU)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         androidx.core.splashscreen.SplashScreen splashScreen =
                 androidx.core.splashscreen.SplashScreen.installSplashScreen(this);
         super.onCreate(savedInstanceState);
-        // Restore previously saved state if available
         if (savedInstanceState != null) {
-            webViewState = savedInstanceState.getBundle("webViewState");
             darkModeEnabled = savedInstanceState.getBoolean("darkModeEnabled");
         }
         setContentView(R.layout.activity_main);
@@ -168,7 +163,13 @@ public class MainActivity extends AppCompatActivity {
         lastAuthenticatedTime = SharedPreferencesManager.getLong(LAST_AUTH_TIME_KEY, 0);
 
         try {
-            MessagingInitializer.initialize(this);
+            new Thread(() -> {
+                try {
+                    MessagingInitializer.initialize(getApplicationContext());
+                } catch (Exception e) {
+                    runOnUiThread(() -> sentryManager.captureException(e));
+                }
+            }, "fcm-init").start();
         } catch (Exception e) {
             sentryManager.captureException(e);
         }
@@ -232,12 +233,12 @@ public class MainActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         try {
-            webViewState = null;
             // Remove WebView from its parent if attached
             if (webView != null && webView.getParent() != null) {
                 ((ViewGroup) webView.getParent()).removeView(webView);
             }
             if (webView != null) {
+                webView.evaluateJavascript(WebViewInteractionScript.DISCONNECT_SCRIPT, null);
                 // Remove JavaScript interfaces and clients
                 webView.removeJavascriptInterface("AndroidInterface");
                 webView.setWebViewClient(new WebViewClient());
@@ -314,7 +315,6 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         }
-        SharedPreferencesManager.init(this);
         if (sentryManager != null) {
             setupDarkModeForActivity(sentryManager, SharedPreferencesManager.getString("dark_mode", "match"));
         }
@@ -343,12 +343,7 @@ public class MainActivity extends AppCompatActivity {
      * OnApplyWindowInsetsListener.
      */
     private void setupStatusBarForActivity() {
-        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            getWindow().getDecorView().setOnApplyWindowInsetsListener((view, insets) -> {
-                view.setBackgroundColor(ContextCompat.getColor(this, R.color.main));
-                return insets;
-            });
-        }
+        StatusBarHelper.apply(this);
     }
 
     /**
@@ -856,10 +851,6 @@ public class MainActivity extends AppCompatActivity {
         String savedUrl = SharedPreferencesManager.getString(LAST_WEBVIEW_URL_KEY, null);
         if (isValidNextDnsUrl(savedUrl)) {
             targetWebView.loadUrl(savedUrl);
-            return;
-        }
-        if (Boolean.TRUE.equals(darkModeEnabled) && webViewState != null) {
-            targetWebView.restoreState(webViewState);
             return;
         }
         targetWebView.loadUrl(defaultUrl);

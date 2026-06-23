@@ -7,7 +7,6 @@ import android.content.pm.PermissionInfo;
 import android.content.res.Configuration;
 import android.os.Build;
 import android.os.Bundle;
-import android.view.WindowInsetsController;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
@@ -18,6 +17,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.doubleangels.nextdnsmanagement.adaptors.PermissionsAdapter;
 import com.doubleangels.nextdnsmanagement.sentry.SentryInitializer;
 import com.doubleangels.nextdnsmanagement.sentry.SentryManager;
+import com.doubleangels.nextdnsmanagement.utils.StatusBarHelper;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -154,19 +154,7 @@ public class PermissionActivity extends AppCompatActivity {
      * dark).
      */
     private void setupStatusBarForActivity() {
-        // Check if the Android version supports WindowInsetsController
-        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            WindowInsetsController insetsController = getWindow().getInsetsController();
-            if (insetsController != null) {
-                // Determine if the system is in light theme mode
-                boolean isLightTheme = (getResources().getConfiguration().uiMode
-                        & Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_NO;
-                // Set the appearance of the system bars based on the theme
-                insetsController.setSystemBarsAppearance(
-                        isLightTheme ? WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS : 0,
-                        WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS);
-            }
-        }
+        StatusBarHelper.apply(this);
     }
 
     /**

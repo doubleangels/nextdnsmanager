@@ -4,9 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
-import android.view.WindowInsetsController;
 import android.widget.ImageView;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -14,6 +12,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.doubleangels.nextdnsmanagement.sentry.SentryInitializer;
 import com.doubleangels.nextdnsmanagement.sentry.SentryManager;
 import com.doubleangels.nextdnsmanagement.utils.ExternalLinkHandler;
+import com.doubleangels.nextdnsmanagement.utils.StatusBarHelper;
 
 import java.util.Locale;
 
@@ -114,19 +113,7 @@ public class AuthorActivity extends AppCompatActivity {
      * versions.
      */
     private void setupStatusBarForActivity() {
-        // Check if the OS version supports the new insets controller
-        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            WindowInsetsController insetsController = getWindow().getInsetsController();
-            if (insetsController != null) {
-                // Determine if the current UI mode is light theme
-                boolean isLightTheme = (getResources().getConfiguration().uiMode
-                        & Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_NO;
-                // Set the appearance of system bars based on the theme
-                insetsController.setSystemBarsAppearance(
-                        isLightTheme ? WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS : 0,
-                        WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS);
-            }
-        }
+        StatusBarHelper.apply(this);
     }
 
     /**

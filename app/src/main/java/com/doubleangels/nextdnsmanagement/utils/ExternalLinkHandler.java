@@ -52,11 +52,11 @@ public final class ExternalLinkHandler {
         }
 
         Toast.makeText(context, "No browser found to open link.", Toast.LENGTH_LONG).show();
-        return loadInWebView(webView, uri);
+        return false;
     }
 
     private static boolean loadInWebView(WebView webView, Uri uri) {
-        if (webView == null) {
+        if (webView == null || !isNextDnsHost(uri)) {
             return false;
         }
         webView.loadUrl(uri.toString());

@@ -1,14 +1,15 @@
-# Keep all classes and methods in your package
--keep class com.doubleangels.nextdnsmanagement.** { *; }
+# Keep WebView JavaScript bridge methods.
+-keepclassmembers class * {
+    @android.webkit.JavascriptInterface <methods>;
+}
+
+-keep class com.doubleangels.nextdnsmanagement.webview.WebAppInterface { *; }
+
 -keepattributes *Annotation*
 -dontwarn com.doubleangels.nextdnsmanagement.**
 
 # General ProGuard rules
 -dontwarn javax.annotation.**
-
-# AndroidX libraries
--keep class androidx.** { *; }
--dontwarn androidx.**
 
 # AndroidX App Startup (InitializationProvider runs before Application.onCreate)
 -keep class androidx.startup.** { *; }
@@ -16,29 +17,17 @@
     <init>();
 }
 
-# Material Design components
--keep class com.google.android.material.** { *; }
--dontwarn com.google.android.material.**
-
 # Webkit
 -keep class androidx.webkit.** { *; }
 -dontwarn androidx.webkit.**
 
-# Appcompat and Preferences
--keep class androidx.appcompat.** { *; }
--keep class androidx.preference.** { *; }
--dontwarn androidx.appcompat.**
--dontwarn androidx.preference.**
+# OkHttp (VisualIndicator DNS checks)
+-dontwarn okhttp3.**
+-dontwarn okio.**
 
-# Retrofit (Gson Converter)
--keep class com.squareup.retrofit2.** { *; }
--dontwarn com.squareup.retrofit2.**
--keepattributes Signature
--keepattributes *Annotation*
+# Gson (VisualIndicator JSON parsing)
 -keep class com.google.gson.** { *; }
 -dontwarn com.google.gson.**
-
-# CircleImageView
 -keep class de.hdodenhof.circleimageview.** { *; }
 -dontwarn de.hdodenhof.circleimageview.**
 
@@ -50,11 +39,3 @@
 # LeakCanary (debug only, no need to obfuscate for debug builds)
 -dontwarn com.squareup.leakcanary.**
 -keep class com.squareup.leakcanary.** { *; }
-
-# General Gson rules
--keepclassmembers class * {
-    @com.google.gson.annotations.SerializedName <fields>;
-}
--keepclassmembers class * {
-    @com.google.gson.annotations.Expose <fields>;
-}

@@ -50,5 +50,14 @@ public final class WebViewInteractionScript {
             "       window.__ndmsInteractionObserver = new MutationObserver(setupInteractionGuards);" +
             "       window.__ndmsInteractionObserver.observe(document.body, {childList: true, subtree: true});" +
             "   }" +
+            "   window.__ndmsDisconnectInteractionObserver = function() {" +
+            "       if (window.__ndmsInteractionObserver) {" +
+            "           window.__ndmsInteractionObserver.disconnect();" +
+            "           window.__ndmsInteractionObserver = null;" +
+            "       }" +
+            "   };" +
             "})();";
+
+    public static final String DISCONNECT_SCRIPT =
+            "(function(){if(window.__ndmsDisconnectInteractionObserver)window.__ndmsDisconnectInteractionObserver();})();";
 }

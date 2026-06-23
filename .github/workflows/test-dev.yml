@@ -47,7 +47,10 @@ jobs:
         continue-on-error: false
 
   build-gms-flavor:
-    if: github.event_name == 'pull_request' && github.actor == 'dependabot[bot]'
+    if: |
+      (github.event_name == 'push' && github.actor != 'dependabot[bot]') ||
+      (github.event_name == 'pull_request' && github.actor == 'dependabot[bot]') ||
+      github.event_name == 'workflow_dispatch'
     needs: lint-gms-flavor
     runs-on: ubuntu-latest
     steps:
@@ -105,7 +108,10 @@ jobs:
         continue-on-error: false
 
   build-foss-flavor:
-    if: github.event_name == 'pull_request' && github.actor == 'dependabot[bot]'
+    if: |
+      (github.event_name == 'push' && github.actor != 'dependabot[bot]') ||
+      (github.event_name == 'pull_request' && github.actor == 'dependabot[bot]') ||
+      github.event_name == 'workflow_dispatch'
     needs: lint-foss-flavor
     runs-on: ubuntu-latest
     steps:

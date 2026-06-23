@@ -7,7 +7,6 @@ import android.content.pm.PermissionInfo;
 import android.content.res.Configuration;
 import android.os.Build;
 import android.os.Bundle;
-import android.view.WindowInsetsController;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
@@ -18,6 +17,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.doubleangels.nextdnsmanagement.adaptors.PermissionsAdapter;
 import com.doubleangels.nextdnsmanagement.sentry.SentryInitializer;
 import com.doubleangels.nextdnsmanagement.sentry.SentryManager;
+import com.doubleangels.nextdnsmanagement.utils.StatusBarHelper;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -118,62 +118,11 @@ public class PermissionActivity extends AppCompatActivity {
     }
 
     /**
-     * Called when the user responds to a permission request.
-     * <p>
-     * If the notification permission was requested, the permissions list is
-     * refreshed.
-     * </p>
-     *
-     * @param requestCode  The request code passed in requestPermissions().
-     * @param permissions  The requested permissions.
-     * @param grantResults The grant results for the corresponding permissions.
-     */
-    @Override
-    public void onRequestPermissionsResult(int requestCode,
-            @NonNull String[] permissions,
-            @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        // Check if the notification permission request was handled
-        if (requestCode == 100) {
-            refreshPermissionsList();
-        }
-    }
-
-    /**
      * Configures the status bar appearance based on the current UI mode (light or
      * dark).
      */
     private void setupStatusBarForActivity() {
-        // Check if the Android version supports WindowInsetsController
-        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            WindowInsetsController insetsController = getWindow().getInsetsController();
-            if (insetsController != null) {
-                // Determine if the device is using a light theme
-                boolean isLightTheme = (getResources().getConfiguration().uiMode
-                        & Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_NO;
-                // Set system bars appearance based on the theme
-                insetsController.setSystemBarsAppearance(
-                        isLightTheme ? WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS : 0,
-                        WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS);
-            }
-        }
-    }
-
-    /**
-     * Refreshes the permissions list displayed in the RecyclerView.
-     */
-    private void refreshPermissionsList() {
-        try {
-            RecyclerView recyclerView = findViewById(R.id.permissionRecyclerView);
-            if (recyclerView != null) {
-                // Retrieve updated permissions list and set a new adapter
-                List<PermissionInfo> permissions = getPermissionsList(sentryManager);
-                recyclerView.setAdapter(new PermissionsAdapter(permissions));
-            }
-        } catch (Exception e) {
-            // Capture any exceptions that occur during the refresh
-            sentryManager.captureException(e);
-        }
+        StatusBarHelper.apply(this);
     }
 
     /**

@@ -19,7 +19,9 @@ public class MessagingInitializer {
         SentryManager sentryManager = new SentryManager(context);
 
         try {
-            SharedPreferencesManager.init(context);
+            if (!SharedPreferencesManager.isInitialized()) {
+                SharedPreferencesManager.init(context);
+            }
         } catch (Exception e) {
             sentryManager.captureException(e);
             return;

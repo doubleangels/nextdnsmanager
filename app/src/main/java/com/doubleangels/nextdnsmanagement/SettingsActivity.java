@@ -51,22 +51,13 @@ public class SettingsActivity extends AppCompatActivity {
         // Initialize the SentryManager for error logging
         sentryManager = new SentryManager(this);
         try {
-            // Initialize shared preferences
-            SharedPreferencesManager.init(this);
+            if (!SharedPreferencesManager.isInitialized()) {
+                SharedPreferencesManager.init(this);
+            }
         } catch (Exception e) {
             if (sentryManager != null) {
                 sentryManager.captureException(e);
             }
-        }
-        try {
-            // Log the current settings for dark mode and Sentry enable flag
-            assert sentryManager != null;
-            sentryManager.captureMessage("SharedPreferences 'dark_mode' value: "
-                    + SharedPreferencesManager.getString("dark_mode", "match"));
-            sentryManager.captureMessage("SharedPreferences 'sentry_enable' value: "
-                    + SharedPreferencesManager.getBoolean("sentry_enable", false));
-        } catch (Exception e) {
-            sentryManager.captureException(e);
         }
         try {
             // Initialize Sentry if it is enabled
@@ -164,8 +155,9 @@ public class SettingsActivity extends AppCompatActivity {
                 sentryManager.captureException(e);
             }
             try {
-                // Initialize shared preferences for the fragment
-                SharedPreferencesManager.init(requireContext());
+                if (!SharedPreferencesManager.isInitialized()) {
+                    SharedPreferencesManager.init(requireContext());
+                }
             } catch (Exception e) {
                 sentryManager.captureException(e);
             }
@@ -182,8 +174,8 @@ public class SettingsActivity extends AppCompatActivity {
                 ListPreference darkModePreference = findPreference("dark_mode");
                 final BiometricLock biometricLock = new BiometricLock((AppCompatActivity) requireContext());
 
-                // Hide app lock preferences if biometric authentication is not available
-                if (!biometricLock.canAuthenticate()) {
+                // Hide app lock when storage is not encrypted or biometrics are unavailable
+                if (!SharedPreferencesManager.isUsingEncryptedStorage() || !biometricLock.canAuthenticate()) {
                     setPreferenceVisibility("applock", false);
                 }
                 // Set up change listeners for each preference

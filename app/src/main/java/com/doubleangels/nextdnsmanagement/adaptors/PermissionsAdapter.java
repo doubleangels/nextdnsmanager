@@ -76,9 +76,6 @@ public class PermissionsAdapter extends RecyclerView.Adapter<PermissionsAdapter.
         // Get the PermissionInfo at the current position
         PermissionInfo permissionInfo = permissions.get(position);
 
-        // Initialize SentryManager using the current context
-        SentryManager sentryManager = new SentryManager(holder.itemView.getContext());
-
         // Determine if the permission has been granted (runtime permissions only)
         boolean isGranted = true;
         boolean isRuntimePermission = permissionInfo.name.equals(android.Manifest.permission.POST_NOTIFICATIONS)
@@ -88,7 +85,7 @@ public class PermissionsAdapter extends RecyclerView.Adapter<PermissionsAdapter.
                     isGranted = holder.itemView.getContext()
                             .checkSelfPermission(permissionInfo.name) == PackageManager.PERMISSION_GRANTED;
                 } catch (Exception e) {
-                    sentryManager.captureException(e);
+                    SentryManager.captureStaticException(e);
                     isGranted = false;
                 }
         }
@@ -100,7 +97,7 @@ public class PermissionsAdapter extends RecyclerView.Adapter<PermissionsAdapter.
             CharSequence label = permissionInfo.loadLabel(holder.itemView.getContext().getPackageManager());
             permissionLabel = label.toString().toUpperCase();
         } catch (Exception e) {
-            sentryManager.captureException(e);
+            SentryManager.captureStaticException(e);
             permissionLabel = permissionInfo.name.toUpperCase();
         }
         holder.permissionName.setText(permissionLabel);
@@ -123,7 +120,7 @@ public class PermissionsAdapter extends RecyclerView.Adapter<PermissionsAdapter.
                 }
             }
         } catch (Exception e) {
-            sentryManager.captureException(e);
+            SentryManager.captureStaticException(e);
             displayText = isRuntimePermission
                     ? (isGranted ? "(GRANTED)" : "(NOT GRANTED)")
                     : "(DECLARED)";

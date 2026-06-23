@@ -2,6 +2,8 @@ package com.doubleangels.nextdnsmanagement.protocol;
 
 import android.content.Context;
 import android.net.ConnectivityManager;
+import android.os.Handler;
+import android.os.Looper;
 import android.net.LinkProperties;
 import android.net.Network;
 import android.net.NetworkRequest;
@@ -42,6 +44,9 @@ public class VisualIndicator {
     private ConnectivityManager connectivityManager;
     private ConnectivityManager.NetworkCallback networkCallback;
     private volatile Call activeDnsCheckCall;
+    private final Handler dnsCheckHandler = new Handler(Looper.getMainLooper());
+    private Runnable pendingDnsCheck;
+    private static final long DNS_CHECK_DEBOUNCE_MS = 300L;
 
     public VisualIndicator(Context context) {
         this.sentryManager = new SentryManager(context);
@@ -108,6 +113,10 @@ public class VisualIndicator {
         @Override
         public void onDestroy(@NonNull LifecycleOwner owner) {
             try {
+                if (pendingDnsCheck != null) {
+                    dnsCheckHandler.removeCallbacks(pendingDnsCheck);
+                    pendingDnsCheck = null;
+                }
                 if (activeDnsCheckCall != null) {
                     activeDnsCheckCall.cancel();
                     activeDnsCheckCall = null;
@@ -157,6 +166,19 @@ public class VisualIndicator {
     }
 
     public void checkInheritedDNS(Context context, AppCompatActivity activity) {
+        if (activity.isFinishing() || activity.isDestroyed()) {
+            return;
+        }
+
+        if (pendingDnsCheck != null) {
+            dnsCheckHandler.removeCallbacks(pendingDnsCheck);
+        }
+
+        pendingDnsCheck = () -> performInheritedDnsCheck(context, activity);
+        dnsCheckHandler.postDelayed(pendingDnsCheck, DNS_CHECK_DEBOUNCE_MS);
+    }
+
+    private void performInheritedDnsCheck(Context context, AppCompatActivity activity) {
         if (activity.isFinishing() || activity.isDestroyed()) {
             return;
         }
