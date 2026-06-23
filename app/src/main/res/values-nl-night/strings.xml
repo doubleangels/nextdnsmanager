@@ -56,6 +56,8 @@
     <string name="privacy_policy">"Privacybeleid van NextDNS Manager"</string>
     <string name="private_dns">"Privé DNS"</string>
     <string name="refresh_title">"Vernieuwen"</string>
+    <string name="redact">Redact</string>
+    <string name="redact_summary">"Bekijk Redact - verwijder verborgen EXIF-metadata uit foto's en video's voordat je ze deelt."</string>
     <string name="sentry_enable_instructions">"Sentry Inschakelen"</string>
     <string name="sentry_info">"Meer Informatie"</string>
     <string name="sentry_info_instructions">"Tik voor meer informatie over Sentry."</string>

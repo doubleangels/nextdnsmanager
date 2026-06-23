@@ -56,6 +56,8 @@
     <string name="privacy_policy">"NextDNS 管理器隐私政策"</string>
     <string name="private_dns">"私有DNS"</string>
     <string name="refresh_title">"刷新"</string>
+    <string name="redact">Redact</string>
+    <string name="redact_summary">了解 Redact - 在分享前移除照片和视频中隐藏的 EXIF 元数据。</string>
     <string name="sentry_enable_instructions">"启用 Sentry"</string>
     <string name="sentry_info">"了解更多"</string>
     <string name="sentry_info_instructions">"点击了解更多关于Sentry的信息。"</string>

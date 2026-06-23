@@ -56,6 +56,8 @@
     <string name="privacy_policy">"Informativa sulla privacy di NextDNS Manager"</string>
     <string name="private_dns">"DNS Privato"</string>
     <string name="refresh_title">"Aggiorna"</string>
+    <string name="redact">Redact</string>
+    <string name="redact_summary">Scopri Redact - rimuovi i metadati EXIF nascosti da foto e video prima di condividerli.</string>
     <string name="sentry_enable_instructions">"Abilita Sentry"</string>
     <string name="sentry_info">"Scopri Di Più"</string>
     <string name="sentry_info_instructions">"Tocca per saperne di più su Sentry."</string>

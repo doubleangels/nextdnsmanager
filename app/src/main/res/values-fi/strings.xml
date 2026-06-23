@@ -56,6 +56,8 @@
     <string name="privacy_policy">"NextDNS Managerin tietosuojakäytäntö"</string>
     <string name="private_dns">"Yksityinen DNS"</string>
     <string name="refresh_title">"Päivitä"</string>
+    <string name="redact">Redact</string>
+    <string name="redact_summary">Tutustu Redactiin - poista piilotetut EXIF-metatiedot kuvista ja videoista ennen jakamista.</string>
     <string name="sentry_enable_instructions">"Ota Käyttöön Sentry"</string>
     <string name="sentry_info">"Lue Lisää"</string>
     <string name="sentry_info_instructions">"Napauta saadaksesi lisätietoja Sentrystä."</string>

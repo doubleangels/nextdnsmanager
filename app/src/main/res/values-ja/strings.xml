@@ -56,6 +56,8 @@
     <string name="privacy_policy">"NextDNSマネージャープライバシーポリシー"</string>
     <string name="private_dns">"プライベート DNS"</string>
     <string name="refresh_title">"リフレッシュ"</string>
+    <string name="redact">Redact</string>
+    <string name="redact_summary">Redactをチェック - 共有前に写真や動画から非表示のEXIFメタデータを削除できます。</string>
     <string name="sentry_enable_instructions">"Sentry を有効にする"</string>
     <string name="sentry_info">"もっと詳しく"</string>
     <string name="sentry_info_instructions">"Sentry について詳しく知るには、タップしてください。"</string>

@@ -70,6 +70,10 @@
             app:key="donation_button"
             app:summary="@string/donation_name"
             app:title="@string/donation" />
+        <Preference
+            app:key="redact_button"
+            app:summary="@string/redact_summary"
+            app:title="@string/redact" />
     </PreferenceCategory>
     <PreferenceCategory
         app:title="@string/translate"

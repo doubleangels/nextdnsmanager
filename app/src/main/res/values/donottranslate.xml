@@ -14,6 +14,7 @@
     <string name="nextdns_user_agreement_url">https://help.nextdns.io/terms</string>
     <string name="ping_url">https://ping.nextdns.io</string>
     <string name="privacy_policy_url">https://doubleangels.github.io/privacypolicy/nextdns.html</string>
+    <string name="redact_url">https://play.google.com/store/apps/details?id=com.doubleangels.redact</string>
     <string name="sentry_info_url">https://github.com/getsentry/sentry</string>
     <string name="tally_feedback_url">https://tally.so/r/3Nbp4b</string>
     <string name="tally_incorrect_translation_url">https://tally.so/r/3NRPvj</string>

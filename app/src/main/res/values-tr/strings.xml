@@ -56,6 +56,8 @@
     <string name="privacy_policy">"NextDNS Yöneticisi Gizlilik Politikası"</string>
     <string name="private_dns">"Özel DNS"</string>
     <string name="refresh_title">"Yenile"</string>
+    <string name="redact">Redact</string>
+    <string name="redact_summary">"Redact'e göz atın - paylaşmadan önce fotoğraf ve videolardaki gizli EXIF meta verilerini kaldırın."</string>
     <string name="sentry_enable_instructions">"Sentry'yi Etkinleştir"</string>
     <string name="sentry_info">"Daha Fazla Öğren"</string>
     <string name="sentry_info_instructions">"Sentry hakkında daha fazla bilgi edinmek için dokunun."</string>

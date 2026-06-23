@@ -217,6 +217,8 @@ public class MainActivity extends AppCompatActivity {
         } catch (Exception e) {
             sentryManager.captureException(e);
         }
+
+        maybeShowBiometricPrompt();
     }
 
     private void persistLastAuthenticatedTime() {
@@ -290,7 +292,9 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        maybeShowBiometricPrompt();
+        if (SharedPreferencesManager.isInitialized()) {
+            maybeShowBiometricPrompt();
+        }
     }
 
     /**
@@ -299,6 +303,9 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        if (!SharedPreferencesManager.isInitialized()) {
+            return;
+        }
         // Resume WebView if it exists; otherwise, initialize it
         if (webView != null) {
             webView.onResume();

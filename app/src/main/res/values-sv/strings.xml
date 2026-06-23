@@ -56,6 +56,8 @@
     <string name="privacy_policy">"Sekretesspolicy för NextDNS Manager"</string>
     <string name="private_dns">"Privat DNS"</string>
     <string name="refresh_title">"Uppdatera"</string>
+    <string name="redact">Redact</string>
+    <string name="redact_summary">Kolla in Redact - ta bort dold EXIF-metadata från foton och videor innan du delar.</string>
     <string name="sentry_enable_instructions">"Aktivera Sentry"</string>
     <string name="sentry_info">"Läs Mer"</string>
     <string name="sentry_info_instructions">"Tryck för att läsa mer om Sentry."</string>

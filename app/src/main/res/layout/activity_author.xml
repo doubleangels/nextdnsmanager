@@ -13,6 +13,7 @@
         android:layout_width="125dp"
         android:layout_height="125dp"
         android:layout_marginTop="30dp"
+        android:contentDescription="@string/generic_content_description"
         android:src="@drawable/swirl"
         app:civ_border_color="?attr/colorTertiary"
         app:civ_border_width="2dp"

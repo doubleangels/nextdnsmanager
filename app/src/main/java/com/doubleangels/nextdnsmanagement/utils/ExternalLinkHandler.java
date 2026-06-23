@@ -1,9 +1,9 @@
 package com.doubleangels.nextdnsmanagement.utils;
 
+import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.webkit.WebView;
 import android.widget.Toast;
@@ -38,23 +38,30 @@ public final class ExternalLinkHandler {
      * @return {@code true} when the URL was handled externally or loaded as a fallback.
      */
     public static boolean openExternalLink(Context context, WebView webView, Uri uri) {
-        Intent intent = new Intent(Intent.ACTION_VIEW, uri);
-        PackageManager packageManager = context.getPackageManager();
-        if (intent.resolveActivity(packageManager) != null) {
-            try {
-                context.startActivity(intent);
-                return true;
-            } catch (ActivityNotFoundException ignored) {
-                // resolveActivity can succeed while startActivity still fails on some devices.
-            } catch (SecurityException e) {
-                Toast.makeText(context, R.string.link_open_security_error, Toast.LENGTH_LONG)
-                        .show();
-                return loadInWebView(webView, uri);
-            }
+        if (uri == null) {
+            return false;
         }
 
-        Toast.makeText(context, R.string.no_browser_found, Toast.LENGTH_LONG).show();
-        return false;
+        Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+        intent.addCategory(Intent.CATEGORY_BROWSABLE);
+        if (!(context instanceof Activity)) {
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        }
+
+        try {
+            context.startActivity(intent);
+            return true;
+        } catch (ActivityNotFoundException e) {
+            if (loadInWebView(webView, uri)) {
+                return true;
+            }
+            Toast.makeText(context, R.string.no_browser_found, Toast.LENGTH_LONG).show();
+            return false;
+        } catch (SecurityException e) {
+            Toast.makeText(context, R.string.link_open_security_error, Toast.LENGTH_LONG)
+                    .show();
+            return loadInWebView(webView, uri);
+        }
     }
 
     private static boolean loadInWebView(WebView webView, Uri uri) {

@@ -197,6 +197,7 @@ public class SettingsActivity extends AppCompatActivity {
                 setupButton("github_button", R.string.github_url);
                 setupButton("github_issue_button", R.string.github_issues_url);
                 setupButton("donation_button", R.string.donation_url);
+                setupButton("redact_button", R.string.redact_url);
                 setupButton("tally_issues_button", R.string.tally_issues_url);
                 setupButton("translate_button", R.string.tally_incorrect_translation_url);
                 setupButton("privacy_policy_button", R.string.privacy_policy_url);
@@ -308,9 +309,11 @@ public class SettingsActivity extends AppCompatActivity {
                     try {
                         // Launch the appropriate activity based on the button key
                         if ("author_button".equals(buttonKey)) {
-                            startActivity(new Intent(getContext(), AuthorActivity.class));
+                            requireActivity().startActivity(
+                                    new Intent(requireActivity(), AuthorActivity.class));
                         } else if ("permission_button".equals(buttonKey)) {
-                            startActivity(new Intent(getContext(), PermissionActivity.class));
+                            requireActivity().startActivity(
+                                    new Intent(requireActivity(), PermissionActivity.class));
                         }
                     } catch (SecurityException e) {
                         Toast.makeText(getContext(), R.string.activity_open_security_error,
