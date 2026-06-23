@@ -36,7 +36,7 @@ jobs:
       - name: Set up Android SDK
         uses: android-actions/setup-android@v4
         with:
-          packages: "platform-tools platforms;android-36 build-tools;36.0.0"
+          packages: "platform-tools platforms;android-37 build-tools;37.0.0"
           accept-android-sdk-licenses: true
 
       - name: Grant execute permission for gradlew
@@ -67,7 +67,7 @@ jobs:
       - name: Set up Android SDK
         uses: android-actions/setup-android@v4
         with:
-          packages: "platform-tools platforms;android-36 build-tools;36.0.0"
+          packages: "platform-tools platforms;android-37 build-tools;37.0.0"
           accept-android-sdk-licenses: true
 
       - name: Grant execute permission for gradlew
@@ -97,7 +97,7 @@ jobs:
       - name: Set up Android SDK
         uses: android-actions/setup-android@v4
         with:
-          packages: "platform-tools platforms;android-36 build-tools;36.0.0"
+          packages: "platform-tools platforms;android-37 build-tools;37.0.0"
           accept-android-sdk-licenses: true
 
       - name: Grant execute permission for gradlew
@@ -128,7 +128,7 @@ jobs:
       - name: Set up Android SDK
         uses: android-actions/setup-android@v4
         with:
-          packages: "platform-tools platforms;android-36 build-tools;36.0.0"
+          packages: "platform-tools platforms;android-37 build-tools;37.0.0"
           accept-android-sdk-licenses: true
 
       - name: Grant execute permission for gradlew

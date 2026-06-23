@@ -2,7 +2,6 @@
 <resources>
     <string name="author_name">DoubleAngels</string>
     <string name="author_real_name">Matt VerLee</string>
-    <string name="author_url">https://doubleangels.com</string>
     <string name="donation_url">https://donate.stripe.com/4gw8yhbvH0mg6SQ7ss</string>
     <string name="github_profile_url">https://github.com/doubleangels</string>
     <string name="github_url">https://github.com/doubleangels/nextdnsmanager</string>

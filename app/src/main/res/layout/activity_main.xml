@@ -3,37 +3,53 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fitsSystemWindows="true"
     tools:context=".MainActivity">
+
+    <View
+        android:id="@+id/statusBarScrim"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="@color/toolbar_background"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
-        android:minHeight="?attr/actionBarSize"
         android:theme="@style/ToolbarTheme"
-        app:layout_constraintTop_toTopOf="parent"
+        app:contentInsetStart="0dp"
+        app:contentInsetStartWithNavigation="0dp"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
+        app:layout_constraintTop_toBottomOf="@+id/statusBarScrim">
 
-        <ImageView
-            android:layout_width="55dp"
-            android:layout_height="55dp"
-            android:paddingHorizontal="10dp"
-            android:contentDescription="@string/generic_content_description"
-            app:srcCompat="@drawable/nextdns_logo" />
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_gravity="center_vertical"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
 
-        <ImageView
-            android:id="@+id/connectionStatus"
-            android:layout_width="25dp"
-            android:layout_height="25dp"
-            android:contentDescription="@string/generic_content_description"
-            app:srcCompat="@drawable/failure"
-            tools:ignore="ImageContrastCheck"
-            tools:layout_editor_absoluteX="66dp"
-            tools:layout_editor_absoluteY="17dp"/>
+            <ImageView
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:contentDescription="@string/generic_content_description"
+                android:paddingHorizontal="8dp"
+                app:srcCompat="@drawable/nextdns_logo" />
+
+            <ImageView
+                android:id="@+id/connectionStatus"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:contentDescription="@string/generic_content_description"
+                app:srcCompat="@drawable/failure"
+                tools:ignore="ImageContrastCheck" />
+        </LinearLayout>
     </androidx.appcompat.widget.Toolbar>
 
     <com.doubleangels.nextdnsmanagement.CustomSwipeRefreshLayout
@@ -66,7 +82,6 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/toolbar" />
 
-    <!-- Blur overlay for biometric authentication -->
     <View
         android:id="@+id/blurOverlay"
         android:layout_width="0dp"

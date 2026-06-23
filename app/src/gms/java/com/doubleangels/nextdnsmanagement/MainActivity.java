@@ -34,10 +34,10 @@ import android.webkit.WebViewClient;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.ActionBar;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.appcompat.widget.Toolbar;
 import androidx.biometric.BiometricPrompt;
@@ -54,7 +54,7 @@ import com.doubleangels.nextdnsmanagement.protocol.VisualIndicator;
 import com.doubleangels.nextdnsmanagement.sentry.SentryInitializer;
 import com.doubleangels.nextdnsmanagement.sentry.SentryManager;
 import com.doubleangels.nextdnsmanagement.utils.ExternalLinkHandler;
-import com.doubleangels.nextdnsmanagement.utils.StatusBarHelper;
+import com.doubleangels.nextdnsmanagement.utils.InsetsHelper;
 import com.doubleangels.nextdnsmanagement.sharedpreferences.SharedPreferencesManager;
 import com.doubleangels.nextdnsmanagement.webview.WebAppInterface;
 import com.doubleangels.nextdnsmanagement.webview.WebViewInteractionScript;
@@ -67,7 +67,7 @@ import java.util.Locale;
  * such as dark mode, locale, biometric re-authentication, and notification
  * permission checks.
  */
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends BaseActivity {
 
     // Main WebView for displaying web content
     private WebView webView;
@@ -147,11 +147,6 @@ public class MainActivity extends AppCompatActivity {
 
         sentryManager = new SentryManager(this);
 
-        // Log hardware acceleration status for debugging (after sentryManager is
-        // initialized)
-        boolean isHardwareAccelerated = getWindow().getDecorView().isHardwareAccelerated();
-        sentryManager.captureMessage("Hardware acceleration enabled: " + isHardwareAccelerated);
-
         AppStartupHelper.initializePreferencesAsync(this, splashScreen, this::finishStartup);
     }
 
@@ -176,23 +171,21 @@ public class MainActivity extends AppCompatActivity {
 
         try {
             if (sentryManager.isEnabled()) {
-                sentryManager.captureMessage("Sentry is enabled for NextDNS Manager.");
                 SentryInitializer.initialize(this);
             }
         } catch (Exception e) {
             sentryManager.captureException(e);
         }
 
-        // Setup UI components and configurations
         try {
-            setupStatusBarForActivity();
+            setupInsetsForActivity();
             setupToolbarForActivity();
+            setupPredictiveBackForActivity();
         } catch (Exception e) {
             sentryManager.captureException(e);
         }
         try {
-            String appLocale = setupLanguageForActivity();
-            sentryManager.captureMessage("Using locale: " + appLocale);
+            setupLanguageForActivity();
         } catch (Exception e) {
             sentryManager.captureException(e);
         }
@@ -211,14 +204,43 @@ public class MainActivity extends AppCompatActivity {
         } catch (Exception e) {
             sentryManager.captureException(e);
         }
-        try {
-            // Setup the WebView with the main URL
-            setupWebViewForActivity(getString(R.string.main_url));
-        } catch (Exception e) {
-            sentryManager.captureException(e);
+        SwipeRefreshLayout refreshLayout = findViewById(R.id.swipeRefreshLayout);
+        if (refreshLayout != null) {
+            refreshLayout.post(() -> {
+                if (!isFinishing()) {
+                    try {
+                        setupWebViewForActivity(getString(R.string.main_url));
+                    } catch (Exception e) {
+                        sentryManager.captureException(e);
+                    }
+                }
+            });
         }
 
         maybeShowBiometricPrompt();
+    }
+
+    private void setupPredictiveBackForActivity() {
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                if (webView != null && webView.canGoBack()) {
+                    webView.goBack();
+                } else {
+                    setEnabled(false);
+                    getOnBackPressedDispatcher().onBackPressed();
+                }
+            }
+        });
+    }
+
+    private void setupInsetsForActivity() {
+        View root = findViewById(R.id.root);
+        InsetsHelper.installOnRoot(root);
+        View statusBarScrim = findViewById(R.id.statusBarScrim);
+        InsetsHelper.applyStatusBarScrimHeight(statusBarScrim);
+        SwipeRefreshLayout refreshLayout = findViewById(R.id.swipeRefreshLayout);
+        InsetsHelper.applyBottomSystemBarPadding(refreshLayout);
     }
 
     private void persistLastAuthenticatedTime() {
@@ -280,8 +302,12 @@ public class MainActivity extends AppCompatActivity {
         super.onPause();
         if (webView != null) {
             webView.onPause();
-            // Pause JavaScript execution and timers to save battery
             webView.pauseTimers();
+        }
+        try {
+            CookieManager.getInstance().flush();
+        } catch (Exception e) {
+            SentryManager.captureStaticException(e);
         }
     }
 
@@ -345,15 +371,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * Configures the status bar for the activity.
-     * For newer SDK versions, sets the background color using an
-     * OnApplyWindowInsetsListener.
-     */
-    private void setupStatusBarForActivity() {
-        StatusBarHelper.apply(this);
-    }
-
-    /**
      * Sets up the toolbar for the activity.
      * Configures the action bar and assigns a click listener to the connection
      * status icon.
@@ -403,23 +420,19 @@ public class MainActivity extends AppCompatActivity {
             case "match":
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
                 updateDarkModeState();
-                sentryManager.captureMessage("Dark mode set to follow system.");
                 break;
             case "on":
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
                 darkModeEnabled = true;
-                sentryManager.captureMessage("Dark mode set to on.");
                 break;
             case "disabled":
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
                 darkModeEnabled = false;
-                sentryManager.captureMessage("Dark mode is disabled due to SDK version.");
                 break;
             case "off":
             default:
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
                 darkModeEnabled = false;
-                sentryManager.captureMessage("Dark mode set to off.");
                 break;
         }
     }
@@ -507,7 +520,6 @@ public class MainActivity extends AppCompatActivity {
                         }
                         CookieManager.getInstance().setAcceptCookie(true);
                         CookieManager.getInstance().acceptCookie();
-                        CookieManager.getInstance().flush();
                         view.evaluateJavascript(WebViewInteractionScript.PAGE_FINISHED_SCRIPT, null);
                     } catch (Exception e) {
                         SentryManager.captureStaticException(e);
@@ -783,44 +795,31 @@ public class MainActivity extends AppCompatActivity {
     @SuppressLint("NonConstantResourceId")
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Determine action based on selected menu item
-        switch (item.getItemId()) {
-            case R.id.back:
-                // Navigate back in the WebView history
-                if (webView == null) {
-                    setupWebViewForActivity(getString(R.string.main_url));
-                } else {
-                    webView.goBack();
-                }
-                break;
-            case R.id.refreshNextDNS:
-                // Reload the WebView
-                if (webView == null) {
-                    setupWebViewForActivity(getString(R.string.main_url));
-                } else {
-                    webView.reload();
-                }
-                break;
-            case R.id.pingNextDNS:
-                // Launch the PingActivity
-                startActivity(new Intent(this, PingActivity.class));
-                break;
-            case R.id.returnHome:
-                // Load the main URL in the WebView
-                if (webView == null) {
-                    setupWebViewForActivity(getString(R.string.main_url));
-                } else {
-                    webView.loadUrl(getString(R.string.main_url));
-                }
-                break;
-            case R.id.privateDNS:
-                // Open wireless settings
-                startActivity(new Intent(Settings.ACTION_WIRELESS_SETTINGS));
-                break;
-            case R.id.settings:
-                // Launch the SettingsActivity
-                startActivity(new Intent(this, SettingsActivity.class));
-                break;
+        int itemId = item.getItemId();
+        if (itemId == R.id.back) {
+            if (webView == null) {
+                setupWebViewForActivity(getString(R.string.main_url));
+            } else {
+                webView.goBack();
+            }
+        } else if (itemId == R.id.refreshNextDNS) {
+            if (webView == null) {
+                setupWebViewForActivity(getString(R.string.main_url));
+            } else {
+                webView.reload();
+            }
+        } else if (itemId == R.id.pingNextDNS) {
+            startActivity(new Intent(this, PingActivity.class));
+        } else if (itemId == R.id.returnHome) {
+            if (webView == null) {
+                setupWebViewForActivity(getString(R.string.main_url));
+            } else {
+                webView.loadUrl(getString(R.string.main_url));
+            }
+        } else if (itemId == R.id.privateDNS) {
+            startActivity(new Intent(Settings.ACTION_WIRELESS_SETTINGS));
+        } else if (itemId == R.id.settings) {
+            startActivity(new Intent(this, SettingsActivity.class));
         }
         return super.onOptionsItemSelected(item);
     }

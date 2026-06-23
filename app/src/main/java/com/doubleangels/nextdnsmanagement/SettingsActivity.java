@@ -8,6 +8,7 @@ import android.content.res.Configuration;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -22,6 +23,7 @@ import com.doubleangels.nextdnsmanagement.sentry.SentryInitializer;
 import com.doubleangels.nextdnsmanagement.sentry.SentryManager;
 import com.doubleangels.nextdnsmanagement.sharedpreferences.SharedPreferencesManager;
 import com.doubleangels.nextdnsmanagement.utils.ExternalLinkHandler;
+import com.doubleangels.nextdnsmanagement.utils.InsetsHelper;
 
 import java.util.Locale;
 
@@ -30,7 +32,7 @@ import java.util.Locale;
  * error logging (Sentry),
  * configures dark mode settings, and loads the SettingsFragment.
  */
-public class SettingsActivity extends AppCompatActivity {
+public class SettingsActivity extends BaseActivity {
 
     // Sentry manager instance for capturing errors
     public SentryManager sentryManager;
@@ -45,22 +47,22 @@ public class SettingsActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // Set the layout for this activity
         setContentView(R.layout.activity_settings);
+        setupInsets();
 
-        // Initialize the SentryManager for error logging
         sentryManager = new SentryManager(this);
-        try {
-            if (!SharedPreferencesManager.isInitialized()) {
-                SharedPreferencesManager.init(this);
-            }
-        } catch (Exception e) {
-            if (sentryManager != null) {
-                sentryManager.captureException(e);
-            }
+        if (SharedPreferencesManager.isInitialized()) {
+            finishSettingsStartup();
+        } else {
+            AppStartupHelper.initializePreferencesAsync(this, null, this::finishSettingsStartup);
+        }
+    }
+
+    private void finishSettingsStartup() {
+        if (isFinishing()) {
+            return;
         }
         try {
-            // Initialize Sentry if it is enabled
             if (sentryManager.isEnabled()) {
                 SentryInitializer.initialize(this);
             }
@@ -68,25 +70,24 @@ public class SettingsActivity extends AppCompatActivity {
             sentryManager.captureException(e);
         }
         try {
-            // Set up dark mode configuration based on saved preferences
             setupDarkModeForActivity(SharedPreferencesManager.getString("dark_mode", "match"));
         } catch (Exception e) {
             sentryManager.captureException(e);
         }
         try {
-            // Initialize the settings views (fragment)
             initializeViews();
         } catch (Exception e) {
             sentryManager.captureException(e);
         }
     }
 
-    /**
-     * Attaches a new base context with locale settings based on device
-     * configuration.
-     *
-     * @param newBase The new base context.
-     */
+    private void setupInsets() {
+        View root = findViewById(R.id.root);
+        InsetsHelper.installOnRoot(root);
+        View settingsContainer = findViewById(R.id.settings);
+        InsetsHelper.applySystemBarPadding(settingsContainer);
+    }
+
     @Override
     protected void attachBaseContext(Context newBase) {
         // Retrieve the current configuration
@@ -154,12 +155,8 @@ public class SettingsActivity extends AppCompatActivity {
             } catch (Exception e) {
                 sentryManager.captureException(e);
             }
-            try {
-                if (!SharedPreferencesManager.isInitialized()) {
-                    SharedPreferencesManager.init(requireContext());
-                }
-            } catch (Exception e) {
-                sentryManager.captureException(e);
+            if (!SharedPreferencesManager.isInitialized()) {
+                return;
             }
             try {
                 // Set the initial visibility of Sentry-related preferences

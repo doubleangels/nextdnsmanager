@@ -4,6 +4,8 @@ import android.content.Context;
 
 import com.doubleangels.nextdnsmanagement.BuildConfig;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import io.sentry.Hint;
 import io.sentry.SentryEvent;
 import io.sentry.TypeCheckHint;
@@ -19,6 +21,8 @@ import okhttp3.Request;
  */
 public class SentryInitializer {
 
+    private static final AtomicBoolean INITIALIZED = new AtomicBoolean(false);
+
     /**
      * Initializes Sentry on a separate thread, providing DSN (Data Source Name),
      * release version,
@@ -30,6 +34,9 @@ public class SentryInitializer {
      *                initialization.
      */
     public static void initialize(Context context) {
+        if (!INITIALIZED.compareAndSet(false, true)) {
+            return;
+        }
         new Thread(() -> SentryAndroid.init(context, options -> {
             // The DSN (Data Source Name) for your Sentry project:
             // This tells Sentry where to send the error data

@@ -23,8 +23,7 @@ import java.util.List;
  */
 public class PermissionsAdapter extends RecyclerView.Adapter<PermissionsAdapter.PermissionViewHolder> {
 
-    // The list of permission information to be displayed
-    private final List<PermissionInfo> permissions;
+    private List<PermissionInfo> permissions;
 
     /**
      * Constructor for the PermissionsAdapter.
@@ -38,6 +37,14 @@ public class PermissionsAdapter extends RecyclerView.Adapter<PermissionsAdapter.
             throw new IllegalArgumentException("Permissions list cannot be null");
         }
         this.permissions = permissions;
+    }
+
+    public void updatePermissions(List<PermissionInfo> updatedPermissions) {
+        if (updatedPermissions == null) {
+            throw new IllegalArgumentException("Permissions list cannot be null");
+        }
+        this.permissions = updatedPermissions;
+        notifyDataSetChanged();
     }
 
     /**

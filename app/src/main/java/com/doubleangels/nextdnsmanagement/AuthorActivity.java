@@ -5,14 +5,13 @@ import android.content.Intent;
 import android.content.res.Configuration;
 import android.net.Uri;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.ImageView;
 import android.widget.Toast;
 
-import androidx.appcompat.app.AppCompatActivity;
-
 import com.doubleangels.nextdnsmanagement.sentry.SentryManager;
 import com.doubleangels.nextdnsmanagement.utils.ExternalLinkHandler;
-import com.doubleangels.nextdnsmanagement.utils.StatusBarHelper;
+import com.doubleangels.nextdnsmanagement.utils.InsetsHelper;
 
 import java.util.Locale;
 
@@ -20,18 +19,13 @@ import java.util.Locale;
  * Activity displaying information about the author, including links to GitHub
  * and email.
  */
-public class AuthorActivity extends AppCompatActivity {
+public class AuthorActivity extends BaseActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_author);
-
-        try {
-            setupStatusBarForActivity();
-        } catch (Exception e) {
-            SentryManager.captureStaticException(e);
-        }
+        setupInsets();
 
         try {
             setupPersonalLinks();
@@ -50,8 +44,10 @@ public class AuthorActivity extends AppCompatActivity {
         super.attachBaseContext(localizedContext);
     }
 
-    private void setupStatusBarForActivity() {
-        StatusBarHelper.apply(this);
+    private void setupInsets() {
+        View root = findViewById(R.id.root);
+        InsetsHelper.installOnRoot(root);
+        InsetsHelper.applySystemBarPadding(root);
     }
 
     private void setupPersonalLinks() {

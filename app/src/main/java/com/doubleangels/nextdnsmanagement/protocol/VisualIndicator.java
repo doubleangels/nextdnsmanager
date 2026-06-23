@@ -17,17 +17,16 @@ import androidx.lifecycle.DefaultLifecycleObserver;
 import androidx.lifecycle.LifecycleOwner;
 
 import com.doubleangels.nextdnsmanagement.R;
+import com.doubleangels.nextdnsmanagement.network.HttpClients;
 import com.doubleangels.nextdnsmanagement.sentry.SentryManager;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 import java.io.IOException;
-import java.util.Collections;
 
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.OkHttpClient;
-import okhttp3.Protocol;
 import okhttp3.Request;
 import okhttp3.Response;
 
@@ -50,16 +49,7 @@ public class VisualIndicator {
 
     public VisualIndicator(Context context) {
         this.sentryManager = new SentryManager(context);
-        this.httpClient = new OkHttpClient.Builder()
-                .protocols(Collections.singletonList(Protocol.HTTP_1_1))
-                .addInterceptor(chain -> {
-                    try {
-                        return chain.proceed(chain.request());
-                    } catch (IllegalArgumentException e) {
-                        throw new IOException("Proxy setup failed due to IllegalArgumentException", e);
-                    }
-                })
-                .build();
+        this.httpClient = HttpClients.getDnsCheckClient();
     }
 
     public void initialize(Context context, LifecycleOwner lifecycleOwner, AppCompatActivity activity) {

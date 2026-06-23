@@ -25,7 +25,9 @@ public final class AppStartupHelper {
             SplashScreen splashScreen,
             StartupCallback callback) {
         final AtomicBoolean preferencesReady = new AtomicBoolean(false);
-        splashScreen.setKeepOnScreenCondition(() -> !preferencesReady.get());
+        if (splashScreen != null) {
+            splashScreen.setKeepOnScreenCondition(() -> !preferencesReady.get());
+        }
 
         new Thread(() -> {
             try {

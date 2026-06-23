@@ -6,18 +6,18 @@ import android.content.Intent;
 import android.content.res.Configuration;
 import android.net.Uri;
 import android.os.Bundle;
+import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
-import androidx.appcompat.app.AppCompatActivity;
-
 import com.doubleangels.nextdnsmanagement.sentry.SentryInitializer;
 import com.doubleangels.nextdnsmanagement.sentry.SentryManager;
 import com.doubleangels.nextdnsmanagement.utils.ExternalLinkHandler;
-import com.doubleangels.nextdnsmanagement.utils.StatusBarHelper;
+import com.doubleangels.nextdnsmanagement.utils.InsetsHelper;
+import com.doubleangels.nextdnsmanagement.webview.WebViewInteractionScript;
 
 import java.util.Locale;
 
@@ -25,16 +25,18 @@ import java.util.Locale;
  * Activity that handles ping functionality by loading two web pages in separate
  * WebViews.
  */
-public class PingActivity extends AppCompatActivity {
+public class PingActivity extends BaseActivity {
 
     public SentryManager sentryManager;
     public WebView webView;
     public WebView webView2;
+    private boolean webView2Initialized;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_ping);
+        setupInsets();
 
         getWindow().setFlags(
                 android.view.WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED,
@@ -45,11 +47,6 @@ public class PingActivity extends AppCompatActivity {
             if (sentryManager.isEnabled()) {
                 SentryInitializer.initialize(this);
             }
-        } catch (Exception e) {
-            sentryManager.captureException(e);
-        }
-        try {
-            setupStatusBarForActivity();
         } catch (Exception e) {
             sentryManager.captureException(e);
         }
@@ -65,9 +62,11 @@ public class PingActivity extends AppCompatActivity {
         super.onPause();
         if (webView != null) {
             webView.onPause();
+            webView.pauseTimers();
         }
         if (webView2 != null) {
             webView2.onPause();
+            webView2.pauseTimers();
         }
     }
 
@@ -76,9 +75,11 @@ public class PingActivity extends AppCompatActivity {
         super.onResume();
         if (webView != null) {
             webView.onResume();
+            webView.resumeTimers();
         }
         if (webView2 != null) {
             webView2.onResume();
+            webView2.resumeTimers();
         }
     }
 
@@ -86,28 +87,10 @@ public class PingActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         try {
-            if (webView != null) {
-                if (webView.getParent() != null) {
-                    ((ViewGroup) webView.getParent()).removeView(webView);
-                }
-                webView.setWebViewClient(new WebViewClient());
-                webView.clearCache(true);
-                webView.clearHistory();
-                webView.clearFormData();
-                webView.destroy();
-                webView = null;
-            }
-            if (webView2 != null) {
-                if (webView2.getParent() != null) {
-                    ((ViewGroup) webView2.getParent()).removeView(webView2);
-                }
-                webView2.setWebViewClient(new WebViewClient());
-                webView2.clearCache(true);
-                webView2.clearHistory();
-                webView2.clearFormData();
-                webView2.destroy();
-                webView2 = null;
-            }
+            destroyWebView(webView);
+            webView = null;
+            destroyWebView(webView2);
+            webView2 = null;
             sentryManager = null;
         } catch (Exception e) {
             SentryManager.captureStaticException(e);
@@ -124,8 +107,10 @@ public class PingActivity extends AppCompatActivity {
         super.attachBaseContext(localizedContext);
     }
 
-    private void setupStatusBarForActivity() {
-        StatusBarHelper.apply(this);
+    private void setupInsets() {
+        View root = findViewById(R.id.root);
+        InsetsHelper.installOnRoot(root);
+        InsetsHelper.applySystemBarPadding(root);
     }
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -136,19 +121,22 @@ public class PingActivity extends AppCompatActivity {
             if (webView == null || webView2 == null) {
                 throw new IllegalStateException("Ping WebViews not found in layout");
             }
-            setupWebView(webView, url1);
-            setupWebView(webView2, url2);
+            setupWebView(webView, url1, () -> {
+                if (!webView2Initialized && webView2 != null) {
+                    webView2Initialized = true;
+                    setupWebView(webView2, url2, null);
+                }
+            });
         } catch (Exception e) {
             sentryManager.captureException(e);
         }
     }
 
     @SuppressLint("SetJavaScriptEnabled")
-    private void setupWebView(WebView targetWebView, String url) {
+    private void setupWebView(WebView targetWebView, String url, Runnable onFirstPageFinished) {
         WebSettings settings = targetWebView.getSettings();
         settings.setJavaScriptEnabled(true);
         settings.setDomStorageEnabled(true);
-        settings.setDatabaseEnabled(true);
         settings.setCacheMode(WebSettings.LOAD_DEFAULT);
         settings.setAllowFileAccess(false);
         settings.setAllowContentAccess(false);
@@ -164,7 +152,29 @@ public class PingActivity extends AppCompatActivity {
                 }
                 return ExternalLinkHandler.openExternalLink(view.getContext(), view, uri);
             }
+
+            @Override
+            public void onPageFinished(WebView view, String pageUrl) {
+                if (onFirstPageFinished != null) {
+                    onFirstPageFinished.run();
+                }
+            }
         });
         targetWebView.loadUrl(url);
+    }
+
+    private void destroyWebView(WebView targetWebView) {
+        if (targetWebView == null) {
+            return;
+        }
+        targetWebView.evaluateJavascript(WebViewInteractionScript.DISCONNECT_SCRIPT, null);
+        if (targetWebView.getParent() != null) {
+            ((ViewGroup) targetWebView.getParent()).removeView(targetWebView);
+        }
+        targetWebView.setWebViewClient(new WebViewClient());
+        targetWebView.clearCache(true);
+        targetWebView.clearHistory();
+        targetWebView.clearFormData();
+        targetWebView.destroy();
     }
 }
