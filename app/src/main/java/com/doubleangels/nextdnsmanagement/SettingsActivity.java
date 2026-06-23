@@ -391,7 +391,7 @@ public class SettingsActivity extends AppCompatActivity {
                                         }
 
                                         @Override
-                                        public void onAuthenticationError(String error) {
+                                        public void onAuthenticationError(int errorCode, String error) {
                                             // Authentication failed, revert the change
                                             setting.setChecked(true);
                                             captureMessageIfAvailable(

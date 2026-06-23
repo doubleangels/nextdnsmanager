@@ -49,6 +49,8 @@ jobs:
 
       - name: Build APK for Github release
         run: ./gradlew assembleGmsRelease --parallel --build-cache --configuration-cache
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
 
       - name: Sign APK for Github release
         uses: r0adkll/sign-android-release@v1
@@ -115,6 +117,8 @@ jobs:
 
       - name: Build APK for Github release
         run: ./gradlew assembleFossRelease --parallel --build-cache --configuration-cache
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
 
       - name: Sign APK for Github release
         uses: r0adkll/sign-android-release@v1
@@ -181,6 +185,8 @@ jobs:
 
       - name: Build bundle for Google Play release
         run: ./gradlew bundleGmsRelease --parallel --build-cache --configuration-cache
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
 
       - name: Sign bundle for Google Play release
         uses: r0adkll/sign-android-release@v1

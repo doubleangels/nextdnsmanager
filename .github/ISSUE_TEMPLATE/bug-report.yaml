@@ -48,6 +48,18 @@ body:
         - GMS (Google Play)
         - FOSS (F-Droid/GitHub)
         - Not sure
+  - type: dropdown
+    id: install-source
+    attributes:
+      label: Original Install Source
+      description: Where did you first install this app from? (Important for update/signing issues.)
+      options:
+        - Google Play Store
+        - F-Droid
+        - GitHub (app-release.apk / GMS)
+        - GitHub (app-release-foss.apk / FOSS)
+        - Third-party APK store (APKPure, etc.)
+        - Not sure
   - type: textarea
     id: expected-behavior
     attributes:

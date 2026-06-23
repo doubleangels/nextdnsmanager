@@ -72,7 +72,7 @@ public class BiometricLock {
                         super.onAuthenticationError(errorCode, errString);
                         String errorMessage = "Biometric authentication error (" + errorCode + "): " + errString;
                         sentryManager.captureMessage(errorMessage);
-                        callback.onAuthenticationError(errString.toString());
+                        callback.onAuthenticationError(errorCode, errString.toString());
                     }
 
                     @Override
@@ -105,7 +105,7 @@ public class BiometricLock {
             biometricPrompt.authenticate(promptInfo);
         } catch (Exception e) {
             sentryManager.captureException(e);
-            callback.onAuthenticationError(e.getMessage());
+            callback.onAuthenticationError(BiometricPrompt.ERROR_HW_UNAVAILABLE, e.getMessage());
         }
     }
 
@@ -117,7 +117,7 @@ public class BiometricLock {
         void onAuthenticationSucceeded();
 
         /** Called when an unrecoverable error or user-cancellation occurs. */
-        void onAuthenticationError(String error);
+        void onAuthenticationError(int errorCode, String error);
 
         /** Called when a biometric was presented but not recognized. */
         void onAuthenticationFailed();

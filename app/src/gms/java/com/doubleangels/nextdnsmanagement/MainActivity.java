@@ -15,14 +15,19 @@ import android.provider.Settings;
 import android.view.ContextThemeWrapper;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.webkit.CookieManager;
+import android.webkit.RenderProcessGoneDetail;
 import android.webkit.WebChromeClient;
 import android.webkit.WebChromeClient.CustomViewCallback;
 import android.webkit.WebChromeClient.FileChooserParams;
+import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
+import android.webkit.WebResourceResponse;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -35,6 +40,7 @@ import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.appcompat.widget.Toolbar;
+import androidx.biometric.BiometricPrompt;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.lifecycle.LifecycleOwner;
@@ -50,6 +56,7 @@ import com.doubleangels.nextdnsmanagement.sentry.SentryManager;
 import com.doubleangels.nextdnsmanagement.utils.ExternalLinkHandler;
 import com.doubleangels.nextdnsmanagement.sharedpreferences.SharedPreferencesManager;
 import com.doubleangels.nextdnsmanagement.webview.WebAppInterface;
+import com.doubleangels.nextdnsmanagement.webview.WebViewInteractionScript;
 
 import java.util.Locale;
 
@@ -75,8 +82,12 @@ public class MainActivity extends AppCompatActivity {
     private Bundle webViewState = null;
     // Biometric authentication timeout in milliseconds (5 minutes)
     private static final long AUTH_TIMEOUT_MS = 5 * 60 * 1000;
+    private static final String LAST_WEBVIEW_URL_KEY = "last_webview_url";
     // Timestamp (in ms) of the last successful biometric authentication
     private long lastAuthenticatedTime = 0;
+    private float webViewTouchStartX;
+    private float webViewTouchStartY;
+    private int webViewTouchSlop;
 
     // Blur overlay view to hide content during biometric authentication
     private View blurOverlay;
@@ -418,17 +429,7 @@ public class MainActivity extends AppCompatActivity {
     public void setupWebViewForActivity(String url) {
         webView = findViewById(R.id.webView);
         try {
-            // Load URL directly if dark mode is disabled; otherwise, try to restore state
-            if (!darkModeEnabled) {
-                webViewState = null;
-                webView.loadUrl(url);
-            } else {
-                if (webViewState != null) {
-                    webView.restoreState(webViewState);
-                } else {
-                    webView.loadUrl(url);
-                }
-            }
+            loadWebViewUrl(webView, url);
         } catch (Exception e) {
             SentryManager.captureStaticException(e);
         }
@@ -448,8 +449,7 @@ public class MainActivity extends AppCompatActivity {
         webViewSettings.setLoadWithOverviewMode(true);
         webViewSettings.setUseWideViewPort(true);
 
-        // Use modern caching approach for better performance
-        webViewSettings.setCacheMode(WebSettings.LOAD_DEFAULT);
+        CookieManager.getInstance().setAcceptThirdPartyCookies(webView, true);
 
         // Set a custom WebViewClient to handle page events
         webView.setWebViewClient(new WebViewClient() {
@@ -468,96 +468,46 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onPageFinished(WebView view, String url) {
                 try {
+                    if (isValidNextDnsUrl(url)) {
+                        SharedPreferencesManager.putString(LAST_WEBVIEW_URL_KEY, url);
+                    }
                     // Enable and flush cookies
                     CookieManager.getInstance().setAcceptCookie(true);
                     CookieManager.getInstance().acceptCookie();
                     CookieManager.getInstance().flush();
-                    // Inject JavaScript to improve text selection and scrolling behavior
-                    String js = "setInterval(function() {" +
-                            "   // Handle modal dialogs and swipe refresh" +
-                            "   var modal = document.querySelector('.modal-dialog.modal-lg.modal-dialog-scrollable');" +
-                            "   if (modal) {" +
-                            "       if (!modal.getAttribute('data-listeners-attached')) {" +
-                            "           modal.setAttribute('data-listeners-attached', 'true');" +
-                            "           modal.addEventListener('touchstart', function(){" +
-                            "               AndroidInterface.setSwipeRefreshEnabled(false);" +
-                            "           });" +
-                            "           modal.addEventListener('touchend', function(){" +
-                            "               AndroidInterface.setSwipeRefreshEnabled(true);" +
-                            "           });" +
-                            "       }" +
-                            "   }" +
-                            "   " +
-                            "   // Improve text selection behavior" +
-                            "   var textElements = document.querySelectorAll('p, span, div, td, th, li');" +
-                            "   textElements.forEach(function(element) {" +
-                            "       element.style.webkitUserSelect = 'text';" +
-                            "       element.style.userSelect = 'text';" +
-                            "   });" +
-                            "   " +
-                            "   // Fix scrolling issues with account/equipment menu" +
-                            "   var accountMenu = document.querySelector('.account-menu, .equipment-menu');" +
-                            "   if (accountMenu) {" +
-                            "       accountMenu.style.position = 'relative';" +
-                            "       accountMenu.style.zIndex = '1000';" +
-                            "   }" +
-                            "   " +
-                            "   // Fix horizontal tab panel scroll stuttering" +
-                            "   // Target nav-item containers and their parent scroll containers" +
-                            "   var navItems = document.querySelectorAll('.nav-item');" +
-                            "   if (navItems.length > 0) {" +
-                            "       // Find the parent container that holds the nav-items" +
-                            "       var parentContainer = navItems[0].parentElement;" +
-                            "       while (parentContainer && parentContainer !== document.body) {" +
-                            "           if (parentContainer.scrollWidth > parentContainer.clientWidth || " +
-                            "               parentContainer.classList.contains('nav') || " +
-                            "               parentContainer.classList.contains('nav-tabs') || " +
-                            "               parentContainer.getAttribute('role') === 'tablist') {" +
-                            "               if (!parentContainer.getAttribute('data-scroll-optimized')) {" +
-                            "                   parentContainer.setAttribute('data-scroll-optimized', 'true');" +
-                            "                   // Enable hardware acceleration for smooth scrolling" +
-                            "                   parentContainer.style.webkitOverflowScrolling = 'touch';" +
-                            "                   parentContainer.style.overflowX = 'auto';" +
-                            "                   parentContainer.style.overflowY = 'hidden';" +
-                            "                   parentContainer.style.willChange = 'scroll-position';" +
-                            "                   parentContainer.style.transform = 'translateZ(0)';" +
-                            "                   parentContainer.style.backfaceVisibility = 'hidden';" +
-                            "                   parentContainer.style.perspective = '1000px';" +
-                            "                   // Prevent scroll chaining" +
-                            "                   parentContainer.style.overscrollBehaviorX = 'contain';" +
-                            "               }" +
-                            "               break;" +
-                            "           }" +
-                            "           parentContainer = parentContainer.parentElement;" +
-                            "       }" +
-                            "       // Also optimize the nav-items themselves" +
-                            "       navItems.forEach(function(navItem) {" +
-                            "           if (!navItem.getAttribute('data-scroll-optimized')) {" +
-                            "               navItem.setAttribute('data-scroll-optimized', 'true');" +
-                            "               navItem.style.flexShrink = '0';" +
-                            "               navItem.style.willChange = 'transform';" +
-                            "           }" +
-                            "       });" +
-                            "   }" +
-                            "   // Also check for other common tab panel selectors" +
-                            "   var tabPanels = document.querySelectorAll('nav[role=\"tablist\"], .nav-tabs, .nav-pills, .nav:not([data-scroll-optimized])');" +
-                            "   tabPanels.forEach(function(tabPanel) {" +
-                            "       if (!tabPanel.getAttribute('data-scroll-optimized')) {" +
-                            "           tabPanel.setAttribute('data-scroll-optimized', 'true');" +
-                            "           tabPanel.style.webkitOverflowScrolling = 'touch';" +
-                            "           tabPanel.style.overflowX = 'auto';" +
-                            "           tabPanel.style.overflowY = 'hidden';" +
-                            "           tabPanel.style.willChange = 'scroll-position';" +
-                            "           tabPanel.style.transform = 'translateZ(0)';" +
-                            "           tabPanel.style.backfaceVisibility = 'hidden';" +
-                            "           tabPanel.style.overscrollBehaviorX = 'contain';" +
-                            "       }" +
-                            "   });" +
-                            "}, 500);";
-                    view.evaluateJavascript(js, null);
+                    view.evaluateJavascript(WebViewInteractionScript.PAGE_FINISHED_SCRIPT, null);
                 } catch (Exception e) {
                     SentryManager.captureStaticException(e);
                 }
+            }
+
+            @Override
+            public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
+                if (request.isForMainFrame() && sentryManager != null) {
+                    sentryManager.captureMessage(
+                            "WebView error: " + error.getDescription() + " url=" + request.getUrl());
+                }
+            }
+
+            @Override
+            public void onReceivedHttpError(WebView view, WebResourceRequest request,
+                    WebResourceResponse errorResponse) {
+                if (request.isForMainFrame() && sentryManager != null) {
+                    sentryManager.captureMessage(
+                            "WebView HTTP error: " + errorResponse.getStatusCode()
+                                    + " url=" + request.getUrl());
+                }
+            }
+
+            @Override
+            public boolean onRenderProcessGone(WebView view, RenderProcessGoneDetail detail) {
+                if (sentryManager != null) {
+                    sentryManager.captureMessage(
+                            "WebView render process gone, didCrash=" + detail.didCrash());
+                }
+                isWebViewInitialized = false;
+                setupWebViewForActivity(getString(R.string.main_url));
+                return true;
             }
         });
 
@@ -591,6 +541,7 @@ public class MainActivity extends AppCompatActivity {
         }
         // Setup file download handling
         setupDownloadManagerForActivity();
+        setupWebViewTouchHandling();
         isWebViewInitialized = true;
     }
 
@@ -737,19 +688,20 @@ public class MainActivity extends AppCompatActivity {
                         }
 
                         @Override
-                        public void onAuthenticationError(String error) {
-                            // Hide blur overlay before finishing
-                            hideBlurOverlay();
-                            // Finish the activity on authentication error
-                            finish();
+                        public void onAuthenticationError(int errorCode, String error) {
+                            if (errorCode == BiometricPrompt.ERROR_USER_CANCELED
+                                    || errorCode == BiometricPrompt.ERROR_CANCELED
+                                    || errorCode == BiometricPrompt.ERROR_NEGATIVE_BUTTON) {
+                                hideBlurOverlay();
+                                finish();
+                            } else {
+                                showBiometricPrompt();
+                            }
                         }
 
                         @Override
                         public void onAuthenticationFailed() {
-                            // Hide blur overlay before finishing
-                            hideBlurOverlay();
-                            // Finish the activity on authentication failure
-                            finish();
+                            // Keep blur overlay visible; the system prompt allows retry.
                         }
                     });
         }
@@ -816,5 +768,58 @@ public class MainActivity extends AppCompatActivity {
                 break;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void setupWebViewTouchHandling() {
+        if (webView == null || swipeRefreshLayout == null) {
+            return;
+        }
+        webViewTouchSlop = ViewConfiguration.get(this).getScaledTouchSlop();
+        webView.setOnTouchListener((view, event) -> {
+            switch (event.getActionMasked()) {
+                case MotionEvent.ACTION_DOWN:
+                    webViewTouchStartX = event.getX();
+                    webViewTouchStartY = event.getY();
+                    break;
+                case MotionEvent.ACTION_MOVE:
+                    float dx = Math.abs(event.getX() - webViewTouchStartX);
+                    float dy = Math.abs(event.getY() - webViewTouchStartY);
+                    if (dx > webViewTouchSlop && dx > dy) {
+                        swipeRefreshLayout.requestDisallowInterceptTouchEvent(true);
+                    }
+                    break;
+                default:
+                    break;
+            }
+            return false;
+        });
+    }
+
+    private void loadWebViewUrl(WebView targetWebView, String defaultUrl) {
+        String currentUrl = targetWebView.getUrl();
+        if (isValidNextDnsUrl(currentUrl)) {
+            return;
+        }
+        String savedUrl = SharedPreferencesManager.getString(LAST_WEBVIEW_URL_KEY, null);
+        if (isValidNextDnsUrl(savedUrl)) {
+            targetWebView.loadUrl(savedUrl);
+            return;
+        }
+        if (Boolean.TRUE.equals(darkModeEnabled) && webViewState != null) {
+            targetWebView.restoreState(webViewState);
+            return;
+        }
+        targetWebView.loadUrl(defaultUrl);
+    }
+
+    private boolean isValidNextDnsUrl(String url) {
+        if (url == null || url.isBlank() || "about:blank".equals(url)) {
+            return false;
+        }
+        try {
+            return ExternalLinkHandler.isNextDnsHost(Uri.parse(url));
+        } catch (Exception e) {
+            return false;
+        }
     }
 }

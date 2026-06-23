@@ -10,6 +10,12 @@
 -keep class androidx.** { *; }
 -dontwarn androidx.**
 
+# AndroidX App Startup (InitializationProvider runs before Application.onCreate)
+-keep class androidx.startup.** { *; }
+-keep class * extends androidx.startup.Initializer {
+    <init>();
+}
+
 # Material Design components
 -keep class com.google.android.material.** { *; }
 -dontwarn com.google.android.material.**

@@ -10,8 +10,8 @@ android {
         applicationId "com.doubleangels.nextdnsmanagement"
         minSdkVersion 32
         targetSdk = 35
-        versionCode 270
-        versionName "5.5.21"
+        versionCode 271
+        versionName "5.5.22"
         resourceConfigurations += ["en", "zh", "nl", "fi", "fr", "de", "in", "it", "ja", "pl", "pt", "es", "sv", "tr"]
     }
 
@@ -69,6 +69,7 @@ dependencies {
     implementation 'androidx.preference:preference:1.2.1'
     implementation 'androidx.security:security-crypto:1.1.0'
     implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.2.0'
+    implementation 'androidx.startup:startup-runtime:1.2.0'
     implementation 'androidx.webkit:webkit:1.16.0'
     implementation 'com.google.android.material:material:1.14.0'
     gmsImplementation 'com.google.firebase:firebase-messaging:25.1.0'
@@ -78,14 +79,17 @@ dependencies {
     debugImplementation 'com.squareup.leakcanary:leakcanary-android:2.14'
 }
 
+def sentryUploadEnabled = System.getenv("SENTRY_AUTH_TOKEN") != null
+
 sentry {
     authToken = System.getenv("SENTRY_AUTH_TOKEN")
     includeProguardMapping = true
-    autoUploadProguardMapping = true
-    uploadNativeSymbols = true
-    autoUploadNativeSymbols = true
-    includeNativeSources = true
-    includeSourceContext = true
+    autoUploadProguardMapping = sentryUploadEnabled
+    uploadNativeSymbols = sentryUploadEnabled
+    autoUploadNativeSymbols = sentryUploadEnabled
+    includeNativeSources = sentryUploadEnabled
+    includeSourceContext = sentryUploadEnabled
+    ignoredBuildTypes = ["debug"]
 }
 
 afterEvaluate {
