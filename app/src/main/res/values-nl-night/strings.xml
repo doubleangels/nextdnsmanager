@@ -2,6 +2,22 @@
 <resources>
     <string name="app_lock">App-vergrendeling</string>
     <string name="app_lock_instructions">Biometrie of PIN vereist om toegang te krijgen tot deze app.</string>
+    <string name="webview_load_error">Kan pagina niet laden. Tik om opnieuw te proberen.</string>
+    <string name="app_lock_unavailable">App-vergrendeling is ingeschakeld, maar authenticatie is niet beschikbaar op dit apparaat.</string>
+    <string name="download_started">Bestand wordt gedownload!</string>
+    <string name="download_failed">Download mislukt</string>
+    <string name="link_open_security_error">Kan link niet openen vanwege beveiligingsbeperkingen.</string>
+    <string name="no_browser_found">Geen browser gevonden om de link te openen.</string>
+    <string name="no_email_client_found">Geen e-mailclient gevonden.</string>
+    <string name="email_open_security_error">Kan e-mailclient niet openen vanwege beveiligingsbeperkingen.</string>
+    <string name="text_copied">Tekst gekopieerd!</string>
+    <string name="activity_open_security_error">Kan activiteit niet openen vanwege beveiligingsbeperkingen.</string>
+    <string name="enable_app_lock_title">App-vergrendeling inschakelen</string>
+    <string name="disable_app_lock_title">App-vergrendeling uitschakelen</string>
+    <string name="enable_app_lock_subtitle">Authenticeer om app-vergrendeling in te schakelen</string>
+    <string name="disable_app_lock_subtitle">Authenticeer om app-vergrendeling uit te schakelen</string>
+    <string name="app_lock_confirm_action">Gebruik biometrie of apparaatreferenties om deze actie te bevestigen</string>
+    <string name="send_email">E-mail verzenden</string>
     <string name="app_name">"NextDNS Manager"</string>
     <string name="author">"Auteur"</string>
     <string name="back_title">"Terug"</string>

@@ -6,6 +6,7 @@ import android.content.res.Configuration;
 import android.net.Uri;
 import android.os.Bundle;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -141,12 +142,12 @@ public class AuthorActivity extends AppCompatActivity {
             Intent emailIntent = new Intent(Intent.ACTION_SENDTO);
             emailIntent.setData(Uri.parse("mailto:jzgm2llm@addy.io"));
             try {
-                startActivity(Intent.createChooser(emailIntent, "Send Email"));
+                startActivity(Intent.createChooser(emailIntent, getString(R.string.send_email)));
             } catch (android.content.ActivityNotFoundException e) {
-                android.widget.Toast.makeText(this, "No email client found.", android.widget.Toast.LENGTH_LONG).show();
+                Toast.makeText(this, R.string.no_email_client_found, Toast.LENGTH_LONG).show();
             } catch (SecurityException e) {
-                android.widget.Toast.makeText(this, "Unable to open email client due to security restrictions.",
-                        android.widget.Toast.LENGTH_LONG).show();
+                Toast.makeText(this, R.string.email_open_security_error,
+                        Toast.LENGTH_LONG).show();
             }
         });
 

@@ -281,7 +281,7 @@ public class SettingsActivity extends AppCompatActivity {
                             CharSequence copiedText = getString(textResource);
                             ClipData copiedData = ClipData.newPlainText("text", copiedText);
                             clipboardManager.setPrimaryClip(copiedData);
-                            Toast.makeText(getContext(), "Text copied!", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(getContext(), R.string.text_copied, Toast.LENGTH_SHORT).show();
                         } else {
                             ExternalLinkHandler.openExternalLink(requireContext(),
                                     Uri.parse(getString(textResource)));
@@ -313,7 +313,7 @@ public class SettingsActivity extends AppCompatActivity {
                             startActivity(new Intent(getContext(), PermissionActivity.class));
                         }
                     } catch (SecurityException e) {
-                        Toast.makeText(getContext(), "Unable to open activity due to security restrictions.",
+                        Toast.makeText(getContext(), R.string.activity_open_security_error,
                                 Toast.LENGTH_LONG).show();
                     } catch (Exception e) {
                         if (getContext() != null) {
@@ -365,14 +365,16 @@ public class SettingsActivity extends AppCompatActivity {
                     if (currentValue != newValueBoolean) {
                         final BiometricLock biometricLock = new BiometricLock((AppCompatActivity) requireContext());
                         if (biometricLock.canAuthenticate()) {
-                            String promptTitle = newValueBoolean ? "Enable App Lock" : "Disable App Lock";
+                            String promptTitle = newValueBoolean
+                                    ? getString(R.string.enable_app_lock_title)
+                                    : getString(R.string.disable_app_lock_title);
                             String promptSubtitle = newValueBoolean
-                                    ? "Authenticate to enable app lock"
-                                    : "Authenticate to disable app lock";
+                                    ? getString(R.string.enable_app_lock_subtitle)
+                                    : getString(R.string.disable_app_lock_subtitle);
                             biometricLock.showPrompt(
                                     promptTitle,
                                     promptSubtitle,
-                                    "Use biometric or device credentials to confirm this action",
+                                    getString(R.string.app_lock_confirm_action),
                                     new BiometricLock.BiometricLockCallback() {
                                         @Override
                                         public void onAuthenticationSucceeded() {

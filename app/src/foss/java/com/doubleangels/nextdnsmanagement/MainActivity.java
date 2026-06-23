@@ -599,10 +599,10 @@ public class MainActivity extends AppCompatActivity {
                 } else {
                     throw new Exception("DownloadManager is null");
                 }
-                Toast.makeText(getApplicationContext(), "Downloading file!", Toast.LENGTH_LONG).show();
+                Toast.makeText(getApplicationContext(), R.string.download_started, Toast.LENGTH_LONG).show();
             } catch (Exception e) {
                 SentryManager.captureStaticException(e);
-                Toast.makeText(MainActivity.this, "Download failed", Toast.LENGTH_SHORT).show();
+                Toast.makeText(MainActivity.this, R.string.download_failed, Toast.LENGTH_SHORT).show();
             }
         });
     }

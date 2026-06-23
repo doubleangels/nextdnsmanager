@@ -2,6 +2,22 @@
 <resources>
     <string name="app_lock">Uygulama Kilidi</string>
     <string name="app_lock_instructions">Bu uygulamaya erişmek için biyometrik doğrulama veya PIN gereklidir.</string>
+    <string name="webview_load_error">Sayfa yüklenemedi. Yeniden denemek için dokunun.</string>
+    <string name="app_lock_unavailable">Uygulama kilidi etkin, ancak bu cihazda kimlik doğrulama kullanılamıyor.</string>
+    <string name="download_started">Dosya indiriliyor!</string>
+    <string name="download_failed">İndirme başarısız</string>
+    <string name="link_open_security_error">Güvenlik kısıtlamaları nedeniyle bağlantı açılamıyor.</string>
+    <string name="no_browser_found">Bağlantıyı açmak için tarayıcı bulunamadı.</string>
+    <string name="no_email_client_found">E-posta istemcisi bulunamadı.</string>
+    <string name="email_open_security_error">Güvenlik kısıtlamaları nedeniyle e-posta istemcisi açılamıyor.</string>
+    <string name="text_copied">Metin kopyalandı!</string>
+    <string name="activity_open_security_error">Güvenlik kısıtlamaları nedeniyle etkinlik açılamıyor.</string>
+    <string name="enable_app_lock_title">Uygulama kilidini etkinleştir</string>
+    <string name="disable_app_lock_title">Uygulama kilidini devre dışı bırak</string>
+    <string name="enable_app_lock_subtitle">Uygulama kilidini etkinleştirmek için kimlik doğrulayın</string>
+    <string name="disable_app_lock_subtitle">Uygulama kilidini devre dışı bırakmak için kimlik doğrulayın</string>
+    <string name="app_lock_confirm_action">Bu işlemi onaylamak için biyometri veya cihaz kimlik bilgilerini kullanın</string>
+    <string name="send_email">E-posta gönder</string>
     <string name="app_name">"NextDNS Manager"</string>
     <string name="author">"Yazar"</string>
     <string name="back_title">"Geri"</string>

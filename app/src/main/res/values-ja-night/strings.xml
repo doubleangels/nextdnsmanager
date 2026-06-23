@@ -2,6 +2,22 @@
 <resources>
     <string name="app_lock">アプリロック</string>
     <string name="app_lock_instructions">このアプリにアクセスするには生体認証またはPINコードが必要です。</string>
+    <string name="webview_load_error">ページを読み込めませんでした。タップして再試行してください。</string>
+    <string name="app_lock_unavailable">アプリロックは有効ですが、このデバイスでは認証を利用できません。</string>
+    <string name="download_started">ファイルをダウンロード中！</string>
+    <string name="download_failed">ダウンロードに失敗しました</string>
+    <string name="link_open_security_error">セキュリティ制限によりリンクを開けません。</string>
+    <string name="no_browser_found">リンクを開くブラウザが見つかりません。</string>
+    <string name="no_email_client_found">メールクライアントが見つかりません。</string>
+    <string name="email_open_security_error">セキュリティ制限によりメールクライアントを開けません。</string>
+    <string name="text_copied">テキストをコピーしました！</string>
+    <string name="activity_open_security_error">セキュリティ制限によりアクティビティを開けません。</string>
+    <string name="enable_app_lock_title">アプリロックを有効にする</string>
+    <string name="disable_app_lock_title">アプリロックを無効にする</string>
+    <string name="enable_app_lock_subtitle">アプリロックを有効にするには認証してください</string>
+    <string name="disable_app_lock_subtitle">アプリロックを無効にするには認証してください</string>
+    <string name="app_lock_confirm_action">生体認証またはデバイス認証情報でこの操作を確認してください</string>
+    <string name="send_email">メールを送信</string>
     <string name="app_name">"NextDNS Manager"</string>
     <string name="author">"著者"</string>
     <string name="back_title">"戻る"</string>

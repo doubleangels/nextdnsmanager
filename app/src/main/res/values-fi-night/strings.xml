@@ -2,6 +2,22 @@
 <resources>
     <string name="app_lock">Sovelluksen lukitus</string>
     <string name="app_lock_instructions">Sovelluksen avaamiseen vaaditaan biometria tai PIN-koodi.</string>
+    <string name="webview_load_error">Sivua ei voitu ladata. Napauta yrittääksesi uudelleen.</string>
+    <string name="app_lock_unavailable">Sovelluksen lukitus on käytössä, mutta tunnistautuminen ei ole saatavilla tällä laitteella.</string>
+    <string name="download_started">Ladataan tiedostoa!</string>
+    <string name="download_failed">Lataus epäonnistui</string>
+    <string name="link_open_security_error">Linkkiä ei voi avata turvarajoitusten vuoksi.</string>
+    <string name="no_browser_found">Selainta linkin avaamiseen ei löytynyt.</string>
+    <string name="no_email_client_found">Sähköpostisovellusta ei löytynyt.</string>
+    <string name="email_open_security_error">Sähköpostisovellusta ei voi avata turvarajoitusten vuoksi.</string>
+    <string name="text_copied">Teksti kopioitu!</string>
+    <string name="activity_open_security_error">Toimintoa ei voi avata turvarajoitusten vuoksi.</string>
+    <string name="enable_app_lock_title">Ota sovelluksen lukitus käyttöön</string>
+    <string name="disable_app_lock_title">Poista sovelluksen lukitus käytöstä</string>
+    <string name="enable_app_lock_subtitle">Tunnistaudu ottaaksesi sovelluksen lukituksen käyttöön</string>
+    <string name="disable_app_lock_subtitle">Tunnistaudu poistaaksesi sovelluksen lukituksen käytöstä</string>
+    <string name="app_lock_confirm_action">Vahvista toiminto biometrialla tai laitteen PIN-koodilla</string>
+    <string name="send_email">Lähetä sähköposti</string>
     <string name="app_name">"NextDNS Manager"</string>
     <string name="author">"Kirjoittaja"</string>
     <string name="back_title">"Takaisin"</string>

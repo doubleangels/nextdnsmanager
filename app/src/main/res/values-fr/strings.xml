@@ -2,6 +2,22 @@
 <resources>
     <string name="app_lock">Verrouillage de l\'application</string>
     <string name="app_lock_instructions">Nécessite la biométrie ou un code PIN pour accéder à cette application.</string>
+    <string name="webview_load_error">Impossible de charger la page. Appuyez pour réessayer.</string>
+    <string name="app_lock_unavailable">Le verrouillage de l\'application est activé, mais l\'authentification n\'est pas disponible sur cet appareil.</string>
+    <string name="download_started">Téléchargement du fichier !</string>
+    <string name="download_failed">Échec du téléchargement</string>
+    <string name="link_open_security_error">Impossible d\'ouvrir le lien en raison de restrictions de sécurité.</string>
+    <string name="no_browser_found">Aucun navigateur trouvé pour ouvrir le lien.</string>
+    <string name="no_email_client_found">Aucun client de messagerie trouvé.</string>
+    <string name="email_open_security_error">Impossible d\'ouvrir le client de messagerie en raison de restrictions de sécurité.</string>
+    <string name="text_copied">Texte copié !</string>
+    <string name="activity_open_security_error">Impossible d\'ouvrir l\'activité en raison de restrictions de sécurité.</string>
+    <string name="enable_app_lock_title">Activer le verrouillage de l\'application</string>
+    <string name="disable_app_lock_title">Désactiver le verrouillage de l\'application</string>
+    <string name="enable_app_lock_subtitle">Authentifiez-vous pour activer le verrouillage de l\'application</string>
+    <string name="disable_app_lock_subtitle">Authentifiez-vous pour désactiver le verrouillage de l\'application</string>
+    <string name="app_lock_confirm_action">Utilisez la biométrie ou les identifiants de l\'appareil pour confirmer cette action</string>
+    <string name="send_email">Envoyer un e-mail</string>
     <string name="app_name">"NextDNS Manager"</string>
     <string name="author">"Auteur"</string>
     <string name="back_title">"Retour"</string>

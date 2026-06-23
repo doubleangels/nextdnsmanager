@@ -2,6 +2,22 @@
 <resources>
     <string name="app_lock">Blokada aplikacji</string>
     <string name="app_lock_instructions">Wymagane są dane biometryczne lub PIN, aby uzyskać dostęp do tej aplikacji.</string>
+    <string name="webview_load_error">Nie można załadować strony. Stuknij, aby spróbować ponownie.</string>
+    <string name="app_lock_unavailable">Blokada aplikacji jest włączona, ale uwierzytelnianie jest niedostępne na tym urządzeniu.</string>
+    <string name="download_started">Pobieranie pliku!</string>
+    <string name="download_failed">Pobieranie nie powiodło się</string>
+    <string name="link_open_security_error">Nie można otworzyć linku z powodu ograniczeń bezpieczeństwa.</string>
+    <string name="no_browser_found">Nie znaleziono przeglądarki do otwarcia linku.</string>
+    <string name="no_email_client_found">Nie znaleziono klienta poczty e-mail.</string>
+    <string name="email_open_security_error">Nie można otworzyć klienta poczty z powodu ograniczeń bezpieczeństwa.</string>
+    <string name="text_copied">Tekst skopiowany!</string>
+    <string name="activity_open_security_error">Nie można otworzyć aktywności z powodu ograniczeń bezpieczeństwa.</string>
+    <string name="enable_app_lock_title">Włącz blokadę aplikacji</string>
+    <string name="disable_app_lock_title">Wyłącz blokadę aplikacji</string>
+    <string name="enable_app_lock_subtitle">Uwierzytelnij się, aby włączyć blokadę aplikacji</string>
+    <string name="disable_app_lock_subtitle">Uwierzytelnij się, aby wyłączyć blokadę aplikacji</string>
+    <string name="app_lock_confirm_action">Użyj biometrii lub danych logowania urządzenia, aby potwierdzić tę czynność</string>
+    <string name="send_email">Wyślij e-mail</string>
     <string name="app_name">"NextDNS Manager"</string>
     <string name="author">"Autor"</string>
     <string name="back_title">"Wstecz"</string>

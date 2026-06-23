@@ -2,6 +2,22 @@
 <resources>
     <string name="app_lock">App-lås</string>
     <string name="app_lock_instructions">Kräver biometrik eller PIN för att få åtkomst till denna app.</string>
+    <string name="webview_load_error">Kunde inte ladda sidan. Tryck för att försöka igen.</string>
+    <string name="app_lock_unavailable">App-lås är aktiverat, men autentisering är inte tillgänglig på den här enheten.</string>
+    <string name="download_started">Laddar ner fil!</string>
+    <string name="download_failed">Nedladdningen misslyckades</string>
+    <string name="link_open_security_error">Kan inte öppna länken på grund av säkerhetsbegränsningar.</string>
+    <string name="no_browser_found">Ingen webbläsare hittades för att öppna länken.</string>
+    <string name="no_email_client_found">Ingen e-postklient hittades.</string>
+    <string name="email_open_security_error">Kan inte öppna e-postklienten på grund av säkerhetsbegränsningar.</string>
+    <string name="text_copied">Text kopierad!</string>
+    <string name="activity_open_security_error">Kan inte öppna aktiviteten på grund av säkerhetsbegränsningar.</string>
+    <string name="enable_app_lock_title">Aktivera app-lås</string>
+    <string name="disable_app_lock_title">Inaktivera app-lås</string>
+    <string name="enable_app_lock_subtitle">Autentisera för att aktivera app-lås</string>
+    <string name="disable_app_lock_subtitle">Autentisera för att inaktivera app-lås</string>
+    <string name="app_lock_confirm_action">Använd biometri eller enhetens autentiseringsuppgifter för att bekräfta denna åtgärd</string>
+    <string name="send_email">Skicka e-post</string>
     <string name="app_name">"NextDNS Manager"</string>
     <string name="author">"Författaren"</string>
     <string name="back_title">"Tillbaka"</string>

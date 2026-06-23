@@ -2,6 +2,22 @@
 <resources>
     <string name="app_lock">应用锁</string>
     <string name="app_lock_instructions">访问此应用需要生物识别或 PIN 码。</string>
+    <string name="webview_load_error">无法加载页面。点击重试。</string>
+    <string name="app_lock_unavailable">应用锁已启用，但此设备无法使用身份验证。</string>
+    <string name="download_started">正在下载文件！</string>
+    <string name="download_failed">下载失败</string>
+    <string name="link_open_security_error">由于安全限制，无法打开链接。</string>
+    <string name="no_browser_found">未找到可打开链接的浏览器。</string>
+    <string name="no_email_client_found">未找到电子邮件客户端。</string>
+    <string name="email_open_security_error">由于安全限制，无法打开电子邮件客户端。</string>
+    <string name="text_copied">文本已复制！</string>
+    <string name="activity_open_security_error">由于安全限制，无法打开活动。</string>
+    <string name="enable_app_lock_title">启用应用锁</string>
+    <string name="disable_app_lock_title">禁用应用锁</string>
+    <string name="enable_app_lock_subtitle">请进行身份验证以启用应用锁</string>
+    <string name="disable_app_lock_subtitle">请进行身份验证以禁用应用锁</string>
+    <string name="app_lock_confirm_action">使用生物识别或设备凭据确认此操作</string>
+    <string name="send_email">发送电子邮件</string>
     <string name="app_name">"NextDNS Manager"</string>
     <string name="author">"作者"</string>
     <string name="back_title">"返回"</string>

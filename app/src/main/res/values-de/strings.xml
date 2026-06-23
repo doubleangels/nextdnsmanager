@@ -2,6 +2,22 @@
 <resources>
     <string name="app_lock">App-Sperre</string>
     <string name="app_lock_instructions">Biometrie oder PIN erforderlich, um auf diese App zuzugreifen.</string>
+    <string name="webview_load_error">Seite konnte nicht geladen werden. Tippen, um es erneut zu versuchen.</string>
+    <string name="app_lock_unavailable">App-Sperre ist aktiviert, aber auf diesem Gerät ist keine Authentifizierung verfügbar.</string>
+    <string name="download_started">Datei wird heruntergeladen!</string>
+    <string name="download_failed">Download fehlgeschlagen</string>
+    <string name="link_open_security_error">Link kann aufgrund von Sicherheitsbeschränkungen nicht geöffnet werden.</string>
+    <string name="no_browser_found">Kein Browser zum Öffnen des Links gefunden.</string>
+    <string name="no_email_client_found">Kein E-Mail-Client gefunden.</string>
+    <string name="email_open_security_error">E-Mail-Client kann aufgrund von Sicherheitsbeschränkungen nicht geöffnet werden.</string>
+    <string name="text_copied">Text kopiert!</string>
+    <string name="activity_open_security_error">Aktivität kann aufgrund von Sicherheitsbeschränkungen nicht geöffnet werden.</string>
+    <string name="enable_app_lock_title">App-Sperre aktivieren</string>
+    <string name="disable_app_lock_title">App-Sperre deaktivieren</string>
+    <string name="enable_app_lock_subtitle">Authentifizieren, um App-Sperre zu aktivieren</string>
+    <string name="disable_app_lock_subtitle">Authentifizieren, um App-Sperre zu deaktivieren</string>
+    <string name="app_lock_confirm_action">Biometrie oder Geräte-PIN zur Bestätigung verwenden</string>
+    <string name="send_email">E-Mail senden</string>
     <string name="app_name">"NextDNS Manager"</string>
     <string name="author">"Autor"</string>
     <string name="back_title">"Zurück"</string>

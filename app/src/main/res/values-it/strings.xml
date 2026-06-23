@@ -2,6 +2,22 @@
 <resources>
     <string name="app_lock">Blocco app</string>
     <string name="app_lock_instructions">Richiede l\'uso di biometria o PIN per accedere a questa app.</string>
+    <string name="webview_load_error">Impossibile caricare la pagina. Tocca per riprovare.</string>
+    <string name="app_lock_unavailable">Il blocco app è attivo, ma l\'autenticazione non è disponibile su questo dispositivo.</string>
+    <string name="download_started">Download del file in corso!</string>
+    <string name="download_failed">Download non riuscito</string>
+    <string name="link_open_security_error">Impossibile aprire il link a causa di restrizioni di sicurezza.</string>
+    <string name="no_browser_found">Nessun browser trovato per aprire il link.</string>
+    <string name="no_email_client_found">Nessun client email trovato.</string>
+    <string name="email_open_security_error">Impossibile aprire il client email a causa di restrizioni di sicurezza.</string>
+    <string name="text_copied">Testo copiato!</string>
+    <string name="activity_open_security_error">Impossibile aprire l\'attività a causa di restrizioni di sicurezza.</string>
+    <string name="enable_app_lock_title">Attiva blocco app</string>
+    <string name="disable_app_lock_title">Disattiva blocco app</string>
+    <string name="enable_app_lock_subtitle">Autenticati per attivare il blocco app</string>
+    <string name="disable_app_lock_subtitle">Autenticati per disattivare il blocco app</string>
+    <string name="app_lock_confirm_action">Usa biometria o credenziali del dispositivo per confermare questa azione</string>
+    <string name="send_email">Invia email</string>
     <string name="app_name">"NextDNS Manager"</string>
     <string name="author">"Autore"</string>
     <string name="back_title">"Indietro"</string>

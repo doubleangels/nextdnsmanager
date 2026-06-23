@@ -8,6 +8,8 @@ import android.net.Uri;
 import android.webkit.WebView;
 import android.widget.Toast;
 
+import com.doubleangels.nextdnsmanagement.R;
+
 /**
  * Opens links in an external browser when one is available, otherwise falls back
  * to loading the URL in a WebView when one is provided.
@@ -45,13 +47,13 @@ public final class ExternalLinkHandler {
             } catch (ActivityNotFoundException ignored) {
                 // resolveActivity can succeed while startActivity still fails on some devices.
             } catch (SecurityException e) {
-                Toast.makeText(context, "Unable to open link due to security restrictions.", Toast.LENGTH_LONG)
+                Toast.makeText(context, R.string.link_open_security_error, Toast.LENGTH_LONG)
                         .show();
                 return loadInWebView(webView, uri);
             }
         }
 
-        Toast.makeText(context, "No browser found to open link.", Toast.LENGTH_LONG).show();
+        Toast.makeText(context, R.string.no_browser_found, Toast.LENGTH_LONG).show();
         return false;
     }
 

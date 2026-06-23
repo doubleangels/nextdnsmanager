@@ -2,6 +2,22 @@
 <resources>
     <string name="app_lock">Bloqueio da aplicação</string>
     <string name="app_lock_instructions">É necessário utilizar biometria ou um PIN para aceder a esta aplicação.</string>
+    <string name="webview_load_error">Não foi possível carregar a página. Toque para tentar novamente.</string>
+    <string name="app_lock_unavailable">O bloqueio da aplicação está ativado, mas a autenticação não está disponível neste dispositivo.</string>
+    <string name="download_started">A transferir ficheiro!</string>
+    <string name="download_failed">Falha na transferência</string>
+    <string name="link_open_security_error">Não foi possível abrir a ligação devido a restrições de segurança.</string>
+    <string name="no_browser_found">Nenhum navegador encontrado para abrir a ligação.</string>
+    <string name="no_email_client_found">Nenhum cliente de e-mail encontrado.</string>
+    <string name="email_open_security_error">Não foi possível abrir o cliente de e-mail devido a restrições de segurança.</string>
+    <string name="text_copied">Texto copiado!</string>
+    <string name="activity_open_security_error">Não foi possível abrir a atividade devido a restrições de segurança.</string>
+    <string name="enable_app_lock_title">Ativar bloqueio da aplicação</string>
+    <string name="disable_app_lock_title">Desativar bloqueio da aplicação</string>
+    <string name="enable_app_lock_subtitle">Autentique-se para ativar o bloqueio da aplicação</string>
+    <string name="disable_app_lock_subtitle">Autentique-se para desativar o bloqueio da aplicação</string>
+    <string name="app_lock_confirm_action">Use biometria ou credenciais do dispositivo para confirmar esta ação</string>
+    <string name="send_email">Enviar e-mail</string>
     <string name="app_name">"NextDNS Manager"</string>
     <string name="author">"Autor"</string>
     <string name="back_title">"Voltar"</string>

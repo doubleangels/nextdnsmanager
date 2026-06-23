@@ -2,6 +2,22 @@
 <resources>
     <string name="app_lock">Kunci Aplikasi</string>
     <string name="app_lock_instructions">Memerlukan biometrik atau PIN untuk mengakses aplikasi ini.</string>
+    <string name="webview_load_error">Tidak dapat memuat halaman. Ketuk untuk coba lagi.</string>
+    <string name="app_lock_unavailable">Kunci aplikasi diaktifkan, tetapi autentikasi tidak tersedia di perangkat ini.</string>
+    <string name="download_started">Mengunduh file!</string>
+    <string name="download_failed">Unduhan gagal</string>
+    <string name="link_open_security_error">Tidak dapat membuka tautan karena pembatasan keamanan.</string>
+    <string name="no_browser_found">Tidak ada browser untuk membuka tautan.</string>
+    <string name="no_email_client_found">Tidak ada klien email ditemukan.</string>
+    <string name="email_open_security_error">Tidak dapat membuka klien email karena pembatasan keamanan.</string>
+    <string name="text_copied">Teks disalin!</string>
+    <string name="activity_open_security_error">Tidak dapat membuka aktivitas karena pembatasan keamanan.</string>
+    <string name="enable_app_lock_title">Aktifkan kunci aplikasi</string>
+    <string name="disable_app_lock_title">Nonaktifkan kunci aplikasi</string>
+    <string name="enable_app_lock_subtitle">Autentikasi untuk mengaktifkan kunci aplikasi</string>
+    <string name="disable_app_lock_subtitle">Autentikasi untuk menonaktifkan kunci aplikasi</string>
+    <string name="app_lock_confirm_action">Gunakan biometrik atau kredensial perangkat untuk mengonfirmasi tindakan ini</string>
+    <string name="send_email">Kirim Email</string>
     <string name="app_name">"NextDNS Manager"</string>
     <string name="author">"Penulis"</string>
     <string name="back_title">"Kembali"</string>
