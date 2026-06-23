@@ -21,6 +21,7 @@ import com.doubleangels.nextdnsmanagement.biometriclock.BiometricLock;
 import com.doubleangels.nextdnsmanagement.sentry.SentryInitializer;
 import com.doubleangels.nextdnsmanagement.sentry.SentryManager;
 import com.doubleangels.nextdnsmanagement.sharedpreferences.SharedPreferencesManager;
+import com.doubleangels.nextdnsmanagement.utils.ExternalLinkHandler;
 
 import java.util.Locale;
 
@@ -233,6 +234,20 @@ public class SettingsActivity extends AppCompatActivity {
             sentryManager = null;
         }
 
+        private void captureMessageIfAvailable(String message) {
+            if (sentryManager != null) {
+                sentryManager.captureMessage(message);
+            }
+        }
+
+        private void captureExceptionIfAvailable(Exception e) {
+            if (sentryManager != null) {
+                sentryManager.captureException(e);
+            } else if (getContext() != null) {
+                new SentryManager(requireContext()).captureException(e);
+            }
+        }
+
         /**
          * Sets the initial visibility of Sentry-related preferences.
          *
@@ -278,19 +293,8 @@ public class SettingsActivity extends AppCompatActivity {
                             clipboardManager.setPrimaryClip(copiedData);
                             Toast.makeText(getContext(), "Text copied!", Toast.LENGTH_SHORT).show();
                         } else {
-                            // Otherwise, open the URL in a browser
-                            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(getString(textResource)));
-                            startActivity(intent);
-                        }
-                    } catch (android.content.ActivityNotFoundException e) {
-                        Toast.makeText(getContext(), "No browser found to open link.", Toast.LENGTH_LONG).show();
-                        if (getContext() != null) {
-                            new SentryManager(getContext()).captureException(e);
-                        }
-                    } catch (SecurityException e) {
-                        Toast.makeText(getContext(), "Unable to open link due to security restrictions.", Toast.LENGTH_LONG).show();
-                        if (getContext() != null) {
-                            new SentryManager(getContext()).captureException(e);
+                            ExternalLinkHandler.openExternalLink(requireContext(),
+                                    Uri.parse(getString(textResource)));
                         }
                     } catch (Exception e) {
                         if (getContext() != null) {
@@ -314,22 +318,13 @@ public class SettingsActivity extends AppCompatActivity {
                     try {
                         // Launch the appropriate activity based on the button key
                         if ("author_button".equals(buttonKey)) {
-                            Intent intent = new Intent(getContext(), AuthorActivity.class);
-                            startActivity(intent);
+                            startActivity(new Intent(getContext(), AuthorActivity.class));
                         } else if ("permission_button".equals(buttonKey)) {
-                            Intent intent = new Intent(getContext(), PermissionActivity.class);
-                            startActivity(intent);
-                        }
-                    } catch (android.content.ActivityNotFoundException e) {
-                        Toast.makeText(getContext(), "Activity not found.", Toast.LENGTH_LONG).show();
-                        if (getContext() != null) {
-                            new SentryManager(getContext()).captureException(e);
+                            startActivity(new Intent(getContext(), PermissionActivity.class));
                         }
                     } catch (SecurityException e) {
-                        Toast.makeText(getContext(), "Unable to open activity due to security restrictions.", Toast.LENGTH_LONG).show();
-                        if (getContext() != null) {
-                            new SentryManager(getContext()).captureException(e);
-                        }
+                        Toast.makeText(getContext(), "Unable to open activity due to security restrictions.",
+                                Toast.LENGTH_LONG).show();
                     } catch (Exception e) {
                         if (getContext() != null) {
                             new SentryManager(getContext()).captureException(e);
@@ -358,7 +353,7 @@ public class SettingsActivity extends AppCompatActivity {
                         ((SettingsActivity) getActivity()).setupDarkModeForActivity(newValue.toString());
                     }
                 } catch (Exception e) {
-                    sentryManager.captureException(e);
+                    captureExceptionIfAvailable(e);
                 }
                 return true;
             });
@@ -391,43 +386,40 @@ public class SettingsActivity extends AppCompatActivity {
                                             SharedPreferencesManager.putBoolean("app_lock_enable", false);
                                             // Update the UI toggle to reflect the change
                                             setting.setChecked(false);
-                                            sentryManager
-                                                    .captureMessage(
-                                                            "App lock disabled after biometric authentication.");
+                                            captureMessageIfAvailable(
+                                                    "App lock disabled after biometric authentication.");
                                         }
 
                                         @Override
                                         public void onAuthenticationError(String error) {
                                             // Authentication failed, revert the change
                                             setting.setChecked(true);
-                                            sentryManager
-                                                    .captureMessage(
-                                                            "App lock disable failed - authentication error: " + error);
+                                            captureMessageIfAvailable(
+                                                    "App lock disable failed - authentication error: " + error);
                                         }
 
                                         @Override
                                         public void onAuthenticationFailed() {
                                             // Authentication failed, revert the change
                                             setting.setChecked(true);
-                                            sentryManager
-                                                    .captureMessage("App lock disable failed - authentication failed");
+                                            captureMessageIfAvailable(
+                                                    "App lock disable failed - authentication failed");
                                         }
                                     });
                         } else {
                             // No biometric available, don't allow disabling
                             setting.setChecked(true);
-                            sentryManager
-                                    .captureMessage("Cannot disable app lock - biometric authentication not available");
+                            captureMessageIfAvailable(
+                                    "Cannot disable app lock - biometric authentication not available");
                         }
                         return false; // Don't apply the change yet
                     } else {
                         // Enabling app lock or other changes don't require authentication
                         SharedPreferencesManager.putBoolean("app_lock_enable", newValueBoolean);
-                        sentryManager
-                                .captureMessage("App lock set to " + newValue + ".");
+                        captureMessageIfAvailable("App lock set to " + newValue + ".");
                     }
                 } catch (Exception e) {
-                    sentryManager.captureException(e);
+                    captureExceptionIfAvailable(e);
                 }
                 return true;
             });

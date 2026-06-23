@@ -18,6 +18,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.doubleangels.nextdnsmanagement.sentry.SentryInitializer;
 import com.doubleangels.nextdnsmanagement.sentry.SentryManager;
+import com.doubleangels.nextdnsmanagement.utils.ExternalLinkHandler;
 
 import java.util.Locale;
 
@@ -251,30 +252,14 @@ public class PingActivity extends AppCompatActivity {
             webView.setWebViewClient(new WebViewClient() {
                 @Override
                 public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
-                    try {
-                        // Check if the URL ends with .nextdns.io
-                        String url = request.getUrl().toString();
-                        if (url.endsWith(".nextdns.io")) {
-                            // Load NextDNS URLs in the WebView
-                            return false;
-                        } else {
-                            // Open all other URLs in the default browser
-                            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-                            startActivity(intent);
-                            return true;
-                        }
-                    } catch (android.content.ActivityNotFoundException e) {
-                        android.widget.Toast.makeText(view.getContext(), "No browser found to open link.", android.widget.Toast.LENGTH_LONG).show();
-                        SentryManager.captureStaticException(e);
-                        return false;
-                    } catch (SecurityException e) {
-                        android.widget.Toast.makeText(view.getContext(), "Unable to open link due to security restrictions.", android.widget.Toast.LENGTH_LONG).show();
-                        SentryManager.captureStaticException(e);
-                        return false;
-                    } catch (Exception e) {
-                        SentryManager.captureStaticException(e);
+                    Uri uri = request.getUrl();
+                    if (uri == null) {
                         return false;
                     }
+                    if (ExternalLinkHandler.isNextDnsHost(uri)) {
+                        return false;
+                    }
+                    return ExternalLinkHandler.openExternalLink(view.getContext(), view, uri);
                 }
             });
         } catch (Exception e) {

@@ -299,18 +299,13 @@ public class VisualIndicator {
     }
 
     /**
-     * Handles various network-related exceptions, capturing them in Sentry.
+     * Handles network-related exceptions from the NextDNS connectivity check.
      *
      * @param e The caught exception.
      */
     private void catchNetworkErrors(@NonNull Exception e) {
-        if (e.getMessage() != null) {
-            String msg = e.getMessage().toLowerCase();
-            if (msg.contains("canceled") || msg.contains("cancel") || 
-                msg.contains("port out of range") || msg.contains("exhausted all routes") ||
-                msg.contains("failed to connect") || msg.contains("timeout")) {
-                return;
-            }
+        if (SentryManager.isIgnored(e)) {
+            return;
         }
         sentryManager.captureException(e);
     }

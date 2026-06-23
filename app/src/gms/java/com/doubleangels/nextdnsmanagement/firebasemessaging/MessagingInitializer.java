@@ -43,25 +43,14 @@ public class MessagingInitializer {
             return;
         }
 
-        // Workaround for a known Firebase Messaging issue where SERVICE_NOT_AVAILABLE
-        // throws an unhandled exception on an internal background thread, crashing the app.
+        // Workaround for known Firebase Messaging issues where transient Play Services
+        // errors throw on an internal background thread and would otherwise crash the app.
         Thread.UncaughtExceptionHandler defaultHandler = Thread.getDefaultUncaughtExceptionHandler();
         Thread.setDefaultUncaughtExceptionHandler((thread, throwable) -> {
-            boolean isFirebaseBug = false;
-            Throwable current = throwable;
-            while (current != null) {
-                if (current instanceof java.io.IOException &&
-                        current.getMessage() != null &&
-                        current.getMessage().contains("SERVICE_NOT_AVAILABLE")) {
-                    isFirebaseBug = true;
-                    break;
-                }
-                current = current.getCause();
-            }
-
-            if (isFirebaseBug) {
-                sentryManager.captureMessage("Caught and ignored SERVICE_NOT_AVAILABLE from Firebase background thread.");
-                return; // suppress crash
+            if (SentryManager.isIgnored(throwable)) {
+                sentryManager.captureMessage(
+                        "Caught and ignored transient Firebase Messaging error from background thread.");
+                return;
             }
 
             if (defaultHandler != null) {
@@ -75,8 +64,14 @@ public class MessagingInitializer {
                     .addOnCompleteListener(task -> {
                         try {
                             if (!task.isSuccessful()) {
-                                if (task.getException() != null) {
-                                    sentryManager.captureException(task.getException());
+                                Exception tokenError = task.getException();
+                                if (tokenError != null) {
+                                    if (SentryManager.isIgnored(tokenError)) {
+                                        sentryManager.captureMessage(
+                                                "Transient Firebase Messaging error while fetching FCM token.");
+                                    } else {
+                                        sentryManager.captureException(tokenError);
+                                    }
                                 } else {
                                     sentryManager.captureMessage("Fetching FCM registration token failed");
                                 }
@@ -100,8 +95,14 @@ public class MessagingInitializer {
                                     .addOnCompleteListener(task1 -> {
                                         try {
                                             if (!task1.isSuccessful()) {
-                                                if (task1.getException() != null) {
-                                                    sentryManager.captureException(task1.getException());
+                                                Exception topicError = task1.getException();
+                                                if (topicError != null) {
+                                                    if (SentryManager.isIgnored(topicError)) {
+                                                        sentryManager.captureMessage(
+                                                                "Transient Firebase Messaging error while subscribing to topic.");
+                                                    } else {
+                                                        sentryManager.captureException(topicError);
+                                                    }
                                                 } else {
                                                     sentryManager.captureMessage("Topic subscription failed");
                                                 }

@@ -47,6 +47,7 @@ import com.doubleangels.nextdnsmanagement.firebasemessaging.MessagingInitializer
 import com.doubleangels.nextdnsmanagement.protocol.VisualIndicator;
 import com.doubleangels.nextdnsmanagement.sentry.SentryInitializer;
 import com.doubleangels.nextdnsmanagement.sentry.SentryManager;
+import com.doubleangels.nextdnsmanagement.utils.ExternalLinkHandler;
 import com.doubleangels.nextdnsmanagement.sharedpreferences.SharedPreferencesManager;
 import com.doubleangels.nextdnsmanagement.webview.WebAppInterface;
 
@@ -226,8 +227,11 @@ public class MainActivity extends AppCompatActivity {
                 swipeRefreshLayout.setOnRefreshListener(null);
                 swipeRefreshLayout = null;
             }
-            // Clear blur overlay reference
-            blurOverlay = null;
+            if (blurOverlay != null) {
+                blurOverlay.animate().cancel();
+                blurOverlay.clearAnimation();
+                blurOverlay = null;
+            }
             // Clear sentry manager reference
             sentryManager = null;
         } catch (Exception e) {
@@ -451,30 +455,14 @@ public class MainActivity extends AppCompatActivity {
         webView.setWebViewClient(new WebViewClient() {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
-                try {
-                    // Check if the URL ends with .nextdns.io
-                    String url = request.getUrl().toString();
-                    if (url != null && url.endsWith(".nextdns.io")) {
-                        // Load NextDNS URLs in the WebView
-                        return false;
-                    } else {
-                        // Open all other URLs in the default browser
-                        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-                        startActivity(intent);
-                        return true;
-                    }
-                } catch (android.content.ActivityNotFoundException e) {
-                    android.widget.Toast.makeText(view.getContext(), "No browser found to open link.", android.widget.Toast.LENGTH_LONG).show();
-                    SentryManager.captureStaticException(e);
-                    return false;
-                } catch (SecurityException e) {
-                    android.widget.Toast.makeText(view.getContext(), "Unable to open link due to security restrictions.", android.widget.Toast.LENGTH_LONG).show();
-                    SentryManager.captureStaticException(e);
-                    return false;
-                } catch (Exception e) {
-                    SentryManager.captureStaticException(e);
+                Uri uri = request.getUrl();
+                if (uri == null) {
                     return false;
                 }
+                if (ExternalLinkHandler.isNextDnsHost(uri)) {
+                    return false;
+                }
+                return ExternalLinkHandler.openExternalLink(view.getContext(), view, uri);
             }
 
             @Override
@@ -662,48 +650,56 @@ public class MainActivity extends AppCompatActivity {
      * authentication.
      */
     private void showBlurOverlay() {
-        if (blurOverlay != null) {
-            // Set overlay color based on current theme
-            int overlayColor;
-            if (darkModeEnabled) {
-                // Dark mode: #212529
-                overlayColor = android.graphics.Color.parseColor("#212529");
-            } else {
-                // Light mode: #007bff
-                overlayColor = android.graphics.Color.parseColor("#007bff");
-            }
-
-            blurOverlay.setBackgroundColor(overlayColor);
-            blurOverlay.setVisibility(View.VISIBLE);
-            blurOverlay.setScaleX(0.95f);
-            blurOverlay.setScaleY(0.95f);
-            blurOverlay.animate()
-                    .alpha(1.0f)
-                    .scaleX(1.0f)
-                    .scaleY(1.0f)
-                    .setDuration(300)
-                    .start();
+        if (blurOverlay == null) {
+            return;
         }
+        View overlay = blurOverlay;
+        overlay.animate().cancel();
+        // Set overlay color based on current theme
+        int overlayColor;
+        if (darkModeEnabled) {
+            // Dark mode: #212529
+            overlayColor = android.graphics.Color.parseColor("#212529");
+        } else {
+            // Light mode: #007bff
+            overlayColor = android.graphics.Color.parseColor("#007bff");
+        }
+
+        overlay.setBackgroundColor(overlayColor);
+        overlay.setVisibility(View.VISIBLE);
+        overlay.setScaleX(0.95f);
+        overlay.setScaleY(0.95f);
+        overlay.animate()
+                .alpha(1.0f)
+                .scaleX(1.0f)
+                .scaleY(1.0f)
+                .setDuration(300)
+                .start();
     }
 
     /**
      * Hides the blur overlay after biometric authentication is complete.
      */
     private void hideBlurOverlay() {
-        if (blurOverlay != null) {
-            View overlay = blurOverlay;
-            overlay.animate()
-                    .alpha(0.0f)
-                    .scaleX(1.05f)
-                    .scaleY(1.05f)
-                    .setDuration(300)
-                    .withEndAction(() -> {
-                        overlay.setVisibility(View.GONE);
-                        overlay.setScaleX(1.0f);
-                        overlay.setScaleY(1.0f);
-                    })
-                    .start();
+        if (blurOverlay == null) {
+            return;
         }
+        View overlay = blurOverlay;
+        overlay.animate().cancel();
+        overlay.animate()
+                .alpha(0.0f)
+                .scaleX(1.05f)
+                .scaleY(1.05f)
+                .setDuration(300)
+                .withEndAction(() -> {
+                    if (isDestroyed() || !overlay.isAttachedToWindow()) {
+                        return;
+                    }
+                    overlay.setVisibility(View.GONE);
+                    overlay.setScaleX(1.0f);
+                    overlay.setScaleY(1.0f);
+                })
+                .start();
     }
 
     /**

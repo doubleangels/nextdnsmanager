@@ -4,7 +4,12 @@ import android.content.Context;
 
 import com.doubleangels.nextdnsmanagement.BuildConfig;
 
+import io.sentry.Hint;
+import io.sentry.SentryEvent;
+import io.sentry.TypeCheckHint;
 import io.sentry.android.core.SentryAndroid;
+
+import okhttp3.Request;
 
 /**
  * A utility class for initializing Sentry in the application. It sets various
@@ -73,18 +78,57 @@ public class SentryInitializer {
             // that may be more likely on rooted devices
             options.setEnableRootCheck(true);
 
+            SentryManager.registerIgnoredExceptionTypes(options);
+
             // Filter out SentryHttpClientException thrown by SentryOkHttpInterceptor
             // when NextDNS or other APIs return 5xx errors (e.g., 504).
             // These are server-side availability issues, not app crashes.
             options.setBeforeSend((event, hint) -> {
-                if (event.getThrowable() != null) {
-                    if (event.getThrowable().getClass().getSimpleName().equals("SentryHttpClientException")) {
-                        return null; // Drop the event
-                    }
+                if (shouldDropEvent(event, hint)) {
+                    return null;
                 }
                 return event;
             });
 
         })).start(); // Start the thread, so the initialization does not block the main thread
+    }
+
+    private static boolean shouldDropEvent(SentryEvent event, Hint hint) {
+        if (event.getThrowable() != null) {
+            if (event.getThrowable().getClass().getSimpleName().equals("SentryHttpClientException")) {
+                return true;
+            }
+            if (SentryManager.isIgnored(event.getThrowable())) {
+                return true;
+            }
+        }
+        return isNextDnsConnectivityProbe(event, hint);
+    }
+
+    /**
+     * Drops auto-captured OkHttp errors from the NextDNS connectivity check endpoint.
+     * DNS/network failures there are expected when offline, on VPN, or without NextDNS configured.
+     */
+    private static boolean isNextDnsConnectivityProbe(SentryEvent event, Hint hint) {
+        Object okHttpRequest = hint.get(TypeCheckHint.OKHTTP_REQUEST);
+        if (okHttpRequest instanceof Request request) {
+            if (isTestNextDnsHost(request.url().host())) {
+                return true;
+            }
+        }
+
+        Throwable throwable = event.getThrowable();
+        while (throwable != null) {
+            String message = throwable.getMessage();
+            if (message != null && message.contains("test.nextdns.io")) {
+                return true;
+            }
+            throwable = throwable.getCause();
+        }
+        return false;
+    }
+
+    private static boolean isTestNextDnsHost(String host) {
+        return host != null && (host.equals("test.nextdns.io") || host.endsWith(".test.nextdns.io"));
     }
 }

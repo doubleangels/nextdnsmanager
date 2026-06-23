@@ -1,5 +1,6 @@
 package com.doubleangels.nextdnsmanagement.sentry;
 
+import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.util.Log;
 
@@ -7,6 +8,8 @@ import com.doubleangels.nextdnsmanagement.sharedpreferences.SharedPreferencesMan
 
 import java.lang.ref.WeakReference;
 
+import java.io.EOFException;
+import java.net.ConnectException;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
@@ -17,6 +20,7 @@ import javax.net.ssl.SSLException;
 import javax.net.ssl.SSLHandshakeException;
 
 import io.sentry.Sentry;
+import io.sentry.SentryOptions;
 import okhttp3.internal.http2.ConnectionShutdownException;
 
 /**
@@ -34,6 +38,10 @@ public class SentryManager {
      * These exceptions will not be sent to Sentry.
      */
     private static final List<Class<? extends Exception>> IGNORED_ERRORS = Arrays.asList(
+            ActivityNotFoundException.class,
+            ConnectException.class,
+            EOFException.class,
+            SecurityException.class,
             UnknownHostException.class,
             SocketTimeoutException.class,
             SocketException.class,
@@ -64,22 +72,98 @@ public class SentryManager {
     }
 
     /**
-     * Checks whether the provided exception is an instance of any ignored error
-     * types.
+     * Transient Firebase Messaging / Installations errors that reflect device or
+     * Play Services state, not app bugs.
+     */
+    private static final List<String> TRANSIENT_FIREBASE_MESSAGING_ERRORS = Arrays.asList(
+            "SERVICE_NOT_AVAILABLE",
+            "FIS_AUTH_ERROR",
+            "MISSING_INSTANCEID_SERVICE",
+            "Firebase Installations Service is unavailable",
+            "TIMEOUT");
+
+    /**
+     * Transient network errors from OkHttp or connectivity checks — not app bugs.
+     */
+    private static final List<String> TRANSIENT_NETWORK_ERROR_MESSAGES = Arrays.asList(
+            "canceled",
+            "cancel",
+            "port out of range",
+            "exhausted all routes",
+            "failed to connect",
+            "timeout",
+            "unexpected end of stream",
+            "stream was reset",
+            "connection reset",
+            "broken pipe",
+            "connection closed",
+            "socket closed",
+            "settings preface not received");
+
+    /**
+     * Checks whether the provided throwable (including its cause chain) matches an
+     * ignored error type.
      * <p>
      * This static method is available for both static and instance contexts.
      * </p>
      *
-     * @param e The exception to check.
-     * @return true if the exception should be ignored; false otherwise.
+     * @param throwable The throwable to check.
+     * @return true if the throwable should be ignored; false otherwise.
      */
-    public static boolean isIgnored(Exception e) {
-        for (Class<? extends Exception> ignored : IGNORED_ERRORS) {
-            if (ignored.isInstance(e)) {
+    public static boolean isIgnored(Throwable throwable) {
+        Throwable current = throwable;
+        while (current != null) {
+            for (Class<? extends Exception> ignored : IGNORED_ERRORS) {
+                if (ignored.isInstance(current)) {
+                    return true;
+                }
+            }
+            if (isTransientFirebaseMessagingError(current)) {
+                return true;
+            }
+            if (isTransientNetworkError(current)) {
+                return true;
+            }
+            current = current.getCause();
+        }
+        return false;
+    }
+
+    private static boolean isTransientFirebaseMessagingError(Throwable throwable) {
+        String message = throwable.getMessage();
+        if (message == null) {
+            return false;
+        }
+        for (String error : TRANSIENT_FIREBASE_MESSAGING_ERRORS) {
+            if (message.contains(error)) {
                 return true;
             }
         }
         return false;
+    }
+
+    private static boolean isTransientNetworkError(Throwable throwable) {
+        String message = throwable.getMessage();
+        if (message == null) {
+            return false;
+        }
+        String lower = message.toLowerCase();
+        for (String pattern : TRANSIENT_NETWORK_ERROR_MESSAGES) {
+            if (lower.contains(pattern)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Registers ignored exception types with the Sentry SDK so auto-captured errors
+     * (e.g. from OkHttp instrumentation) are dropped before transmission.
+     */
+    public static void registerIgnoredExceptionTypes(SentryOptions options) {
+        for (Class<? extends Exception> ignored : IGNORED_ERRORS) {
+            options.addIgnoredExceptionForType(ignored);
+        }
     }
 
     /**

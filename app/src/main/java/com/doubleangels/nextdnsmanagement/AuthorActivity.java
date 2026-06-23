@@ -13,6 +13,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.doubleangels.nextdnsmanagement.sentry.SentryInitializer;
 import com.doubleangels.nextdnsmanagement.sentry.SentryManager;
+import com.doubleangels.nextdnsmanagement.utils.ExternalLinkHandler;
 
 import java.util.Locale;
 
@@ -142,25 +143,8 @@ public class AuthorActivity extends AppCompatActivity {
         ImageView emailButton = findViewById(R.id.emailImageView);
 
         // Set click listener for GitHub button
-        githubButton.setOnClickListener(view -> {
-            // Get the GitHub profile URL from resources
-            String url = getString(R.string.github_profile_url);
-            // Create an intent to view the URL
-            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-            try {
-                // Start the activity to view the GitHub profile
-                startActivity(intent);
-            } catch (android.content.ActivityNotFoundException e) {
-                android.widget.Toast.makeText(this, "No browser found to open link.", android.widget.Toast.LENGTH_LONG).show();
-                sentryManager.captureException(e);
-            } catch (SecurityException e) {
-                android.widget.Toast.makeText(this, "Unable to open link due to security restrictions.", android.widget.Toast.LENGTH_LONG).show();
-                sentryManager.captureException(e);
-            } catch (Exception e) {
-                // Capture and log any exception that occurs when launching the intent
-                sentryManager.captureException(e);
-            }
-        });
+        githubButton.setOnClickListener(view -> ExternalLinkHandler.openExternalLink(this,
+                Uri.parse(getString(R.string.github_profile_url))));
 
         // Set click listener for email button
         emailButton.setOnClickListener(view -> {
@@ -168,17 +152,12 @@ public class AuthorActivity extends AppCompatActivity {
             Intent emailIntent = new Intent(Intent.ACTION_SENDTO);
             emailIntent.setData(Uri.parse("mailto:jzgm2llm@addy.io"));
             try {
-                // Start an email chooser activity
                 startActivity(Intent.createChooser(emailIntent, "Send Email"));
             } catch (android.content.ActivityNotFoundException e) {
                 android.widget.Toast.makeText(this, "No email client found.", android.widget.Toast.LENGTH_LONG).show();
-                sentryManager.captureException(e);
             } catch (SecurityException e) {
-                android.widget.Toast.makeText(this, "Unable to open email client due to security restrictions.", android.widget.Toast.LENGTH_LONG).show();
-                sentryManager.captureException(e);
-            } catch (Exception e) {
-                // Capture and log any exception that occurs when launching the email intent
-                sentryManager.captureException(e);
+                android.widget.Toast.makeText(this, "Unable to open email client due to security restrictions.",
+                        android.widget.Toast.LENGTH_LONG).show();
             }
         });
 
