@@ -9,7 +9,29 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.ACCESS_NOTIFICATION_POLICY"/>
 
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <category android:name="android.intent.category.BROWSABLE" />
+            <data android:scheme="https" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <category android:name="android.intent.category.BROWSABLE" />
+            <data android:scheme="http" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.SENDTO" />
+            <data android:scheme="mailto" />
+        </intent>
+    </queries>
+
     <application
+        android:name=".NextDnsApplication"
+        android:allowBackup="false"
+        android:fullBackupContent="@xml/backup_rules"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:networkSecurityConfig="@xml/network_security_config"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher"
@@ -17,7 +39,7 @@
         android:theme="@style/AppTheme"
         android:localeConfig="@xml/locales_config"
         android:hardwareAccelerated="true"
-        tools:targetApi="tiramisu"
+        tools:targetApi="37"
         android:enableOnBackInvokedCallback="true">
         <service
             android:name=".CustomFirebaseMessagingService"
@@ -49,18 +71,23 @@
         <activity
             android:name=".PingActivity"
             android:exported="false"
-            android:hardwareAccelerated="true" />
+            android:hardwareAccelerated="true"
+            android:windowSoftInputMode="adjustResize" />
         <activity
             android:name=".StatusActivity"
             android:exported="false" />
         <activity android:name=".AuthorActivity"
-            android:exported="false" />
+            android:exported="false"
+            android:theme="@style/AuthorTheme" />
         <activity android:name=".PermissionActivity"
-            android:exported="false" />
+            android:exported="false"
+            android:theme="@style/PermissionTheme" />
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:hardwareAccelerated="true">
+            android:hardwareAccelerated="true"
+            android:theme="@style/Theme.App.Starting"
+            android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />

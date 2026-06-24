@@ -8,6 +8,7 @@ import android.content.res.Configuration;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -21,6 +22,8 @@ import com.doubleangels.nextdnsmanagement.biometriclock.BiometricLock;
 import com.doubleangels.nextdnsmanagement.sentry.SentryInitializer;
 import com.doubleangels.nextdnsmanagement.sentry.SentryManager;
 import com.doubleangels.nextdnsmanagement.sharedpreferences.SharedPreferencesManager;
+import com.doubleangels.nextdnsmanagement.utils.ExternalLinkHandler;
+import com.doubleangels.nextdnsmanagement.utils.InsetsHelper;
 
 import java.util.Locale;
 
@@ -29,7 +32,7 @@ import java.util.Locale;
  * error logging (Sentry),
  * configures dark mode settings, and loads the SettingsFragment.
  */
-public class SettingsActivity extends AppCompatActivity {
+public class SettingsActivity extends BaseActivity {
 
     // Sentry manager instance for capturing errors
     public SentryManager sentryManager;
@@ -44,31 +47,22 @@ public class SettingsActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // Set the layout for this activity
         setContentView(R.layout.activity_settings);
+        setupInsets();
 
-        // Initialize the SentryManager for error logging
         sentryManager = new SentryManager(this);
-        try {
-            // Initialize shared preferences
-            SharedPreferencesManager.init(this);
-        } catch (Exception e) {
-            if (sentryManager != null) {
-                sentryManager.captureException(e);
-            }
+        if (SharedPreferencesManager.isInitialized()) {
+            finishSettingsStartup();
+        } else {
+            AppStartupHelper.initializePreferencesAsync(this, null, this::finishSettingsStartup);
+        }
+    }
+
+    private void finishSettingsStartup() {
+        if (isFinishing()) {
+            return;
         }
         try {
-            // Log the current settings for dark mode and Sentry enable flag
-            assert sentryManager != null;
-            sentryManager.captureMessage("SharedPreferences 'dark_mode' value: "
-                    + SharedPreferencesManager.getString("dark_mode", "match"));
-            sentryManager.captureMessage("SharedPreferences 'sentry_enable' value: "
-                    + SharedPreferencesManager.getBoolean("sentry_enable", false));
-        } catch (Exception e) {
-            sentryManager.captureException(e);
-        }
-        try {
-            // Initialize Sentry if it is enabled
             if (sentryManager.isEnabled()) {
                 SentryInitializer.initialize(this);
             }
@@ -76,25 +70,24 @@ public class SettingsActivity extends AppCompatActivity {
             sentryManager.captureException(e);
         }
         try {
-            // Set up dark mode configuration based on saved preferences
             setupDarkModeForActivity(SharedPreferencesManager.getString("dark_mode", "match"));
         } catch (Exception e) {
             sentryManager.captureException(e);
         }
         try {
-            // Initialize the settings views (fragment)
             initializeViews();
         } catch (Exception e) {
             sentryManager.captureException(e);
         }
     }
 
-    /**
-     * Attaches a new base context with locale settings based on device
-     * configuration.
-     *
-     * @param newBase The new base context.
-     */
+    private void setupInsets() {
+        View root = findViewById(R.id.root);
+        InsetsHelper.installOnRoot(root);
+        View settingsContainer = findViewById(R.id.settings);
+        InsetsHelper.applySystemBarPadding(settingsContainer);
+    }
+
     @Override
     protected void attachBaseContext(Context newBase) {
         // Retrieve the current configuration
@@ -115,17 +108,15 @@ public class SettingsActivity extends AppCompatActivity {
      * @param darkMode The dark mode setting value from shared preferences.
      */
     public void setupDarkModeForActivity(String darkMode) {
-        // Only set dark mode for Android versions below TIRAMISU
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+        if (sentryManager != null) {
             sentryManager.captureMessage("Dark mode setting: " + darkMode);
-            // Set the night mode based on the darkMode string
-            if (darkMode.contains("match")) {
-                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
-            } else if (darkMode.contains("on")) {
-                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
-            } else {
-                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
-            }
+        }
+        if (darkMode.contains("match")) {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
+        } else if (darkMode.contains("on")) {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
+        } else {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
         }
     }
 
@@ -137,7 +128,7 @@ public class SettingsActivity extends AppCompatActivity {
         getSupportFragmentManager()
                 .beginTransaction()
                 .replace(R.id.settings, new SettingsFragment())
-                .commitNow();
+                .commit();
     }
 
     /**
@@ -164,11 +155,8 @@ public class SettingsActivity extends AppCompatActivity {
             } catch (Exception e) {
                 sentryManager.captureException(e);
             }
-            try {
-                // Initialize shared preferences for the fragment
-                SharedPreferencesManager.init(requireContext());
-            } catch (Exception e) {
-                sentryManager.captureException(e);
+            if (!SharedPreferencesManager.isInitialized()) {
+                return;
             }
             try {
                 // Set the initial visibility of Sentry-related preferences
@@ -183,8 +171,8 @@ public class SettingsActivity extends AppCompatActivity {
                 ListPreference darkModePreference = findPreference("dark_mode");
                 final BiometricLock biometricLock = new BiometricLock((AppCompatActivity) requireContext());
 
-                // Hide app lock preferences if biometric authentication is not available
-                if (!biometricLock.canAuthenticate()) {
+                // Hide app lock when storage is not encrypted or biometrics are unavailable
+                if (!SharedPreferencesManager.isUsingEncryptedStorage() || !biometricLock.canAuthenticate()) {
                     setPreferenceVisibility("applock", false);
                 }
                 // Set up change listeners for each preference
@@ -206,6 +194,7 @@ public class SettingsActivity extends AppCompatActivity {
                 setupButton("github_button", R.string.github_url);
                 setupButton("github_issue_button", R.string.github_issues_url);
                 setupButton("donation_button", R.string.donation_url);
+                setupButton("redact_button", R.string.redact_url);
                 setupButton("tally_issues_button", R.string.tally_issues_url);
                 setupButton("translate_button", R.string.tally_incorrect_translation_url);
                 setupButton("privacy_policy_button", R.string.privacy_policy_url);
@@ -231,6 +220,20 @@ public class SettingsActivity extends AppCompatActivity {
         public void onDestroyView() {
             super.onDestroyView();
             sentryManager = null;
+        }
+
+        private void captureMessageIfAvailable(String message) {
+            if (sentryManager != null) {
+                sentryManager.captureMessage(message);
+            }
+        }
+
+        private void captureExceptionIfAvailable(Exception e) {
+            if (sentryManager != null) {
+                sentryManager.captureException(e);
+            } else if (getContext() != null) {
+                new SentryManager(requireContext()).captureException(e);
+            }
         }
 
         /**
@@ -276,21 +279,10 @@ public class SettingsActivity extends AppCompatActivity {
                             CharSequence copiedText = getString(textResource);
                             ClipData copiedData = ClipData.newPlainText("text", copiedText);
                             clipboardManager.setPrimaryClip(copiedData);
-                            Toast.makeText(getContext(), "Text copied!", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(getContext(), R.string.text_copied, Toast.LENGTH_SHORT).show();
                         } else {
-                            // Otherwise, open the URL in a browser
-                            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(getString(textResource)));
-                            startActivity(intent);
-                        }
-                    } catch (android.content.ActivityNotFoundException e) {
-                        Toast.makeText(getContext(), "No browser found to open link.", Toast.LENGTH_LONG).show();
-                        if (getContext() != null) {
-                            new SentryManager(getContext()).captureException(e);
-                        }
-                    } catch (SecurityException e) {
-                        Toast.makeText(getContext(), "Unable to open link due to security restrictions.", Toast.LENGTH_LONG).show();
-                        if (getContext() != null) {
-                            new SentryManager(getContext()).captureException(e);
+                            ExternalLinkHandler.openExternalLink(requireContext(),
+                                    Uri.parse(getString(textResource)));
                         }
                     } catch (Exception e) {
                         if (getContext() != null) {
@@ -314,22 +306,15 @@ public class SettingsActivity extends AppCompatActivity {
                     try {
                         // Launch the appropriate activity based on the button key
                         if ("author_button".equals(buttonKey)) {
-                            Intent intent = new Intent(getContext(), AuthorActivity.class);
-                            startActivity(intent);
+                            requireActivity().startActivity(
+                                    new Intent(requireActivity(), AuthorActivity.class));
                         } else if ("permission_button".equals(buttonKey)) {
-                            Intent intent = new Intent(getContext(), PermissionActivity.class);
-                            startActivity(intent);
-                        }
-                    } catch (android.content.ActivityNotFoundException e) {
-                        Toast.makeText(getContext(), "Activity not found.", Toast.LENGTH_LONG).show();
-                        if (getContext() != null) {
-                            new SentryManager(getContext()).captureException(e);
+                            requireActivity().startActivity(
+                                    new Intent(requireActivity(), PermissionActivity.class));
                         }
                     } catch (SecurityException e) {
-                        Toast.makeText(getContext(), "Unable to open activity due to security restrictions.", Toast.LENGTH_LONG).show();
-                        if (getContext() != null) {
-                            new SentryManager(getContext()).captureException(e);
-                        }
+                        Toast.makeText(getContext(), R.string.activity_open_security_error,
+                                Toast.LENGTH_LONG).show();
                     } catch (Exception e) {
                         if (getContext() != null) {
                             new SentryManager(getContext()).captureException(e);
@@ -358,7 +343,7 @@ public class SettingsActivity extends AppCompatActivity {
                         ((SettingsActivity) getActivity()).setupDarkModeForActivity(newValue.toString());
                     }
                 } catch (Exception e) {
-                    sentryManager.captureException(e);
+                    captureExceptionIfAvailable(e);
                 }
                 return true;
             });
@@ -376,58 +361,52 @@ public class SettingsActivity extends AppCompatActivity {
                     boolean newValueBoolean = (Boolean) newValue;
                     boolean currentValue = SharedPreferencesManager.getBoolean("app_lock_enable", false);
 
-                    // If trying to disable app lock, require biometric authentication
-                    if (currentValue && !newValueBoolean) {
+                    // Require biometric authentication to enable or disable app lock
+                    if (currentValue != newValueBoolean) {
                         final BiometricLock biometricLock = new BiometricLock((AppCompatActivity) requireContext());
                         if (biometricLock.canAuthenticate()) {
+                            String promptTitle = newValueBoolean
+                                    ? getString(R.string.enable_app_lock_title)
+                                    : getString(R.string.disable_app_lock_title);
+                            String promptSubtitle = newValueBoolean
+                                    ? getString(R.string.enable_app_lock_subtitle)
+                                    : getString(R.string.disable_app_lock_subtitle);
                             biometricLock.showPrompt(
-                                    "Disable App Lock",
-                                    "Authenticate to disable app lock",
-                                    "Use biometric or device credentials to confirm this action",
+                                    promptTitle,
+                                    promptSubtitle,
+                                    getString(R.string.app_lock_confirm_action),
                                     new BiometricLock.BiometricLockCallback() {
                                         @Override
                                         public void onAuthenticationSucceeded() {
-                                            // Authentication successful, allow the change
-                                            SharedPreferencesManager.putBoolean("app_lock_enable", false);
-                                            // Update the UI toggle to reflect the change
-                                            setting.setChecked(false);
-                                            sentryManager
-                                                    .captureMessage(
-                                                            "App lock disabled after biometric authentication.");
+                                            SharedPreferencesManager.putBoolean("app_lock_enable", newValueBoolean);
+                                            setting.setChecked(newValueBoolean);
+                                            captureMessageIfAvailable(
+                                                    "App lock set to " + newValueBoolean + " after biometric authentication.");
                                         }
 
                                         @Override
-                                        public void onAuthenticationError(String error) {
-                                            // Authentication failed, revert the change
-                                            setting.setChecked(true);
-                                            sentryManager
-                                                    .captureMessage(
-                                                            "App lock disable failed - authentication error: " + error);
+                                        public void onAuthenticationError(int errorCode, String error) {
+                                            setting.setChecked(currentValue);
+                                            captureMessageIfAvailable(
+                                                    "App lock change failed - authentication error: " + error);
                                         }
 
                                         @Override
                                         public void onAuthenticationFailed() {
-                                            // Authentication failed, revert the change
-                                            setting.setChecked(true);
-                                            sentryManager
-                                                    .captureMessage("App lock disable failed - authentication failed");
+                                            setting.setChecked(currentValue);
+                                            captureMessageIfAvailable(
+                                                    "App lock change failed - authentication failed");
                                         }
                                     });
                         } else {
-                            // No biometric available, don't allow disabling
-                            setting.setChecked(true);
-                            sentryManager
-                                    .captureMessage("Cannot disable app lock - biometric authentication not available");
+                            setting.setChecked(currentValue);
+                            captureMessageIfAvailable(
+                                    "Cannot change app lock - biometric authentication not available");
                         }
-                        return false; // Don't apply the change yet
-                    } else {
-                        // Enabling app lock or other changes don't require authentication
-                        SharedPreferencesManager.putBoolean("app_lock_enable", newValueBoolean);
-                        sentryManager
-                                .captureMessage("App lock set to " + newValue + ".");
+                        return false;
                     }
                 } catch (Exception e) {
-                    sentryManager.captureException(e);
+                    captureExceptionIfAvailable(e);
                 }
                 return true;
             });

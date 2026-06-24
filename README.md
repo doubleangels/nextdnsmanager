@@ -51,6 +51,7 @@ NextDNS Manager is an Android application that simplifies managing your [NextDNS
   - [Is this app secure? Can you access my account or view my DNS queries?](#is-this-app-secure-can-you-access-my-account-or-view-my-dns-queries)
   - [What is Sentry, and is it tracking me?](#what-is-sentry-and-is-it-tracking-me)
   - [I am new to using NextDNS and I don't understand how to use it, can you teach me?](#i-am-new-to-using-nextdns-and-i-dont-understand-how-to-use-it-can-you-teach-me)
+  - [Why does my update fail?](#update-failed)
   - [I have multiple versions of NextDNS Manager on my phone after the 5.5.0 update!](#multiple-versions)
   - [Why doesn't the app support Android versions before 12L?](#supported-android-versions)
   - [Will you bring back support for older Android versions?](#add-supported-android-versions)
@@ -123,6 +124,13 @@ Get NextDNS Manager on F-Droid from the [official page](https://f-droid.org/en/p
 
 Download the latest APK directly from the [GitHub Releases page](https://github.com/doubleangels/NextDNSManager/releases).
 
+Each release includes two APK files:
+
+| GitHub APK | Use when |
+| ---------- | -------- |
+| `app-release.apk` | You want the GMS build (same as Google Play; includes FCM) |
+| `app-release-foss.apk` | You use a de-Googled device or prefer the F-Droid-style build (no FCM) |
+
 ---
 
 ## FAQ
@@ -174,6 +182,28 @@ This data is solely used to improve app stability by fixing bugs and errors. It 
 Because NextDNS support and communication from the developers is lacking, I am happy to try and help any users that open an issue. For simple setup/configuration questions or specific questions about this app and its features, I will do whatever I can to help users get to a point where their configuration is working.
 
 I also recommend the r/nextdns community on Reddit, there are many knowledgeable people who can help as well.
+
+### <a id="update-failed"></a>Why does my update fail?
+
+Android only allows in-place app updates when the new APK is signed with the **same certificate** as the version already installed. NextDNS Manager is distributed through several channels, and each channel uses a different signing key:
+
+| Install / update source | Signing key |
+| ----------------------- | ----------- |
+| [GitHub Releases](https://github.com/doubleangels/NextDNSManager/releases) (`app-release.apk`, `app-release-foss.apk`) | Maintainer upload key |
+| [F-Droid](https://f-droid.org/en/packages/com.doubleangels.nextdnsmanagement) | F-Droid project key |
+| [Google Play](https://play.google.com/store/apps/details?id=com.doubleangels.nextdnsmanagement) | Google Play App Signing key |
+| Third-party stores (e.g. APKPure) | Usually the Play-signed APK |
+
+If you originally installed from **GitHub** or **F-Droid**, an update from **APKPure** or the **Play Store** will fail with "Update failed" or similar — this is expected Android behavior, not an app bug.
+
+**How to fix it:**
+
+1. **Update from the same source you installed from:**
+   - F-Droid install → update via F-Droid only
+   - GitHub install → download the matching APK from [GitHub Releases](https://github.com/doubleangels/NextDNSManager/releases) (`app-release.apk` for GMS, `app-release-foss.apk` for de-Googled/FOSS)
+   - Play Store install → update via Play Store (or a mirror that hosts the Play-signed build)
+2. **If you are unsure which source you used**, or you mixed sources over time: uninstall the app, then install fresh from your chosen channel. You may need to sign in to NextDNS again afterward.
+3. **If you see duplicate app icons**, you may have legacy package names from a brief 5.5.0 release window — see [this issue](https://github.com/doubleangels/nextdnsmanager/issues/430).
 
 ### <a id="multiple-versions"></a>I have multiple versions of NextDNS Manager on my phone after the 5.5.0 update
 

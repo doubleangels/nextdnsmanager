@@ -3,31 +3,41 @@ name: Release Deployment
 on:
   workflow_dispatch:
 
-permissions:
-  contents: read
-
 jobs:
-  build-gms-flavor:
+  build-gms-flavor-for-github:
     runs-on: ubuntu-latest
-    outputs:
-      VERSION_NAME: ${{ steps.version.outputs.VERSION_NAME }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
+
+      - name: Setup Android build
+        uses: ./.github/actions/setup-android-build
+
+      - name: Cache Gradle dependencies
+        uses: actions/cache@v6
         with:
-          persist-credentials: false
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+            ~/.gradle/daemon
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
 
-      - name: Setup Android Environment
-        uses: ./.github/actions/setup-android-env
+      - name: Cache Android SDK
+        uses: actions/cache@v6
+        with:
+          path: |
+            ~/.android/build-cache
+            ~/.android/cache
+          key: ${{ runner.os }}-android-sdk-${{ hashFiles('**/build.gradle*') }}
+          restore-keys: |
+            ${{ runner.os }}-android-sdk-
 
-      - name: Extract versionName
-        id: version
-        run: |
-          VERSION_NAME=$(grep -oP 'versionName\s+"\K[^"]+' app/build.gradle || echo "0.0.0")
-          echo "VERSION_NAME=$VERSION_NAME" >> $GITHUB_OUTPUT
-
-      - name: Build APK & Bundle for Github and Google Play
-        run: ./gradlew assembleGmsRelease bundleGmsRelease --no-daemon --parallel --build-cache --configuration-cache
+      - name: Build APK for Github release
+        run: ./gradlew assembleGmsRelease --parallel --build-cache --configuration-cache
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
 
       - name: Sign APK for Github release
         uses: r0adkll/sign-android-release@v1
@@ -38,7 +48,7 @@ jobs:
           keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
           keyPassword: ${{ secrets.KEY_PASSWORD }}
         env:
-          BUILD_TOOLS_VERSION: "34.0.0"
+          BUILD_TOOLS_VERSION: "37.0.0"
 
       - name: Rename Github APK file
         run: mv app/build/outputs/apk/gms/release/app-gms-release-unsigned-signed.apk app/build/outputs/apk/gms/release/app-release.apk
@@ -48,6 +58,96 @@ jobs:
         with:
           name: github-release-apk
           path: app/build/outputs/apk/gms/release/app-release.apk
+
+  build-foss-flavor-for-github:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Android build
+        uses: ./.github/actions/setup-android-build
+
+      - name: Cache Gradle dependencies
+        uses: actions/cache@v6
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+            ~/.gradle/daemon
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Cache Android SDK
+        uses: actions/cache@v6
+        with:
+          path: |
+            ~/.android/build-cache
+            ~/.android/cache
+          key: ${{ runner.os }}-android-sdk-${{ hashFiles('**/build.gradle*') }}
+          restore-keys: |
+            ${{ runner.os }}-android-sdk-
+
+      - name: Build APK for Github release
+        run: ./gradlew assembleFossRelease --parallel --build-cache --configuration-cache
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+
+      - name: Sign APK for Github release
+        uses: r0adkll/sign-android-release@v1
+        with:
+          releaseDirectory: app/build/outputs/apk/foss/release
+          signingKeyBase64: ${{ secrets.SIGNING_KEY }}
+          alias: ${{ secrets.ALIAS }}
+          keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
+          keyPassword: ${{ secrets.KEY_PASSWORD }}
+        env:
+          BUILD_TOOLS_VERSION: "37.0.0"
+
+      - name: Rename Github APK file
+        run: mv app/build/outputs/apk/foss/release/app-foss-release-unsigned-signed.apk app/build/outputs/apk/foss/release/app-release-foss.apk
+
+      - name: Upload APK to Github release artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: github-foss-release-apk
+          path: app/build/outputs/apk/foss/release/app-release-foss.apk
+
+  build-gms-flavor-for-google-play:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Android build
+        uses: ./.github/actions/setup-android-build
+
+      - name: Cache Gradle dependencies
+        uses: actions/cache@v6
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+            ~/.gradle/daemon
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Cache Android SDK
+        uses: actions/cache@v6
+        with:
+          path: |
+            ~/.android/build-cache
+            ~/.android/cache
+          key: ${{ runner.os }}-android-sdk-${{ hashFiles('**/build.gradle*') }}
+          restore-keys: |
+            ${{ runner.os }}-android-sdk-
+
+      - name: Build bundle for Google Play release
+        run: ./gradlew bundleGmsRelease --parallel --build-cache --configuration-cache
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
 
       - name: Sign bundle for Google Play release
         uses: r0adkll/sign-android-release@v1
@@ -67,54 +167,20 @@ jobs:
           name: google-play-bundle
           path: app/build/outputs/bundle/gmsRelease/app-release.aab
 
-  build-foss-flavor:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          persist-credentials: false
-
-      - name: Setup Android Environment
-        uses: ./.github/actions/setup-android-env
-
-      - name: Build APK for Github release
-        run: ./gradlew assembleFossRelease --no-daemon --parallel --build-cache --configuration-cache
-
-      - name: Sign APK for Github release
-        uses: r0adkll/sign-android-release@v1
-        with:
-          releaseDirectory: app/build/outputs/apk/foss/release
-          signingKeyBase64: ${{ secrets.SIGNING_KEY }}
-          alias: ${{ secrets.ALIAS }}
-          keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
-          keyPassword: ${{ secrets.KEY_PASSWORD }}
-        env:
-          BUILD_TOOLS_VERSION: "34.0.0"
-
-      - name: Rename Github APK file
-        run: mv app/build/outputs/apk/foss/release/app-foss-release-unsigned-signed.apk app/build/outputs/apk/foss/release/app-release-foss.apk
-
-      - name: Upload APK to Github release artifacts
-        uses: actions/upload-artifact@v7
-        with:
-          name: github-foss-release-apk
-          path: app/build/outputs/apk/foss/release/app-release-foss.apk
-
   publish-built-files:
-    permissions:
-      contents: write
     needs:
       [
-        "build-gms-flavor",
-        "build-foss-flavor"
+        "build-gms-flavor-for-github",
+        "build-foss-flavor-for-github",
+        "build-gms-flavor-for-google-play",
       ]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
-          persist-credentials: false
+          fetch-depth: 0
+          fetch-tags: true
 
       - name: Download APK from Github release artifacts
         uses: actions/download-artifact@v8
@@ -134,20 +200,50 @@ jobs:
           name: google-play-bundle
           path: .
 
+      - name: Read APK info to get version code
+        id: android_version
+        uses: hkusu/apk-info-action@v1
+        with:
+          apk-path: app-release.apk
+
+      # release-drafter only lists merged PRs (GitHub API). Plain `git merge`
+      # commits are not linked to PRs, so add them from git for the same range.
+      - name: Summarize git merge commits since last tag
+        id: git_merges
+        shell: bash
+        run: |
+          set -euo pipefail
+          delim="git_merges_${GITHUB_RUN_ID}_${GITHUB_RUN_ATTEMPT}_EOF"
+          {
+            echo "footer<<${delim}"
+            prev=$(git describe --tags --abbrev=0 2>/dev/null || true)
+            if [[ -n "${prev}" ]]; then
+              extra=$(git log "${prev}..HEAD" --merges --pretty=format:'- %s (%h)' \
+                | grep -vE '^- Merge pull request #[0-9]+' || true)
+              if [[ -n "${extra}" ]]; then
+                echo ""
+                echo "### Git merges"
+                echo "${extra}"
+              fi
+            fi
+            echo "${delim}"
+          } >> "${GITHUB_OUTPUT}"
+
       - name: Create Github release using release-drafter
         id: create_release
         uses: release-drafter/release-drafter@v7
         env:
-          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag: v${{ needs.build-gms-flavor.outputs.VERSION_NAME }}
-          name: v${{ needs.build-gms-flavor.outputs.VERSION_NAME }}
+          tag: v${{ steps.android_version.outputs.version-name }}
+          name: v${{ steps.android_version.outputs.version-name }}
+          footer: ${{ steps.git_merges.outputs.footer }}
 
       - name: Upload APK to Github release
         id: upload_release_asset
         uses: shogo82148/actions-upload-release-asset@v1
         env:
-          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: app-release.apk
@@ -159,7 +255,7 @@ jobs:
         id: upload_foss_release_asset
         uses: shogo82148/actions-upload-release-asset@v1
         env:
-          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: app-release-foss.apk
@@ -170,7 +266,7 @@ jobs:
       - name: Publish Github release
         uses: eregon/publish-release@v1
         env:
-          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           release_id: ${{ steps.create_release.outputs.id }}
 
@@ -187,12 +283,11 @@ jobs:
           whatsNewDirectory: whatsnew
 
   delete-workflow-runs:
-    permissions:
-      actions: write
     needs:
       [
-        "build-gms-flavor",
-        "publish-built-files"
+        "build-gms-flavor-for-github",
+        "build-gms-flavor-for-google-play",
+        "publish-built-files",
       ]
     runs-on: ubuntu-latest
     if: always()

@@ -4,7 +4,14 @@ import android.content.Context;
 
 import com.doubleangels.nextdnsmanagement.BuildConfig;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import io.sentry.Hint;
+import io.sentry.SentryEvent;
+import io.sentry.TypeCheckHint;
 import io.sentry.android.core.SentryAndroid;
+
+import okhttp3.Request;
 
 /**
  * A utility class for initializing Sentry in the application. It sets various
@@ -13,6 +20,8 @@ import io.sentry.android.core.SentryAndroid;
  * capabilities.
  */
 public class SentryInitializer {
+
+    private static final AtomicBoolean INITIALIZED = new AtomicBoolean(false);
 
     /**
      * Initializes Sentry on a separate thread, providing DSN (Data Source Name),
@@ -25,6 +34,9 @@ public class SentryInitializer {
      *                initialization.
      */
     public static void initialize(Context context) {
+        if (!INITIALIZED.compareAndSet(false, true)) {
+            return;
+        }
         new Thread(() -> SentryAndroid.init(context, options -> {
             // The DSN (Data Source Name) for your Sentry project:
             // This tells Sentry where to send the error data
@@ -45,9 +57,8 @@ public class SentryInitializer {
             // Attach the full view hierarchy for debugging layout or view-related issues
             options.setAttachViewHierarchy(true);
 
-            // Sets the sample rate for performance tracing (transactions)
-            // 1.0 means all transactions are captured
-            options.setTracesSampleRate(1.0);
+            // Sample 20% of performance transactions to reduce overhead.
+            options.setTracesSampleRate(0.2);
 
             // Enables application start profiling, which measures cold/warm start
             // performance
@@ -65,26 +76,62 @@ public class SentryInitializer {
             // Tracks dropped or slow frames to measure UI responsiveness
             options.setEnableFramesTracking(true);
 
-            // This is set again (likely redundant, but ensures it's explicitly enabled)
-            options.setEnableAppStartProfiling(true);
-
             // Check if the device is rooted, adding extra context for debugging certain
             // crashes
             // that may be more likely on rooted devices
             options.setEnableRootCheck(true);
 
+            SentryManager.registerIgnoredExceptionTypes(options);
+
             // Filter out SentryHttpClientException thrown by SentryOkHttpInterceptor
             // when NextDNS or other APIs return 5xx errors (e.g., 504).
             // These are server-side availability issues, not app crashes.
             options.setBeforeSend((event, hint) -> {
-                if (event.getThrowable() != null) {
-                    if (event.getThrowable().getClass().getSimpleName().equals("SentryHttpClientException")) {
-                        return null; // Drop the event
-                    }
+                if (shouldDropEvent(event, hint)) {
+                    return null;
                 }
                 return event;
             });
 
         })).start(); // Start the thread, so the initialization does not block the main thread
+    }
+
+    private static boolean shouldDropEvent(SentryEvent event, Hint hint) {
+        if (event.getThrowable() != null) {
+            if (event.getThrowable().getClass().getSimpleName().equals("SentryHttpClientException")) {
+                return true;
+            }
+            if (SentryManager.isIgnored(event.getThrowable())) {
+                return true;
+            }
+        }
+        return isNextDnsConnectivityProbe(event, hint);
+    }
+
+    /**
+     * Drops auto-captured OkHttp errors from the NextDNS connectivity check endpoint.
+     * DNS/network failures there are expected when offline, on VPN, or without NextDNS configured.
+     */
+    private static boolean isNextDnsConnectivityProbe(SentryEvent event, Hint hint) {
+        Object okHttpRequest = hint.get(TypeCheckHint.OKHTTP_REQUEST);
+        if (okHttpRequest instanceof Request request) {
+            if (isTestNextDnsHost(request.url().host())) {
+                return true;
+            }
+        }
+
+        Throwable throwable = event.getThrowable();
+        while (throwable != null) {
+            String message = throwable.getMessage();
+            if (message != null && message.contains("test.nextdns.io")) {
+                return true;
+            }
+            throwable = throwable.getCause();
+        }
+        return false;
+    }
+
+    private static boolean isTestNextDnsHost(String host) {
+        return host != null && (host.equals("test.nextdns.io") || host.endsWith(".test.nextdns.io"));
     }
 }

@@ -15,7 +15,7 @@ permissions:
   contents: read
 
 jobs:
-  test-gms-flavor:
+  lint-gms-flavor:
     if: |
       (github.event_name == 'push' && github.actor != 'dependabot[bot]') ||
       (github.event_name == 'pull_request' && github.actor == 'dependabot[bot]') ||
@@ -23,23 +23,34 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
-        with:
-          persist-credentials: false
+        uses: actions/checkout@v7
 
-      - name: Setup Android Environment
-        uses: ./.github/actions/setup-android-env
+      - name: Setup Android build
+        uses: ./.github/actions/setup-android-build
 
       - name: Run Lint
-        run: ./gradlew lintGmsRelease --no-daemon
+        run: ./gradlew lintGmsRelease
         continue-on-error: false
+
+  build-gms-flavor:
+    if: |
+      (github.event_name == 'push' && github.actor != 'dependabot[bot]') ||
+      (github.event_name == 'pull_request' && github.actor == 'dependabot[bot]') ||
+      github.event_name == 'workflow_dispatch'
+    needs: lint-gms-flavor
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Android build
+        uses: ./.github/actions/setup-android-build
 
       - name: Build GMS Release
-        if: github.event_name == 'pull_request' && github.actor == 'dependabot[bot]'
-        run: ./gradlew assembleGmsRelease --no-daemon
+        run: ./gradlew assembleGmsRelease
         continue-on-error: false
 
-  test-foss-flavor:
+  lint-foss-flavor:
     if: |
       (github.event_name == 'push' && github.actor != 'dependabot[bot]') ||
       (github.event_name == 'pull_request' && github.actor == 'dependabot[bot]') ||
@@ -47,38 +58,29 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
-        with:
-          persist-credentials: false
+        uses: actions/checkout@v7
 
-      - name: Setup Android Environment
-        uses: ./.github/actions/setup-android-env
+      - name: Setup Android build
+        uses: ./.github/actions/setup-android-build
 
       - name: Run Lint
-        run: ./gradlew lintFossRelease --no-daemon
+        run: ./gradlew lintFossRelease
         continue-on-error: false
+
+  build-foss-flavor:
+    if: |
+      (github.event_name == 'push' && github.actor != 'dependabot[bot]') ||
+      (github.event_name == 'pull_request' && github.actor == 'dependabot[bot]') ||
+      github.event_name == 'workflow_dispatch'
+    needs: lint-foss-flavor
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Android build
+        uses: ./.github/actions/setup-android-build
 
       - name: Build FOSS Release
-        if: github.event_name == 'pull_request' && github.actor == 'dependabot[bot]'
-        run: ./gradlew assembleFossRelease --no-daemon
+        run: ./gradlew assembleFossRelease
         continue-on-error: false
-
-  automerge:
-    needs:
-      [test-gms-flavor, test-foss-flavor]
-    if: >
-      github.event_name == 'pull_request' &&
-      github.event.pull_request.user.login == 'dependabot[bot]' &&
-      needs.test-gms-flavor.result == 'success' &&
-      needs.test-foss-flavor.result == 'success'
-    runs-on: ubuntu-latest
-    permissions:
-      pull-requests: write
-      contents: write
-    steps:
-      - name: Enable auto-merge for Dependabot PRs
-        uses: peter-evans/enable-pull-request-automerge@v3
-        with:
-          token: ${{ github.token }}
-          pull-request-number: ${{ github.event.pull_request.number }}
-          merge-method: merge

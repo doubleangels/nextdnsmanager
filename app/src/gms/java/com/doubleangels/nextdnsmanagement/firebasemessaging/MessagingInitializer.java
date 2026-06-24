@@ -13,29 +13,20 @@ import com.google.firebase.messaging.FirebaseMessaging;
  */
 public class MessagingInitializer {
 
-    // Key for storing the FCM token in shared preferences
     private static final String KEY_FCM_TOKEN = "fcmToken";
 
-    /**
-     * Initializes Firebase, retrieves the device's FCM registration token,
-     * stores it in shared preferences, and subscribes the device to the "general"
-     * topic.
-     *
-     * @param context The context from which this method is called (e.g., an
-     *                Application or Activity).
-     */
     public static void initialize(Context context) {
         SentryManager sentryManager = new SentryManager(context);
 
-        // Initialize SharedPreferencesManager
         try {
-            SharedPreferencesManager.init(context);
+            if (!SharedPreferencesManager.isInitialized()) {
+                SharedPreferencesManager.init(context);
+            }
         } catch (Exception e) {
             sentryManager.captureException(e);
             return;
         }
 
-        // Initialize Firebase (Required before using Firebase services)
         try {
             FirebaseApp.initializeApp(context);
         } catch (Exception e) {
@@ -43,25 +34,12 @@ public class MessagingInitializer {
             return;
         }
 
-        // Workaround for a known Firebase Messaging issue where SERVICE_NOT_AVAILABLE
-        // throws an unhandled exception on an internal background thread, crashing the app.
         Thread.UncaughtExceptionHandler defaultHandler = Thread.getDefaultUncaughtExceptionHandler();
         Thread.setDefaultUncaughtExceptionHandler((thread, throwable) -> {
-            boolean isFirebaseBug = false;
-            Throwable current = throwable;
-            while (current != null) {
-                if (current instanceof java.io.IOException &&
-                        current.getMessage() != null &&
-                        current.getMessage().contains("SERVICE_NOT_AVAILABLE")) {
-                    isFirebaseBug = true;
-                    break;
-                }
-                current = current.getCause();
-            }
-
-            if (isFirebaseBug) {
-                sentryManager.captureMessage("Caught and ignored SERVICE_NOT_AVAILABLE from Firebase background thread.");
-                return; // suppress crash
+            if (SentryManager.isIgnored(throwable)) {
+                sentryManager.captureMessage(
+                        "Caught and ignored transient Firebase Messaging error from background thread.");
+                return;
             }
 
             if (defaultHandler != null) {
@@ -70,38 +48,47 @@ public class MessagingInitializer {
         });
 
         try {
-            // Retrieve the FCM registration token asynchronously
             FirebaseMessaging.getInstance().getToken()
                     .addOnCompleteListener(task -> {
                         try {
                             if (!task.isSuccessful()) {
-                                if (task.getException() != null) {
-                                    sentryManager.captureException(task.getException());
+                                Exception tokenError = task.getException();
+                                if (tokenError != null) {
+                                    if (SentryManager.isIgnored(tokenError)) {
+                                        sentryManager.captureMessage(
+                                                "Transient Firebase Messaging error while fetching FCM token.");
+                                    } else {
+                                        sentryManager.captureException(tokenError);
+                                    }
                                 } else {
                                     sentryManager.captureMessage("Fetching FCM registration token failed");
                                 }
+                                restoreDefaultExceptionHandler(defaultHandler);
                                 return;
                             }
 
-                            // Get the token result from the task
                             String token = task.getResult();
                             if (token == null) {
                                 sentryManager.captureMessage("FCM token is null");
+                                restoreDefaultExceptionHandler(defaultHandler);
                                 return;
                             }
 
-                            sentryManager.captureMessage("FCM Token retrieved: " + token);
-
-                            // Store the token in SharedPreferences for future use
+                            sentryManager.captureMessage("FCM token retrieved successfully");
                             SharedPreferencesManager.putString(KEY_FCM_TOKEN, token);
 
-                            // Subscribe the user to the "general" topic
                             FirebaseMessaging.getInstance().subscribeToTopic("general")
                                     .addOnCompleteListener(task1 -> {
                                         try {
                                             if (!task1.isSuccessful()) {
-                                                if (task1.getException() != null) {
-                                                    sentryManager.captureException(task1.getException());
+                                                Exception topicError = task1.getException();
+                                                if (topicError != null) {
+                                                    if (SentryManager.isIgnored(topicError)) {
+                                                        sentryManager.captureMessage(
+                                                                "Transient Firebase Messaging error while subscribing to topic.");
+                                                    } else {
+                                                        sentryManager.captureException(topicError);
+                                                    }
                                                 } else {
                                                     sentryManager.captureMessage("Topic subscription failed");
                                                 }
@@ -110,14 +97,24 @@ public class MessagingInitializer {
                                             }
                                         } catch (Exception ex) {
                                             sentryManager.captureException(ex);
+                                        } finally {
+                                            restoreDefaultExceptionHandler(defaultHandler);
                                         }
                                     });
                         } catch (Exception ex) {
                             sentryManager.captureException(ex);
+                            restoreDefaultExceptionHandler(defaultHandler);
                         }
                     });
         } catch (Exception e) {
             sentryManager.captureException(e);
+            restoreDefaultExceptionHandler(defaultHandler);
+        }
+    }
+
+    private static void restoreDefaultExceptionHandler(Thread.UncaughtExceptionHandler defaultHandler) {
+        if (defaultHandler != null) {
+            Thread.setDefaultUncaughtExceptionHandler(defaultHandler);
         }
     }
 }

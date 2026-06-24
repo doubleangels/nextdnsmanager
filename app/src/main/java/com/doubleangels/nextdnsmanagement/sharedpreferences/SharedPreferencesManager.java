@@ -1,6 +1,5 @@
 package com.doubleangels.nextdnsmanagement.sharedpreferences;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.util.Log;
@@ -11,7 +10,6 @@ import androidx.security.crypto.MasterKey;
 import com.doubleangels.nextdnsmanagement.sentry.SentryManager;
 
 import java.io.File;
-import java.security.GeneralSecurityException;
 
 /**
  * A thread-safe utility class for managing encrypted SharedPreferences.
@@ -27,12 +25,17 @@ public class SharedPreferencesManager {
     // Key to track if migration from unencrypted to encrypted has been completed.
     private static final String MIGRATION_COMPLETE_KEY = "_encryption_migration_complete";
 
+    // Set when encrypted storage could not be initialized.
+    private static final String ENCRYPTION_FALLBACK_KEY = "_encryption_fallback_active";
+
     // A reference to the SharedPreferences object, backed by the application
     // context.
     private static SharedPreferences sharedPreferences;
 
     // Store only the application context to avoid leaking an Activity context.
     private static Context appContext;
+
+    private static volatile boolean usingEncryptedStorage = false;
 
     // Tag for logging.
     private static final String TAG = "SharedPreferencesManager";
@@ -43,6 +46,14 @@ public class SharedPreferencesManager {
      */
     private SharedPreferencesManager() {
         throw new UnsupportedOperationException("Cannot instantiate SharedPreferencesManager.");
+    }
+
+    public static boolean isInitialized() {
+        return sharedPreferences != null;
+    }
+
+    public static boolean isUsingEncryptedStorage() {
+        return usingEncryptedStorage;
     }
 
     /**
@@ -73,33 +84,31 @@ public class SharedPreferencesManager {
                         masterKey,
                         EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
                         EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM);
+                usingEncryptedStorage = true;
 
                 // Check if migration from unencrypted to encrypted is needed.
                 if (!sharedPreferences.getBoolean(MIGRATION_COMPLETE_KEY, false)) {
                     migrateUnencryptedPreferences(context);
                 }
-            } catch (GeneralSecurityException e) {
-                // If encryption fails, log error and fall back to unencrypted.
-                Log.e(TAG, "Failed to initialize encrypted SharedPreferences", e);
-                try {
-                    new SentryManager(appContext).captureException(e);
-                } catch (Exception sentryError) {
-                    Log.e(TAG, "Failed to report error to Sentry", sentryError);
-                }
-                // Fall back to unencrypted SharedPreferences.
-                sharedPreferences = appContext.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
             } catch (Exception e) {
-                // Catch any other exceptions and fall back to unencrypted.
-                Log.e(TAG, "Unexpected error initializing encrypted SharedPreferences", e);
-                try {
-                    new SentryManager(appContext).captureException(e);
-                } catch (Exception sentryError) {
-                    Log.e(TAG, "Failed to report error to Sentry", sentryError);
-                }
-                // Fall back to unencrypted SharedPreferences.
-                sharedPreferences = appContext.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+                handleEncryptionFailure(e);
             }
         }
+    }
+
+    private static void handleEncryptionFailure(Exception e) {
+        Log.e(TAG, "Failed to initialize encrypted SharedPreferences; using plaintext fallback", e);
+        SentryManager.captureStaticException(
+                e instanceof Exception ? (Exception) e : new Exception(e));
+
+        sharedPreferences = appContext.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+        usingEncryptedStorage = false;
+
+        // App lock must not rely on plaintext storage; disable it until encryption works.
+        sharedPreferences.edit()
+                .putBoolean(ENCRYPTION_FALLBACK_KEY, true)
+                .putBoolean("app_lock_enable", false)
+                .apply();
     }
 
     /**
@@ -146,7 +155,7 @@ public class SharedPreferencesManager {
                 }
             }
 
-            // Mark migration as complete.
+            // Mark migration as complete only after a successful copy.
             encryptedEditor.putBoolean(MIGRATION_COMPLETE_KEY, true);
             encryptedEditor.apply();
 
@@ -164,37 +173,24 @@ public class SharedPreferencesManager {
                 }
             }
         } catch (Exception e) {
-            // If migration fails, log error but continue with encrypted preferences.
-            Log.e(TAG, "Error during preference migration", e);
-            try {
-                new SentryManager(appContext).captureException(e);
-            } catch (Exception sentryError) {
-                Log.e(TAG, "Failed to report error to Sentry", sentryError);
-            }
-            // Mark migration as complete anyway to avoid retrying.
-            try {
-                sharedPreferences.edit().putBoolean(MIGRATION_COMPLETE_KEY, true).apply();
-            } catch (Exception commitError) {
-                Log.e(TAG, "Failed to mark migration as complete", commitError);
-            }
+            Log.e(TAG, "Error during preference migration; will retry on next launch", e);
+            SentryManager.captureStaticException(e);
         }
     }
 
     /**
-     * Saves a String value into the SharedPreferences, committing the change
-     * immediately.
+     * Saves a String value into the SharedPreferences asynchronously.
      * If an error occurs, it is captured via SentryManager.
      *
      * @param key   The preference key under which the value is stored.
      * @param value The string value to store.
      */
-    @SuppressLint("ApplySharedPref")
     public static void putString(String key, String value) {
         checkInitialization();
         try {
-            sharedPreferences.edit().putString(key, value).commit();
+            sharedPreferences.edit().putString(key, value).apply();
         } catch (Exception e) {
-            new SentryManager(appContext).captureException(e);
+            SentryManager.captureStaticException(e);
         }
     }
 
@@ -212,26 +208,24 @@ public class SharedPreferencesManager {
         try {
             return sharedPreferences.getString(key, defaultValue);
         } catch (Exception e) {
-            new SentryManager(appContext).captureException(e);
+            SentryManager.captureStaticException(e);
             return defaultValue;
         }
     }
 
     /**
-     * Saves a boolean value into the SharedPreferences, committing the change
-     * immediately.
+     * Saves a boolean value into the SharedPreferences asynchronously.
      * If an error occurs, it is captured via SentryManager.
      *
      * @param key   The preference key under which the value is stored.
      * @param value The boolean value to store.
      */
-    @SuppressLint("ApplySharedPref")
     public static void putBoolean(String key, boolean value) {
         checkInitialization();
         try {
-            sharedPreferences.edit().putBoolean(key, value).commit();
+            sharedPreferences.edit().putBoolean(key, value).apply();
         } catch (Exception e) {
-            new SentryManager(appContext).captureException(e);
+            SentryManager.captureStaticException(e);
         }
     }
 
@@ -249,7 +243,26 @@ public class SharedPreferencesManager {
         try {
             return sharedPreferences.getBoolean(key, defaultValue);
         } catch (Exception e) {
-            new SentryManager(appContext).captureException(e);
+            SentryManager.captureStaticException(e);
+            return defaultValue;
+        }
+    }
+
+    public static void putLong(String key, long value) {
+        checkInitialization();
+        try {
+            sharedPreferences.edit().putLong(key, value).apply();
+        } catch (Exception e) {
+            SentryManager.captureStaticException(e);
+        }
+    }
+
+    public static long getLong(String key, long defaultValue) {
+        checkInitialization();
+        try {
+            return sharedPreferences.getLong(key, defaultValue);
+        } catch (Exception e) {
+            SentryManager.captureStaticException(e);
             return defaultValue;
         }
     }

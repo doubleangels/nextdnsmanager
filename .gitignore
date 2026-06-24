@@ -1,7 +1,6 @@
 # Built application files
 *.apk
 *.aar
-*.aar
 *.ap_
 *.aab
 
@@ -13,15 +12,6 @@
 
 # Generated files
 build/
-gradle/
-.gradle/
-
-# Java class files
-*.class
-
-# Generated files
-build/
-gradle/
 .gradle/
 
 # Local configuration files
@@ -29,17 +19,12 @@ local.properties
 
 # IDE-specific files
 .idea/
-.iml/
+*.iml
 
 # Miscellaneous files
-.iml/
 *.log
 *.swp
 *.DS_Store
-
-# Gradle wrapper files
-gradlew
-gradlew.bat
 
 # Intermediate files
 /app/src/build/*

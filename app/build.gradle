@@ -1,17 +1,17 @@
 plugins {
     id "com.android.application"
-    id "io.sentry.android.gradle" version "6.1.0"
+    id "io.sentry.android.gradle" version "6.12.0"
     id "com.google.gms.google-services"
 }
 
 android {
-    compileSdk = 36
+    compileSdk = 37
     defaultConfig {
         applicationId "com.doubleangels.nextdnsmanagement"
         minSdkVersion 32
-        targetSdk = 35
-        versionCode 269
-        versionName "5.5.20"
+        targetSdk = 37
+        versionCode 271
+        versionName "5.5.22"
         resourceConfigurations += ["en", "zh", "nl", "fi", "fr", "de", "in", "it", "ja", "pl", "pt", "es", "sv", "tr"]
     }
 
@@ -64,28 +64,36 @@ android {
 
 dependencies {
     implementation "androidx.activity:activity:1.13.0"
+    implementation 'androidx.core:core:1.16.0'
     implementation 'androidx.appcompat:appcompat:1.7.1'
     implementation 'androidx.biometric:biometric:1.1.0'
     implementation 'androidx.preference:preference:1.2.1'
     implementation 'androidx.security:security-crypto:1.1.0'
+    implementation 'androidx.core:core-splashscreen:1.0.1'
     implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.2.0'
-    implementation 'androidx.webkit:webkit:1.15.0'
-    implementation 'com.google.android.material:material:1.13.0'
-    gmsImplementation 'com.google.firebase:firebase-messaging:25.0.1'
-    implementation 'com.squareup.retrofit2:converter-gson:3.0.0'
+    implementation 'androidx.startup:startup-runtime:1.2.0'
+    implementation 'androidx.webkit:webkit:1.16.0'
+    implementation 'com.google.android.material:material:1.14.0'
+    gmsImplementation 'com.google.firebase:firebase-messaging:25.1.0'
+    implementation 'com.squareup.okhttp3:okhttp:4.12.0'
+    implementation 'com.google.code.gson:gson:2.13.1'
     implementation 'de.hdodenhof:circleimageview:3.1.0'
-    implementation 'io.sentry:sentry-android:8.35.0'
+    implementation 'androidx.profileinstaller:profileinstaller:1.4.1'
+    implementation 'io.sentry:sentry-android:8.44.1'
     debugImplementation 'com.squareup.leakcanary:leakcanary-android:2.14'
 }
+
+def sentryUploadEnabled = System.getenv("SENTRY_AUTH_TOKEN") != null
 
 sentry {
     authToken = System.getenv("SENTRY_AUTH_TOKEN")
     includeProguardMapping = true
-    autoUploadProguardMapping = true
-    uploadNativeSymbols = true
-    autoUploadNativeSymbols = true
-    includeNativeSources = true
-    includeSourceContext = true
+    autoUploadProguardMapping = sentryUploadEnabled
+    uploadNativeSymbols = sentryUploadEnabled
+    autoUploadNativeSymbols = sentryUploadEnabled
+    includeNativeSources = sentryUploadEnabled
+    includeSourceContext = sentryUploadEnabled
+    ignoredBuildTypes = ["debug"]
 }
 
 afterEvaluate {
