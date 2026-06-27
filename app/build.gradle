@@ -10,8 +10,8 @@ android {
         applicationId "com.doubleangels.nextdnsmanagement"
         minSdkVersion 32
         targetSdk = 37
-        versionCode 271
-        versionName "5.5.22"
+        versionCode 272
+        versionName "5.5.23"
         resourceConfigurations += ["en", "zh", "nl", "fi", "fr", "de", "in", "it", "ja", "pl", "pt", "es", "sv", "tr"]
     }
 
