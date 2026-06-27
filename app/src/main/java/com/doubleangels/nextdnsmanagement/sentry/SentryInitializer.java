@@ -10,6 +10,11 @@ import io.sentry.Hint;
 import io.sentry.SentryEvent;
 import io.sentry.TypeCheckHint;
 import io.sentry.android.core.SentryAndroid;
+import io.sentry.protocol.SentryStackFrame;
+import io.sentry.protocol.SentryStackTrace;
+import io.sentry.protocol.SentryThread;
+
+import java.util.List;
 
 import okhttp3.Request;
 
@@ -24,11 +29,9 @@ public class SentryInitializer {
     private static final AtomicBoolean INITIALIZED = new AtomicBoolean(false);
 
     /**
-     * Initializes Sentry on a separate thread, providing DSN (Data Source Name),
-     * release version,
+     * Initializes Sentry, providing DSN (Data Source Name), release version,
      * and other advanced configuration options for capturing and tracking
-     * application performance
-     * and errors.
+     * application performance and errors.
      *
      * @param context The application or activity context needed for Sentry's
      *                initialization.
@@ -37,7 +40,7 @@ public class SentryInitializer {
         if (!INITIALIZED.compareAndSet(false, true)) {
             return;
         }
-        new Thread(() -> SentryAndroid.init(context, options -> {
+        SentryAndroid.init(context, options -> {
             // The DSN (Data Source Name) for your Sentry project:
             // This tells Sentry where to send the error data
             options.setDsn("https://8b52cc2148b94716a69c9a4f0c0b4513@o244019.ingest.us.sentry.io/6270764");
@@ -93,7 +96,7 @@ public class SentryInitializer {
                 return event;
             });
 
-        })).start(); // Start the thread, so the initialization does not block the main thread
+        });
     }
 
     private static boolean shouldDropEvent(SentryEvent event, Hint hint) {
@@ -104,8 +107,68 @@ public class SentryInitializer {
             if (SentryManager.isIgnored(event.getThrowable())) {
                 return true;
             }
+            if (isFirebaseInfrastructureFailure(event)) {
+                return true;
+            }
+            if (isIgnoredInfrastructureWithoutAppFrames(event)) {
+                return true;
+            }
         }
         return isNextDnsConnectivityProbe(event, hint);
+    }
+
+    /**
+     * Drops auto-captured Firebase / Play Services messaging failures that never
+     * touch application code.
+     */
+    private static boolean isFirebaseInfrastructureFailure(SentryEvent event) {
+        Throwable throwable = event.getThrowable();
+        if (throwable == null) {
+            return false;
+        }
+        if (!SentryManager.isIgnored(throwable)) {
+            return false;
+        }
+        return stackTraceContainsModule(event, "com.google.firebase.messaging")
+                || stackTraceContainsModule(event, "com.google.android.gms.cloudmessaging")
+                || stackTraceContainsModule(event, "com.google.firebase.installations");
+    }
+
+    /**
+     * Drops ignored network/DNS failures that only appear in third-party stack frames
+     * (e.g. OkHttp worker threads for the connectivity probe).
+     */
+    private static boolean isIgnoredInfrastructureWithoutAppFrames(SentryEvent event) {
+        Throwable throwable = event.getThrowable();
+        if (throwable == null || !SentryManager.isIgnored(throwable)) {
+            return false;
+        }
+        return !stackTraceContainsModule(event, "com.doubleangels.nextdnsmanagement");
+    }
+
+    private static boolean stackTraceContainsModule(SentryEvent event, String modulePrefix) {
+        List<SentryThread> threads = event.getThreads();
+        if (threads != null) {
+            for (SentryThread thread : threads) {
+                if (stackTraceContainsModule(thread.getStacktrace(), modulePrefix)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private static boolean stackTraceContainsModule(SentryStackTrace stackTrace, String modulePrefix) {
+        if (stackTrace == null || stackTrace.getFrames() == null) {
+            return false;
+        }
+        for (SentryStackFrame frame : stackTrace.getFrames()) {
+            String module = frame.getModule();
+            if (module != null && module.startsWith(modulePrefix)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**

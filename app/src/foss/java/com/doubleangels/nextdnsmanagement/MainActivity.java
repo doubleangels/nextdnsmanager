@@ -50,6 +50,7 @@ import com.doubleangels.nextdnsmanagement.utils.InsetsHelper;
 import com.doubleangels.nextdnsmanagement.sharedpreferences.SharedPreferencesManager;
 import com.doubleangels.nextdnsmanagement.webview.WebAppInterface;
 import com.doubleangels.nextdnsmanagement.webview.WebViewInteractionScript;
+import com.doubleangels.nextdnsmanagement.webview.WebViewLayoutHelper;
 
 import java.util.Locale;
 
@@ -448,10 +449,12 @@ public class MainActivity extends BaseActivity {
      */
     @SuppressLint("SetJavaScriptEnabled")
     public void setupWebViewForActivity(String url) {
-        webView = findViewById(R.id.webView);
+        webView = WebViewLayoutHelper.findOrCreateWebView(this, swipeRefreshLayout);
         if (webView == null) {
-            SentryManager.captureStaticException(new IllegalStateException("WebView not found in layout"));
             return;
+        }
+        if (swipeRefreshLayout == null) {
+            swipeRefreshLayout = findViewById(R.id.swipeRefreshLayout);
         }
 
         try {
