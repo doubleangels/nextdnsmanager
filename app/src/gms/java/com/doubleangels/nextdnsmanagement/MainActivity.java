@@ -58,6 +58,7 @@ import com.doubleangels.nextdnsmanagement.utils.InsetsHelper;
 import com.doubleangels.nextdnsmanagement.sharedpreferences.SharedPreferencesManager;
 import com.doubleangels.nextdnsmanagement.webview.WebAppInterface;
 import com.doubleangels.nextdnsmanagement.webview.WebViewInteractionScript;
+import com.doubleangels.nextdnsmanagement.webview.WebViewLayoutHelper;
 
 import java.util.Locale;
 
@@ -158,6 +159,14 @@ public class MainActivity extends BaseActivity {
         lastAuthenticatedTime = SharedPreferencesManager.getLong(LAST_AUTH_TIME_KEY, 0);
 
         try {
+            if (sentryManager.isEnabled()) {
+                SentryInitializer.initialize(this);
+            }
+        } catch (Exception e) {
+            sentryManager.captureException(e);
+        }
+
+        try {
             new Thread(() -> {
                 try {
                     MessagingInitializer.initialize(getApplicationContext());
@@ -165,14 +174,6 @@ public class MainActivity extends BaseActivity {
                     runOnUiThread(() -> sentryManager.captureException(e));
                 }
             }, "fcm-init").start();
-        } catch (Exception e) {
-            sentryManager.captureException(e);
-        }
-
-        try {
-            if (sentryManager.isEnabled()) {
-                SentryInitializer.initialize(this);
-            }
         } catch (Exception e) {
             sentryManager.captureException(e);
         }
@@ -468,10 +469,12 @@ public class MainActivity extends BaseActivity {
      */
     @SuppressLint("SetJavaScriptEnabled")
     public void setupWebViewForActivity(String url) {
-        webView = findViewById(R.id.webView);
+        webView = WebViewLayoutHelper.findOrCreateWebView(this, swipeRefreshLayout);
         if (webView == null) {
-            SentryManager.captureStaticException(new IllegalStateException("WebView not found in layout"));
             return;
+        }
+        if (swipeRefreshLayout == null) {
+            swipeRefreshLayout = findViewById(R.id.swipeRefreshLayout);
         }
 
         try {

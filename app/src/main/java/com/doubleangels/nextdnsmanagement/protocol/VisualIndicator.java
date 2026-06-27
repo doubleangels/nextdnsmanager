@@ -75,13 +75,20 @@ public class VisualIndicator {
                 @Override
                 public void onLinkPropertiesChanged(@NonNull Network network, @NonNull LinkProperties linkProperties) {
                     super.onLinkPropertiesChanged(network, linkProperties);
+                    if (connectivityManager == null) {
+                        return;
+                    }
                     update(linkProperties, activity, context);
                 }
 
                 @Override
                 public void onAvailable(@NonNull Network network) {
                     super.onAvailable(network);
-                    LinkProperties linkProperties = connectivityManager.getLinkProperties(network);
+                    ConnectivityManager manager = connectivityManager;
+                    if (manager == null) {
+                        return;
+                    }
+                    LinkProperties linkProperties = manager.getLinkProperties(network);
                     update(linkProperties, activity, context);
                 }
 
@@ -118,7 +125,6 @@ public class VisualIndicator {
             } catch (Exception e) {
                 sentryManager.captureException(e);
             } finally {
-                connectivityManager = null;
                 networkCallback = null;
             }
         }
