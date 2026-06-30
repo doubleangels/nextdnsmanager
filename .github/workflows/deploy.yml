@@ -11,7 +11,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build:
+  validate:
     if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     steps:
@@ -29,10 +29,23 @@ jobs:
       - name: Run Android Lint
         run: ./gradlew lintGmsRelease lintFossRelease --no-daemon
 
-      - name: Build release APKs and bundle
+  build-gms-apk:
+    needs: ["validate"]
+    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Setup Android build
+        uses: ./.github/actions/setup-android-build
+
+      - name: Build GMS release APK
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-        run: ./gradlew assembleGmsRelease assembleFossRelease bundleGmsRelease --no-daemon --parallel --build-cache
+        run: ./gradlew assembleGmsRelease --no-daemon --parallel --build-cache
 
       - name: Sign GMS APK for GitHub release
         uses: r0adkll/sign-android-release@v1
@@ -48,6 +61,30 @@ jobs:
       - name: Rename GMS APK file
         run: mv app/build/outputs/apk/gms/release/app-gms-release-unsigned-signed.apk app/build/outputs/apk/gms/release/app-release.apk
 
+      - name: Upload GMS APK to artifacts
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: github-release-apk
+          path: app/build/outputs/apk/gms/release/app-release.apk
+
+  build-foss-apk:
+    needs: ["validate"]
+    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Setup Android build
+        uses: ./.github/actions/setup-android-build
+
+      - name: Build FOSS release APK
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+        run: ./gradlew assembleFossRelease --no-daemon --parallel --build-cache
+
       - name: Sign FOSS APK for GitHub release
         uses: r0adkll/sign-android-release@v1
         with:
@@ -62,6 +99,30 @@ jobs:
       - name: Rename FOSS APK file
         run: mv app/build/outputs/apk/foss/release/app-foss-release-unsigned-signed.apk app/build/outputs/apk/foss/release/app-release-foss.apk
 
+      - name: Upload FOSS APK to artifacts
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: github-foss-release-apk
+          path: app/build/outputs/apk/foss/release/app-release-foss.apk
+
+  build-gms-bundle:
+    needs: ["validate"]
+    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Setup Android build
+        uses: ./.github/actions/setup-android-build
+
+      - name: Build GMS release bundle
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+        run: ./gradlew bundleGmsRelease --no-daemon --parallel --build-cache
+
       - name: Sign bundle for Google Play release
         uses: r0adkll/sign-android-release@v1
         with:
@@ -74,18 +135,6 @@ jobs:
       - name: Rename Google Play bundle file
         run: mv app/build/outputs/bundle/gmsRelease/app-gms-release.aab app/build/outputs/bundle/gmsRelease/app-release.aab
 
-      - name: Upload GMS APK to artifacts
-        uses: actions/upload-artifact@v7.0.1
-        with:
-          name: github-release-apk
-          path: app/build/outputs/apk/gms/release/app-release.apk
-
-      - name: Upload FOSS APK to artifacts
-        uses: actions/upload-artifact@v7.0.1
-        with:
-          name: github-foss-release-apk
-          path: app/build/outputs/apk/foss/release/app-release-foss.apk
-
       - name: Upload bundle to artifacts
         uses: actions/upload-artifact@v7.0.1
         with:
@@ -93,7 +142,7 @@ jobs:
           path: app/build/outputs/bundle/gmsRelease/app-release.aab
 
   publish:
-    needs: ["build"]
+    needs: ["build-gms-apk", "build-foss-apk", "build-gms-bundle"]
     # Requires a "production" environment in repo Settings → Environments with required reviewers.
     if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
     environment: production
@@ -209,7 +258,7 @@ jobs:
           whatsNewDirectory: whatsnew
 
       - name: Set up Ruby for Fastlane
-        uses: ruby/setup-ruby@v1.314.0
+        uses: ruby/setup-ruby@v1.315.0
         with:
           ruby-version: "3.3"
           bundler-cache: false
@@ -242,7 +291,14 @@ jobs:
   delete-workflow-runs:
     permissions:
       actions: write
-    needs: ["build", "publish"]
+    needs:
+      [
+        "validate",
+        "build-gms-apk",
+        "build-foss-apk",
+        "build-gms-bundle",
+        "publish",
+      ]
     runs-on: ubuntu-latest
     if: always()
     steps:
