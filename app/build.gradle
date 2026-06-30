@@ -76,7 +76,7 @@ dependencies {
     implementation 'com.google.android.material:material:1.14.0'
     gmsImplementation 'com.google.firebase:firebase-messaging:25.1.0'
     implementation 'com.squareup.okhttp3:okhttp:5.4.0'
-    implementation 'com.google.code.gson:gson:2.13.1'
+    implementation 'com.google.code.gson:gson:2.14.0'
     implementation 'de.hdodenhof:circleimageview:3.1.0'
     implementation 'androidx.profileinstaller:profileinstaller:1.4.1'
     implementation 'io.sentry:sentry-android:8.46.0'
