@@ -19,6 +19,8 @@ import java.util.List;
 import javax.net.ssl.SSLException;
 import javax.net.ssl.SSLHandshakeException;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import io.sentry.Sentry;
 import io.sentry.SentryOptions;
 import okhttp3.internal.http2.ConnectionShutdownException;
@@ -32,6 +34,8 @@ public class SentryManager {
 
     /** Tag for logging purposes. */
     private static final String TAG = "SentryManager";
+
+    private static final AtomicBoolean FILTERED_UNCAUGHT_HANDLER_INSTALLED = new AtomicBoolean(false);
 
     /**
      * List of exception types to ignore when capturing exceptions.
@@ -148,6 +152,47 @@ public class SentryManager {
             }
         }
         return false;
+    }
+
+    /**
+     * Returns true when a serialized exception message matches a known transient pattern.
+     */
+    public static boolean matchesIgnoredMessage(String message) {
+        if (message == null || message.isEmpty()) {
+            return false;
+        }
+        String lower = message.toLowerCase();
+        for (String error : TRANSIENT_FIREBASE_MESSAGING_ERRORS) {
+            if (message.contains(error)) {
+                return true;
+            }
+        }
+        for (String pattern : TRANSIENT_NETWORK_ERROR_MESSAGES) {
+            if (lower.contains(pattern)) {
+                return true;
+            }
+        }
+        return lower.contains("can only download http/https");
+    }
+
+    /**
+     * Swallows transient infrastructure failures on background threads instead of
+     * forwarding them to Sentry's default uncaught handler.
+     */
+    public static void installFilteredUncaughtExceptionHandler() {
+        if (!FILTERED_UNCAUGHT_HANDLER_INSTALLED.compareAndSet(false, true)) {
+            return;
+        }
+        Thread.UncaughtExceptionHandler defaultHandler = Thread.getDefaultUncaughtExceptionHandler();
+        Thread.setDefaultUncaughtExceptionHandler((thread, throwable) -> {
+            if (isIgnored(throwable)) {
+                Log.w(TAG, "Ignored uncaught exception on thread " + thread.getName(), throwable);
+                return;
+            }
+            if (defaultHandler != null) {
+                defaultHandler.uncaughtException(thread, throwable);
+            }
+        });
     }
 
     /**

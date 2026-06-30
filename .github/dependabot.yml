@@ -1,17 +1,26 @@
 version: 2
 updates:
-  - package-ecosystem: gradle
-    directory: "/"
-    schedule:
-      interval: "weekly"
-    target-branch: "dev"
-    commit-message:
-      prefix: "[Gradle]"
-
   - package-ecosystem: github-actions
     directory: "/"
     schedule:
-      interval: "weekly"
-    target-branch: "dev"
+      interval: daily
+    target-branch: dev
     commit-message:
       prefix: "[Github Actions]"
+
+  - package-ecosystem: gradle
+    directory: "/"
+    schedule:
+      interval: weekly
+    target-branch: dev
+    commit-message:
+      prefix: "[Gradle]"
+    open-pull-requests-limit: 10
+
+  - package-ecosystem: bundler
+    directory: "/"
+    schedule:
+      interval: weekly
+    target-branch: dev
+    commit-message:
+      prefix: "[Bundler]"

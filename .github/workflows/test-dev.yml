@@ -14,73 +14,31 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: test-dev-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  lint-gms-flavor:
+  test:
     if: |
-      (github.event_name == 'push' && github.actor != 'dependabot[bot]') ||
-      (github.event_name == 'pull_request' && github.actor == 'dependabot[bot]') ||
+      github.event_name == 'push' ||
+      github.event_name == 'pull_request' ||
       github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@v7.0.0
+        with:
+          persist-credentials: false
 
       - name: Setup Android build
         uses: ./.github/actions/setup-android-build
 
-      - name: Run Lint
-        run: ./gradlew lintGmsRelease
-        continue-on-error: false
+      - name: Run unit tests
+        run: ./gradlew test --no-daemon
 
-  build-gms-flavor:
-    if: |
-      (github.event_name == 'push' && github.actor != 'dependabot[bot]') ||
-      (github.event_name == 'pull_request' && github.actor == 'dependabot[bot]') ||
-      github.event_name == 'workflow_dispatch'
-    needs: lint-gms-flavor
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
+      - name: Run Android Lint
+        run: ./gradlew lintGmsRelease lintFossRelease --no-daemon
 
-      - name: Setup Android build
-        uses: ./.github/actions/setup-android-build
-
-      - name: Build GMS Release
-        run: ./gradlew assembleGmsRelease
-        continue-on-error: false
-
-  lint-foss-flavor:
-    if: |
-      (github.event_name == 'push' && github.actor != 'dependabot[bot]') ||
-      (github.event_name == 'pull_request' && github.actor == 'dependabot[bot]') ||
-      github.event_name == 'workflow_dispatch'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-
-      - name: Setup Android build
-        uses: ./.github/actions/setup-android-build
-
-      - name: Run Lint
-        run: ./gradlew lintFossRelease
-        continue-on-error: false
-
-  build-foss-flavor:
-    if: |
-      (github.event_name == 'push' && github.actor != 'dependabot[bot]') ||
-      (github.event_name == 'pull_request' && github.actor == 'dependabot[bot]') ||
-      github.event_name == 'workflow_dispatch'
-    needs: lint-foss-flavor
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-
-      - name: Setup Android build
-        uses: ./.github/actions/setup-android-build
-
-      - name: Build FOSS Release
-        run: ./gradlew assembleFossRelease
-        continue-on-error: false
+      - name: Build release APKs
+        run: ./gradlew assembleGmsRelease assembleFossRelease --no-daemon
