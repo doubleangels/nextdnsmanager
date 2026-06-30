@@ -10,6 +10,7 @@ import io.sentry.Hint;
 import io.sentry.SentryEvent;
 import io.sentry.TypeCheckHint;
 import io.sentry.android.core.SentryAndroid;
+import io.sentry.protocol.SentryException;
 import io.sentry.protocol.SentryStackFrame;
 import io.sentry.protocol.SentryStackTrace;
 import io.sentry.protocol.SentryThread;
@@ -114,7 +115,26 @@ public class SentryInitializer {
                 return true;
             }
         }
+        if (matchesIgnoredSerializedExceptions(event)) {
+            return true;
+        }
         return isNextDnsConnectivityProbe(event, hint);
+    }
+
+    private static boolean matchesIgnoredSerializedExceptions(SentryEvent event) {
+        if (event.getMessage() != null && SentryManager.matchesIgnoredMessage(event.getMessage().getFormatted())) {
+            return true;
+        }
+        List<SentryException> exceptions = event.getExceptions();
+        if (exceptions == null) {
+            return false;
+        }
+        for (SentryException exception : exceptions) {
+            if (exception != null && SentryManager.matchesIgnoredMessage(exception.getValue())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**

@@ -1,6 +1,7 @@
 package com.doubleangels.nextdnsmanagement.firebasemessaging;
 
 import android.content.Context;
+import android.util.Log;
 
 import com.doubleangels.nextdnsmanagement.sentry.SentryManager;
 import com.doubleangels.nextdnsmanagement.sharedpreferences.SharedPreferencesManager;
@@ -13,6 +14,7 @@ import com.google.firebase.messaging.FirebaseMessaging;
  */
 public class MessagingInitializer {
 
+    private static final String TAG = "MessagingInitializer";
     private static final String KEY_FCM_TOKEN = "fcmToken";
 
     public static void initialize(Context context) {
@@ -34,19 +36,6 @@ public class MessagingInitializer {
             return;
         }
 
-        Thread.UncaughtExceptionHandler defaultHandler = Thread.getDefaultUncaughtExceptionHandler();
-        Thread.setDefaultUncaughtExceptionHandler((thread, throwable) -> {
-            if (SentryManager.isIgnored(throwable)) {
-                sentryManager.captureMessage(
-                        "Caught and ignored transient Firebase Messaging error from background thread.");
-                return;
-            }
-
-            if (defaultHandler != null) {
-                defaultHandler.uncaughtException(thread, throwable);
-            }
-        });
-
         try {
             FirebaseMessaging.getInstance().getToken()
                     .addOnCompleteListener(task -> {
@@ -55,22 +44,20 @@ public class MessagingInitializer {
                                 Exception tokenError = task.getException();
                                 if (tokenError != null) {
                                     if (SentryManager.isIgnored(tokenError)) {
-                                        sentryManager.captureMessage(
-                                                "Transient Firebase Messaging error while fetching FCM token.");
+                                        Log.w(TAG, "Transient Firebase Messaging error while fetching FCM token.",
+                                                tokenError);
                                     } else {
                                         sentryManager.captureException(tokenError);
                                     }
                                 } else {
                                     sentryManager.captureMessage("Fetching FCM registration token failed");
                                 }
-                                restoreDefaultExceptionHandler(defaultHandler);
                                 return;
                             }
 
                             String token = task.getResult();
                             if (token == null) {
                                 sentryManager.captureMessage("FCM token is null");
-                                restoreDefaultExceptionHandler(defaultHandler);
                                 return;
                             }
 
@@ -84,8 +71,9 @@ public class MessagingInitializer {
                                                 Exception topicError = task1.getException();
                                                 if (topicError != null) {
                                                     if (SentryManager.isIgnored(topicError)) {
-                                                        sentryManager.captureMessage(
-                                                                "Transient Firebase Messaging error while subscribing to topic.");
+                                                        Log.w(TAG,
+                                                                "Transient Firebase Messaging error while subscribing to topic.",
+                                                                topicError);
                                                     } else {
                                                         sentryManager.captureException(topicError);
                                                     }
@@ -97,24 +85,14 @@ public class MessagingInitializer {
                                             }
                                         } catch (Exception ex) {
                                             sentryManager.captureException(ex);
-                                        } finally {
-                                            restoreDefaultExceptionHandler(defaultHandler);
                                         }
                                     });
                         } catch (Exception ex) {
                             sentryManager.captureException(ex);
-                            restoreDefaultExceptionHandler(defaultHandler);
                         }
                     });
         } catch (Exception e) {
             sentryManager.captureException(e);
-            restoreDefaultExceptionHandler(defaultHandler);
-        }
-    }
-
-    private static void restoreDefaultExceptionHandler(Thread.UncaughtExceptionHandler defaultHandler) {
-        if (defaultHandler != null) {
-            Thread.setDefaultUncaughtExceptionHandler(defaultHandler);
         }
     }
 }
