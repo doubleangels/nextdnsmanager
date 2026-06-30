@@ -57,6 +57,7 @@ import com.doubleangels.nextdnsmanagement.utils.ExternalLinkHandler;
 import com.doubleangels.nextdnsmanagement.utils.InsetsHelper;
 import com.doubleangels.nextdnsmanagement.sharedpreferences.SharedPreferencesManager;
 import com.doubleangels.nextdnsmanagement.webview.WebAppInterface;
+import com.doubleangels.nextdnsmanagement.webview.WebDownloadHelper;
 import com.doubleangels.nextdnsmanagement.webview.WebViewInteractionScript;
 import com.doubleangels.nextdnsmanagement.webview.WebViewLayoutHelper;
 
@@ -628,8 +629,11 @@ public class MainActivity extends BaseActivity {
      */
     private void setupDownloadManagerForActivity() {
         webView.setDownloadListener((url, userAgent, contentDisposition, mimetype, contentLength) -> {
+            if (!WebDownloadHelper.isDownloadManagerSupportedUrl(url)) {
+                Toast.makeText(MainActivity.this, R.string.download_failed, Toast.LENGTH_SHORT).show();
+                return;
+            }
             try {
-                // Create a new download request
                 DownloadManager.Request request = new DownloadManager.Request(Uri.parse(url.trim()));
                 request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
                 request.setDestinationInExternalFilesDir(this, Environment.DIRECTORY_DOWNLOADS,
@@ -696,7 +700,7 @@ public class MainActivity extends BaseActivity {
                 .scaleY(1.05f)
                 .setDuration(300)
                 .withEndAction(() -> {
-                    if (isDestroyed() || !overlay.isAttachedToWindow()) {
+                    if (isFinishing() || isDestroyed() || blurOverlay != overlay || !overlay.isAttachedToWindow()) {
                         return;
                     }
                     overlay.setVisibility(View.GONE);
