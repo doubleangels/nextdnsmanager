@@ -89,7 +89,10 @@ public class SentryManager {
             "broken pipe",
             "connection closed",
             "socket closed",
-            "settings preface not received");
+            "settings preface not received",
+            "authenticate with proxy",
+            "read timed out",
+            "connection closed");
 
     /**
      * Checks whether the provided throwable (including its cause chain) matches an
