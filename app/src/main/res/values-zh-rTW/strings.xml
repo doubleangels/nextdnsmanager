@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_lock">應用程式鎖</string>
+    <string name="app_lock_instructions">需要生物辨識或個人識別碼 (PIN) 才能存取此應用程式。</string>
+    <string name="app_name">NextDNS 管理員</string>
+    <string name="author">作者</string>
+    <string name="back_title">返回</string>
+    <string name="dark_mode">深色模式</string>
+    <string name="dark_mode_instructions">深色模式設定</string>
+    <string name="developer">開發者</string>
+    <string name="disclaimer">本應用程式及其開發者與 NextDNS 並無任何關聯。</string>
+    <string name="disclaimer_title">免責聲明</string>
+    <string name="donation">捐款</string>
+    <string name="donation_name">如果您喜歡此應用程式並希望捐款，請點擊此處。這純屬自願性質，感謝您的支持！</string>
+    <string name="sentry">Sentry</string>
+    <string name="feedback">如果您願意，請填寫一份快速問卷，協助我改進應用程式。</string>
+    <string name="feedback_title">意見反應</string>
+    <string name="generic_content_description">這是通用內容說明。</string>
+    <string name="github">Github</string>
+    <string name="github_summary">點擊查看此應用程式的 Github 儲存庫。</string>
+    <string name="issues">回報問題</string>
+    <string name="github_issues_summary">點擊回報問題或查看已回報的問題。</string>
+    <string name="help_green">已使用安全 DNS，且裝置已連線至 NextDNS。</string>
+    <string name="help_orange">未啟用安全 DNS，但裝置已連線至 NextDNS。</string>
+    <string name="help_red">未啟用安全 DNS。</string>
+    <string name="help_yellow">已使用安全 DNS，但裝置未連線至 NextDNS。</string>
+    <string name="home_title">首頁</string>
+    <string name="nextdns_privacy_policy">NextDNS 隱私權政策</string>
+    <string name="nextdns_user_agreement">NextDNS 使用者協議</string>
+    <string name="other">其他</string>
+    <string name="permission">點擊查看此應用程式的權限。</string>
+    <string name="permission_details">本應用程式使用以下權限：</string>
+    <string name="permission_question">如果您對這些權限有疑問，請在 Github 上提出問題。</string>
+    <string name="permission_title">權限</string>
+    <string name="ping_disabled">此功能目前無法使用。</string>
+    <string name="ping_long">快速檢查 NextDNS 伺服器的延遲時間。</string>
+    <string name="ping_short">Ping</string>
+    <string name="ping_title">Ping 測試</string>
+    <string name="privacy">隱私權</string>
+    <string name="privacy_policy">NextDNS 管理員隱私權政策</string>
+    <string name="private_dns">私人 DNS</string>
+    <string name="refresh_title">重新整理</string>
+    <string name="sentry_enable_instructions">啟用 Sentry</string>
+    <string name="sentry_info">深入了解</string>
+    <string name="sentry_info_instructions">點擊深入了解 Sentry。</string>
+    <string name="settings">設定</string>
+    <string name="settings_activity_title">設定</string>
+    <string name="tally_issues">如果您沒有 GitHub 帳戶，可以在這裡回報問題。</string>
+    <string name="translate">翻譯</string>
+    <string name="translate_summary">如果您發現任何翻譯錯誤，請協助我在此處修正。</string>
+    <string name="unlock_description">請先驗證身分，才能存取與變更您的設定。</string>
+    <string name="unlock_title">解鎖</string>
+    <string name="user_agreement">使用者協議</string>
+    <string name="version">版本</string>
+    <string name="whitelist_domains">如果您啟用 Sentry，請在您的 NextDNS 設定中將這些網域加入允許清單。</string>
+    <string name="whitelist_instructions">請考慮選擇加入 Sentry 錯誤追蹤功能。此功能不會收集任何個人資訊，並能協助我改進應用程式。</string>
+    <string-array name="dark_mode_entries">
+        <item>跟隨系統</item>
+        <item>開啟</item>
+        <item>關閉</item>
+    </string-array>
+</resources>
