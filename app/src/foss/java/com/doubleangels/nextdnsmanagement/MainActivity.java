@@ -847,12 +847,22 @@ public class MainActivity extends BaseActivity {
                 case MotionEvent.ACTION_DOWN:
                     webViewTouchStartX = event.getX();
                     webViewTouchStartY = event.getY();
+                    // Claim the gesture for the WebView up front. SwipeRefreshLayout's
+                    // own onInterceptTouchEvent() runs ahead of this listener on every
+                    // MOVE, so waiting until we see a horizontal drag to disallow
+                    // intercept is too late: SwipeRefreshLayout can already have
+                    // claimed an ambiguous (slightly diagonal) gesture by then, which
+                    // cancels whatever Chromium was doing with that touch stream --
+                    // stuttering an in-page horizontal scroll or orphaning the text
+                    // selection toolbar mid-render (a black box). We only release the
+                    // claim below once it's clearly a downward pull at the page top.
+                    swipeRefreshLayout.requestDisallowInterceptTouchEvent(true);
                     break;
                 case MotionEvent.ACTION_MOVE:
                     float dx = Math.abs(event.getX() - webViewTouchStartX);
-                    float dy = Math.abs(event.getY() - webViewTouchStartY);
-                    if (dx > webViewTouchSlop && dx > dy) {
-                        swipeRefreshLayout.requestDisallowInterceptTouchEvent(true);
+                    float dy = event.getY() - webViewTouchStartY;
+                    if (dy > webViewTouchSlop && dy > dx && webView.getScrollY() == 0) {
+                        swipeRefreshLayout.requestDisallowInterceptTouchEvent(false);
                     }
                     break;
                 default:
