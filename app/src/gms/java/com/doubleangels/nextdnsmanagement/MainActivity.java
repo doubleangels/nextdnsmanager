@@ -323,6 +323,31 @@ public class MainActivity extends BaseActivity {
     }
 
     /**
+     * MainActivity declares configChanges for screen size/layout/orientation so the
+     * activity survives a foldable fold/unfold transition instead of being destroyed
+     * and recreated. Android does not automatically repaint the WebView's native
+     * surface at its new size in that case, which otherwise leaves it showing a
+     * blank/stale frame sized for the previous fold state. Force a re-measure and
+     * repaint once the resize settles.
+     */
+    @Override
+    public void onConfigurationChanged(@NonNull Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        if (webView == null) {
+            return;
+        }
+        webView.post(() -> {
+            if (isFinishing() || isDestroyed() || webView == null) {
+                return;
+            }
+            webView.setVisibility(View.GONE);
+            webView.setVisibility(View.VISIBLE);
+            webView.requestLayout();
+            webView.invalidate();
+        });
+    }
+
+    /**
      * Handles results from other activities to ensure biometric authentication is
      * maintained.
      */
