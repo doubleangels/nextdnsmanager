@@ -25,6 +25,14 @@ public class MessagingInitializer {
     // TOO_MANY_REGISTRATIONS rate limit, so only do real work once per process.
     private static final AtomicBoolean INITIALIZED = new AtomicBoolean(false);
 
+    /**
+     * Lets callers skip spinning a background thread for a call that would just
+     * no-op anyway (see {@link #INITIALIZED}).
+     */
+    public static boolean isInitialized() {
+        return INITIALIZED.get();
+    }
+
     public static void initialize(Context context) {
         if (!INITIALIZED.compareAndSet(false, true)) {
             return;

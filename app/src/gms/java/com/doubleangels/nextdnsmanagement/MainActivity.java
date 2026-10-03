@@ -19,6 +19,9 @@ public class MainActivity extends BaseMainActivity {
 
     @Override
     protected void initializeMessaging() {
+        if (MessagingInitializer.isInitialized()) {
+            return;
+        }
         new Thread(() -> {
             try {
                 MessagingInitializer.initialize(getApplicationContext());

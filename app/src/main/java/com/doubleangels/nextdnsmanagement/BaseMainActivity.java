@@ -153,7 +153,15 @@ public abstract class BaseMainActivity extends BaseActivity {
 
         sentryManager = new SentryManager(this);
 
-        AppStartupHelper.initializePreferencesAsync(this, splashScreen, this::finishStartup);
+        if (SharedPreferencesManager.isInitialized()) {
+            // Warm recreation (locale/density/theme change, or returning to a
+            // still-warm process) -- nothing to wait on, so skip the background
+            // thread and let the splash screen dismiss immediately instead of
+            // artificially holding it for a round-trip that has nothing to do.
+            finishStartup();
+        } else {
+            AppStartupHelper.initializePreferencesAsync(this, splashScreen, this::finishStartup);
+        }
     }
 
     private void finishStartup() {
