@@ -136,7 +136,16 @@ public class MainActivity extends BaseActivity {
         if (savedInstanceState != null) {
             darkModeEnabled = savedInstanceState.getBoolean("darkModeEnabled");
         }
-        setContentView(R.layout.activity_main);
+        try {
+            setContentView(R.layout.activity_main);
+        } catch (Throwable e) {
+            // Some devices ship a broken/mismatched system WebView provider that fails
+            // to inflate; there is no way to recover the WebView-based UI in that case.
+            SentryManager.captureStaticException(e instanceof Exception ? (Exception) e : new RuntimeException(e));
+            Toast.makeText(this, R.string.webview_unavailable, Toast.LENGTH_LONG).show();
+            finish();
+            return;
+        }
 
         // Enable hardware acceleration programmatically
         getWindow().setFlags(
@@ -153,7 +162,7 @@ public class MainActivity extends BaseActivity {
     }
 
     private void finishStartup() {
-        if (isFinishing()) {
+        if (isFinishing() || isDestroyed() || sentryManager == null) {
             return;
         }
 
