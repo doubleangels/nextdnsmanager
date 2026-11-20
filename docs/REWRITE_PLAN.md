@@ -1,447 +1,700 @@
-# NextDNS Manager Rewrite Plan
+# Rewrite, Rebrand and Multi-Provider Roadmap
 
-Status: **Phase 1 and Phase 2 complete, awaiting approval. No implementation code has been written.**
-Date: 2026-11-20. Branch: `native-api-app`.
+Status: **Planning complete, awaiting approval. No implementation code has been written.**
+Last updated: 2026-11-20. Branch: `native-api-app`.
 
-This document covers four things.
+This is the single source of truth for the rewrite. It covers the audit of the current code, feature parity with the NextDNS dashboard, the new Control D support, the rebrand, modern Android standards, the Material 3 design system, security, release operations, community communication and an ordered roadmap.
 
-1. Audit of the current native app (commit `54d7065` and follow-ups).
-2. Feature parity analysis against my.nextdns.io.
-3. Modern Android standards and a cohesive Material 3 design system.
-4. Architecture, security model and the milestone roadmap.
+## Contents
 
----
-
-## 1. Audit of the current app
-
-The branch already replaced the WebView wrapper with a Kotlin, Jetpack Compose app on `api.nextdns.io`. The findings below are about that native code. It has no automated tests.
-
-### 1.1 Root causes by severity
-
-#### Critical
-
-| # | Problem | Where | Consequence |
-|---|---|---|---|
-| C1 | The filtered uncaught exception handler returns without calling the default handler for "ignored" exceptions. The ignore list matches loose substrings such as `cancel` and `timeout`. | `sentry/SentryManager.java` `installFilteredUncaughtExceptionHandler` | A matching exception on the main thread kills the main thread and leaves the process alive, so the app freezes instead of crashing. |
-| C2 | If Keystore or Tink fails, storage falls back to plaintext and the API key is written in clear text. The plaintext copy survives later successful launches because migration is already marked complete. | `sharedpreferences/SharedPreferencesManager.java` `handleEncryptionFailure` | A full-account API key sits on disk in plaintext while onboarding says it is stored encrypted. |
-| C3 | When app lock is on and the user removes the device screen lock, `unlock()` returns silently because `canAuthenticate()` is false. | `MainActivity.kt` `unlock` | Permanent lockout. Clearing app data is the only way out. |
-
-#### High, correctness and races
-
-| # | Problem | Where |
-|---|---|---|
-| H1 | Every method is retried on 429 and 5xx, including POST. `Retry-After` is ignored. Adding a rewrite or domain during a slow 5xx can create duplicates. | `api/NextDnsApi.kt` `execute` |
-| H2 | Paging race. `reload()` cancels the old job, whose `finally { loading = false }` runs after the new job set `loading = true`. `loadMore` then fires a second fetch with `cursor = null` and rows are duplicated. | `ui/logs/LogsViewModel.kt` |
-| H3 | The live log stream runs in `viewModelScope` with no lifecycle awareness. It keeps using data and battery in the background, never reconnects after a drop and never de-duplicates against the page it continues from. | `ui/logs/LogsViewModel.kt` |
-| H4 | Optimistic rollback restores a whole snapshot. If add A fails after add B succeeded, B disappears from the UI although the server has it. Two quick toggles send concurrent PATCH calls that can arrive out of order. | `data/EntryListController.kt`, `ui/profile/ProfileViewModel.kt` |
-| H5 | Sign-in stores the candidate key before validating it, so concurrent requests use an unverified key. A rotation cancels the scope, the `CancellationException` is caught as a normal error, the old key is restored and the cancellation is reported to Sentry. | `ui/SessionViewModel.kt` `signIn` |
-| H6 | App lock shows one frame of the dashboard on cold start because `locked` starts false and the lock is evaluated in a `LaunchedEffect` after first composition. The timeout counts from the last unlock instead of from going to the background, and uses the wall clock. | `MainActivity.kt`, `ui/NextDnsApp.kt` |
-| H7 | A revoked key produces a separate error on every screen. Nothing routes the user back to sign-in. | all ViewModels |
-
-#### High, security and privacy
-
-| # | Problem |
-|---|---|
-| S1 | OkHttp follows redirects and only strips `Authorization` on a cross-host redirect, never `X-Api-Key`. A redirect to another host would leak the key. |
-| S2 | `addPathSegments("profiles/$id/${list}/$entryId")` resolves `..` and splits on `/`. An entry ID such as `../../x` retargets the request. |
-| S3 | The Sentry Gradle plugin runs with defaults, which bytecode-instruments OkHttp, file I/O and Compose. HTTP breadcrumbs then contain URLs like `logs?search=<domain>`, which is browsing history. View hierarchy, root check, extra context and all auto breadcrumbs are on. |
-| S4 | Firebase Messaging initialises and subscribes to a topic on every sign-in without consent. The notification permission is requested with no rationale. |
-| S5 | `setRecentsScreenshotEnabled` only exists on API 33+. On API 32 the dashboard and query log appear in Recents. |
-
-#### Medium
-
-- No input validation. Pasted URLs, IDN names, trailing dots, rewrite answers and profile name lengths are not checked. Server domains are shown raw, so homoglyphs and bidi control characters are possible.
-- Errors are untyped. Sign-in returns the magic string `"invalid_key"`. User-facing errors are hardcoded English strings. Unknown exceptions show their raw message.
-- Unbounded `response.body.string()` and unbounded SSE line length.
-- Overview fires 13 parallel requests per refresh with retry backoff on top, which invites 429 storms.
-- Every request decrypts the key from EncryptedSharedPreferences on the main thread.
-- Unneeded permissions: `WAKE_LOCK`, `ACCESS_WIFI_STATE`, `ACCESS_NOTIFICATION_POLICY`, and the `http` `<queries>` entry.
-- Copied domains are not marked sensitive (`ClipDescription.EXTRA_IS_SENSITIVE`).
-- The connection check against `test.nextdns.io` ignores the HTTP status, so HTML responses become `SerializationException` reports in Sentry.
-- Accessibility gaps. Log status is conveyed by colour and icon only, charts have no semantics, and the log list has no stable keys.
-- Blocklist, native tracker, service and category catalogs are hardcoded in `ProfileScreen.kt` and go stale. TLDs are free text.
-
-#### Process
-
-- Zero tests. CI runs `./gradlew test` against nothing.
-- `MissingTranslation` lint was downgraded so English-only strings pass.
-- `gradle.properties` opts out of AGP 9 defaults (`android.builtInKotlin=false`, `android.newDsl=false`, `android.r8.strictFullModeForKeepRules=false`, legacy configuration cache flag).
-
-### 1.2 Dependency audit
-
-| Current | Replacement | Reason |
-|---|---|---|
-| `androidx.security:security-crypto` (EncryptedSharedPreferences and Tink) | Android Keystore AES-256-GCM key, ciphertext in `android.util.AtomicFile` under `noBackupFilesDir` | Deprecated library, large transitive Tink dependency, and the cause of the plaintext fallback |
-| `androidx.biometric` and `androidx.appcompat` | `android.hardware.biometrics.BiometricPrompt` with `BIOMETRIC_STRONG or DEVICE_CREDENTIAL` | minSdk 32 supports the API 30+ authenticator flags natively. AppCompat exists only for biometrics and locale storage |
-| `androidx.core:core-splashscreen` | Platform `SplashScreen` API (31+) with an `OnPreDrawListener` hold | Native on minSdk 32 |
-| AppCompat locale service | `android.app.LocaleManager` (33+) | API 32 falls back to the system language |
-| `material-icons-extended` | About 30 Material Symbols vector drawables | Huge artifact and no longer maintained |
-| OkHttp and Okio | `javax.net.ssl.HttpsURLConnection` (platform TLS through Conscrypt) | Small surface (JSON REST plus one SSE stream). See decision D1 |
-| `kotlinx-serialization` JSON tree walking | Keep the library, switch to typed `@Serializable` DTOs | First-party Kotlin, compile-time, no reflection |
-| Sentry plugin defaults | Keep Sentry, disable `tracingInstrumentation` and `autoInstallation` | Opt-in reporting with nothing beyond the exception itself |
-
-### 1.3 Unhandled edge cases
-
-- Screen lock removed while app lock is on.
-- Keystore key invalidated or keyset corrupted.
-- Process death or rotation during sign-in.
-- Key revoked mid-session.
-- 429 with `Retry-After`.
-- Offline start (the user waits for a 15 second timeout).
-- Stream disconnect, network change or Doze.
-- Long live sessions passing the 2,000 entry cap while paging continues.
-- Timezone change while charts are visible.
-- Pasted URLs, IDN, trailing dots and wildcards in domain input.
-- Selected profile deleted on the server.
-- Server strings containing control characters.
-- List limits (5,000 denylist or allowlist entries, 500 rewrites, 50 shared users) returned as `listLimitExceeded`.
+1. [Decisions](#1-decisions)
+2. [Audit of the current app](#2-audit-of-the-current-app)
+3. [NextDNS parity with my.nextdns.io](#3-nextdns-parity-with-mynextdnsio)
+4. [Control D support](#4-control-d-support)
+5. [Rebrand](#5-rebrand)
+6. [Distribution changes: F-Droid exit and single build](#6-distribution-changes-f-droid-exit-and-single-build)
+7. [Architecture](#7-architecture)
+8. [Security and privacy model](#8-security-and-privacy-model)
+9. [Modern Android standards](#9-modern-android-standards)
+10. [Material 3 design system](#10-material-3-design-system)
+11. [Release, compliance and operations](#11-release-compliance-and-operations)
+12. [Community communication plan](#12-community-communication-plan)
+13. [Roadmap](#13-roadmap)
+14. [Risks](#14-risks)
 
 ---
 
-## 2. Feature parity with my.nextdns.io
+## 1. Decisions
 
-### 2.1 Method
+### 1.1 Decided
 
-- Downloaded the public dashboard bundle `https://my.nextdns.io/static/js/main.a1e3cbc7.js` (about 1 MB) on 2026-11-20 and extracted every route, menu, API call and translation key.
-- Read the public API documentation at `https://nextdns.github.io/api/`.
-- Probed the catalog endpoints the dashboard uses without authentication.
-
-Confirmed public, no auth needed:
-
-| Endpoint | Content |
-|---|---|
-| `GET /privacy/blocklists?locale=` | Blocklist catalog with name, website, description, entries, updatedOn |
-| `GET /privacy/natives` | Native tracking vendors |
-| `GET /parentalControl/services` | Services with website |
-| `GET /parentalControl/categories` | Categories |
-| `GET /security/tlds` | All TLDs with a `spamhaus` score |
-| `GET /trackers/:id` | Tracker insights (owner company, category, prevalence) |
-
-Endpoints the dashboard calls that are **not** in the public API docs. Each must be verified with a real API key during M0 because the dashboard authenticates with a session cookie, not `X-Api-Key`.
-
-`/profiles/:id/setup`, `/profiles/:id/setup/linkedIp` (on `ipv4.api.nextdns.io`), `/profiles/:id/access`, `/profiles/:id/parentalControl` `recreation` object, `privacy.rotatingAdDomains`, `settings.ageVerification`, `/accounts/@me`, `/accounts/@me/usage`, `/accounts/@me/invites`, `/account/apiKeys`.
-
-`GET /accounts/@me` without auth returns a plain `403 Forbidden`, while `/profiles` returns `{"errors":[{"code":"authRequired"}]}`. That difference suggests account endpoints are session-only. This needs confirmation.
-
-### 2.2 Dashboard map
-
-Routes: `/login`, `/signup`, `/reset-password/:token?`, `/start`, `/account`, `/invite/:token`, `/invoice/:code`, `/:profile/:menu`.
-
-Profile menus: `setup`, `security`, `privacy`, `parentalcontrol`, `denylist`, `allowlist`, `analytics`, `logs`, `settings`. Every write control is disabled for the `viewer` role.
-
-### 2.3 Parity matrix
-
-Legend: ✅ present, 🟡 partial, ❌ missing, 🌐 hand off to the web on purpose.
-
-#### Setup
-
-| Site feature | App today | Plan |
+| # | Decision | Source |
 |---|---|---|
-| Live status check (ok, mismatch, unconfigured, error, block page states) | 🟡 simple `test.nextdns.io` check on Overview | Full status card with every state and the site's remediation hints |
-| Endpoints: profile ID, DoH URL, DoT hostname, IPv6 addresses, DNS stamp | ❌ | Setup screen with copy actions |
-| Android Private DNS guide | 🟡 button opens wireless settings | Guided card. Copy the DoT hostname, then open settings |
-| Other platform guides (iOS, macOS, Windows, Linux, routers, browsers, Tailscale) | ❌ | Short per-platform cards with copy actions and links to the official guides |
-| Linked IP: show linked IP, link the current IP, show DNS servers, update URL | ❌ | Setup screen section. The update token is treated as a secret and is never logged |
-| DDNS hostname set and unset | ❌ | Same section, hostname validated client side |
-| IPv6 support test (`test-ipv6.nextdns.io`) | ❌ | Run with the status check |
-| Device identification instructions (DoH path, DoT prefix) | ❌ | Help card with a generator for device-named endpoints |
+| A1 | Ground-up native rewrite with the security, reliability and UX goals in this document | Original brief |
+| A2 | NextDNS feature parity with my.nextdns.io for everything profile-level. Account, password, 2FA and billing hand off to the web | Section 3 |
+| A3 | Stop supporting F-Droid | Maintainer request |
+| A4 | Complete rebrand to a provider-neutral name | Maintainer request |
+| A5 | Support Control D alongside NextDNS | Maintainer request |
+| A6 | Notify the current community before, during and after the transition | Maintainer request |
 
-#### Security
-
-| Site feature | App today | Plan |
-|---|---|---|
-| Toggles: threat intelligence feeds, AI threat detection, Google Safe Browsing, cryptojacking, DNS rebinding, NRD, DDNS, parking, CSAM | 🟡 rendered generically from whatever booleans come back, some without labels | Typed model with a label and description for each. Deprecated `idnHomographs`, `typosquatting` and `dga` hidden |
-| Blocked TLDs from the catalog, with a Spamhaus section | 🟡 free-text entry | Searchable catalog picker from `GET /security/tlds`, sorted by Spamhaus score |
-
-#### Privacy
-
-| Site feature | App today | Plan |
-|---|---|---|
-| Blocklists from the catalog with description, entry count, last update and website | 🟡 hardcoded short list | Live catalog with search, locale and details |
-| Native tracking protection from the catalog | 🟡 hardcoded | Live catalog |
-| Block disguised third-party trackers | 🟡 generic toggle | Typed toggle with description |
-| Allow affiliate and tracking links | 🟡 generic toggle | Typed toggle |
-| Block rotating ad domains (released 2026-10-30) | 🟡 generic toggle, no label | Typed toggle |
-
-#### Parental control
-
-| Site feature | App today | Plan |
-|---|---|---|
-| Services and categories from the catalog with active switch | 🟡 hardcoded catalog | Live catalog with service icons from the site's favicon source behind an opt-in, otherwise monogram avatars |
-| Per-item recreation flag | ❌ | Toggle per item |
-| Recreation time weekly schedule with timezone | ❌ | Weekly schedule editor (M3 time pickers), timezone from `ZoneId.systemDefault()` |
-| SafeSearch, YouTube restricted mode, block bypass | 🟡 generic toggles | Typed toggles with descriptions |
-
-#### Denylist and allowlist
-
-| Site feature | App today | Plan |
-|---|---|---|
-| Add, enable or disable, remove | ✅ | Keep, add validation and serialized mutations |
-| `listLimitExceeded` handling | ❌ | Typed error with a clear message |
-| Search within the list | ❌ | Local filter field |
-
-#### Analytics
-
-| Site feature | App today | Plan |
-|---|---|---|
-| Counters (all, blocked, percent blocked) and queries chart | ✅ | Keep |
-| Range selection | 🟡 24h, 7d, 30d, 90d | Add the site's presets and a custom range with the M3 date range picker |
-| Device filter for the whole page | ❌ | Device selector in the top bar, `device` parameter on every call, including `__UNIDENTIFIED__` |
-| Top domains, blocked domains | ✅ | Keep |
-| Root domains toggle (`root=true`) | ❌ | Add |
-| Drill-down by block reason (`reason=`) | ❌ | Tap a reason to see its blocked domains |
-| Block reasons, devices, protocols, query types, DNSSEC, encryption, IP versions | ✅ | Keep |
-| Destination countries and GAFAM share | ✅ | Keep |
-| Client IPs with ISP, ASN, VPN and cellular flags, geo | ❌ | Add card |
-
-#### Logs
-
-| Site feature | App today | Plan |
-|---|---|---|
-| Search, status filter, paging | ✅ | Keep, fix H2 |
-| `error` status filter | ❌ | Add |
-| Device filter | ❌ | Add |
-| Raw mode (`raw=1`) | ❌ | Add |
-| Blocked only toggle | 🟡 via status filter | Covered |
-| Real-time streaming | 🟡 | Rebuild with lifecycle, resume by `id`, reconnect with backoff |
-| Absolute and relative time toggle | ❌ | Add |
-| Entry insights (tracker owner, category, prevalence) | ❌ | `GET /trackers/:id` in the detail sheet |
-| Allow or block from an entry | ✅ | Keep |
-| Download logs | ❌ | `GET /logs/download?redirect=0`, then hand the URL to the system download manager |
-| Clear logs | ✅ | Keep |
-
-#### Settings
-
-| Site feature | App today | Plan |
-|---|---|---|
-| Rename profile | ✅ | Keep |
-| Logs enable, drop IPs, drop domains | ✅ | Keep |
-| Retention (1h, 6h, 1d, 1w, 1m, 3m, 6m, 1y, 2y) | 🟡 custom option list | Use the site's exact nine options |
-| Storage location change with confirmation | 🟡 read-only | Editable with the site's warning dialog |
-| Block page enable | ✅ | Keep |
-| Block page CA trust status and install help | ❌ | Status line and a link to `nextdns.io/ca` |
-| Performance: ECS, cache boost, CNAME flattening | ✅ | Typed toggles |
-| Web3 | ✅ | Keep |
-| Age verification (beta) | ❌ | Add with the acknowledgment text |
-| Rewrites | ✅ | Keep, validate answers, never retry POST |
-| Access sharing: invite by email, editor or viewer role, pending state, remove | ❌ | Add, if `X-Api-Key` is accepted |
-| Duplicate profile | ❌ | Add |
-| Delete profile | ❌ | Add with typed-name confirmation |
-| Leave a shared profile | ❌ | Add |
-
-#### Profiles and roles
-
-| Site feature | App today | Plan |
-|---|---|---|
-| Switch profile | ✅ | Keep |
-| Create profile with the site's defaults | ❌ | Add |
-| Role awareness (owner, editor, viewer) | ❌ | Read the role and disable writes for viewers like the site does |
-
-#### Account
-
-| Site feature | App today | Plan |
-|---|---|---|
-| Usage and quota | ❌ | In-app card if `/accounts/@me/usage` accepts the API key, otherwise 🌐 |
-| API keys management | 🟡 shows the stored key suffix | 🌐 The key is required to talk to the API, so creating or revoking keys from inside the app is circular |
-| Email, password, two-factor | ❌ | 🌐 These need a password session and are out of scope for an API-key client |
-| Subscription, payment methods, invoices, business info | ❌ | 🌐 Selling or managing digital subscriptions in an Android app requires Google Play Billing. Linking out is the safe option |
-| Affiliate balance and payout | ❌ | 🌐 |
-| Delete account | ❌ | 🌐 |
-| Accept invite links (`/invite/:token`) | ❌ | 🌐 Optional App Link later |
-
-### 2.4 Verdict on "100 percent"
-
-Every profile-level feature of the dashboard (setup, security, privacy, parental control, lists, analytics, logs, settings, profile lifecycle and sharing) is in scope and planned. Account features that need a password session or involve billing are handed off to `my.nextdns.io/account` with a single "Manage account on the web" entry. Building those in-app would mean collecting the user's NextDNS password or bypassing Play billing rules, both of which are worse than a hand-off. The app goes beyond the site with app lock, biometric protection of the key, a local connection status check and an Android-native Private DNS flow.
-
----
-
-## 3. Modern Android standards
-
-### 3.1 Build and tooling
-
-- Gradle Kotlin DSL (`build.gradle.kts`), `plugins {}` blocks and a `gradle/libs.versions.toml` version catalog with exact versions.
-- Remove the AGP 9 opt-outs in `gradle.properties`. Adopt built-in Kotlin, the new DSL, R8 strict full mode and the stable configuration cache.
-- Compose BOM for aligned Compose versions.
-- Gradle dependency verification (`gradle/verification-metadata.xml`) and wrapper checksum validation in CI.
-- Lint with `warningsAsErrors`. `MissingTranslation` returns to error once strings are translated.
-- Kotlin `explicitApi()` and `allWarningsAsErrors` in `:core`.
-- 16 KB page size compliance. Remove `useLegacyPackaging = true` and confirm native libraries are aligned.
-- Baseline profile generated with the `androidx.baselineprofile` plugin and Macrobenchmark, replacing the hand-written file.
-- Gradle Managed Devices for instrumented tests in CI.
-
-### 3.2 Architecture standards
-
-- Unidirectional data flow. Each screen has one immutable `UiState`, exposed as `StateFlow` and collected with `collectAsStateWithLifecycle`.
-- Streams use `SharingStarted.WhileSubscribed(5_000)` so work stops in the background.
-- Repositories expose `suspend` functions and `Flow`. ViewModels never hold Android `Context`.
-- Typed results with a sealed `AppError`. No string matching on errors.
-- Manual dependency injection through an `AppGraph`. No service locator singletons like `AppContainer`.
-- Type-safe navigation with Navigation 3 (stable), with back stack state saved across process death.
-- `SavedStateHandle` for user input that must survive process death, except secrets.
-
-### 3.3 Testing pyramid
-
-| Layer | Tooling | Scope |
-|---|---|---|
-| Unit (JVM) | JUnit, `kotlinx-coroutines-test`, MockWebServer (test only) | Validators, HTTP client, SSE parser, repositories, state machines, ViewModels |
-| Instrumented | AndroidX Test on Gradle Managed Devices | Keystore vault, biometric wrapper contract, migration |
-| UI | Compose UI test | Onboarding, lock, add domain, toggle setting, viewer read-only |
-| Screenshot | Compose Preview Screenshot Testing (AGP) | Light, dark, dynamic, font scale 200%, RTL |
-| Performance | Macrobenchmark | Cold start, log list scrolling |
-
----
-
-## 4. Material 3 design system
-
-### 4.1 Foundations
-
-- **Library.** Compose Material 3 stable. Expressive components are adopted only when they reach stable.
-- **Color.**
-  - Dynamic color on by default (Android 12+).
-  - Brand fallback light and dark schemes generated in Material Theme Builder from one seed colour.
-  - Medium and high contrast schemes, selected from `UiModeManager.getContrast()` on Android 14+.
-- **Semantic status colours.** Blocked, allowed and default are custom colour roles (`blocked`, `onBlocked`, `blockedContainer`, and so on) defined for every scheme and harmonised toward the current primary. No hardcoded `Color(0xFF...)` in screens.
-- **Typography.** The default M3 type scale with the system font. Screens use roles (`titleLarge`, `bodyMedium`, `labelSmall`) only. Domains and IDs use a monospace `FontFamily` for legibility.
-- **Shape.** The M3 shape scale. Cards `medium`, sheets and dialogs `extraLarge`, chips `small`.
-- **Elevation.** Tonal elevation only, through surface container roles (`surfaceContainerLow` to `surfaceContainerHighest`).
-- **Motion.** M3 easing and duration tokens. Animations are disabled when the system animator scale is 0.
-- **Icons.** Material Symbols Outlined, one weight, filled variant for the selected navigation item.
-
-### 4.2 Layout and navigation
-
-- `NavigationSuiteScaffold` switches between navigation bar, rail and drawer by window size class.
-- Destinations: Overview, Logs, Lists, Profile (Setup, Security, Privacy, Parental control, Settings) and App settings.
-- `ListDetailPaneScaffold` for logs and lists on tablets and foldables. The log detail opens as a pane instead of a bottom sheet on large screens.
-- Edge-to-edge with correct inset handling on every screen, and predictive back with the system animation.
-- `TopAppBar` with `enterAlwaysScrollBehavior`. The profile switcher and device filter live in the top bar.
-
-### 4.3 Components by pattern
-
-| Pattern | Component |
-|---|---|
-| Range selection | `SingleChoiceSegmentedButtonRow`, plus `DateRangePicker` for a custom range |
-| Log search | `SearchBar` with recent searches kept in memory only |
-| Filters | `FilterChip` row |
-| Refresh | `PullToRefreshBox` |
-| Destructive actions on list rows | Swipe to dismiss with an undo `Snackbar` instead of a confirmation dialog |
-| Irreversible actions (clear logs, delete profile, change log location) | `AlertDialog` with an explicit verb. Delete profile requires typing the name |
-| Catalog pickers | Full-screen dialog with search and `ListItem` rows |
-| Settings rows | `ListItem` with `Switch` in the trailing slot, the whole row toggles |
-| Recreation schedule | `TimePicker` in a dialog for each day |
-| Loading | Skeleton placeholders for cards, `LinearProgressIndicator` for paging |
-| Empty and error states | Shared composables with icon, title, body and one action |
-| Feedback | `SnackbarHost` owned by the scaffold. One-shot events come from the ViewModel |
-
-### 4.4 Accessibility
-
-- Minimum 48 dp touch targets. Status is never conveyed by colour alone (icon, text and `contentDescription`).
-- Charts expose a summary through semantics and offer a "View as table" alternative.
-- Content stays usable at 200% font scale. RTL is verified.
-- WCAG AA contrast for custom colour roles in every scheme.
-- Focus order and headings (`semantics { heading() }`) for TalkBack.
-- Domains from logs are shown with bidi isolation, and the detail sheet shows the punycode form for IDN names.
-
----
-
-## 5. Architecture and security
-
-### 5.1 Modules
-
-```
-:core      Pure Kotlin/JVM. Models, validators, AppError, HTTP client,
-           SSE parser, NextDNS DTOs and repositories, Session and AppLock
-           state machines with injected clock and lifecycle.
-:platform  Android, no UI. Keystore vault, legacy migration, native
-           BiometricPrompt wrapper, connectivity, preferences, clipboard.
-:app       Compose UI, ViewModels, design system, AppGraph, flavors.
-```
-
-Feature packages in `:app`: `overview`, `logs`, `lists`, `setup`, `security`, `privacy`, `parental`, `settings`, `sharing`, `appsettings`, `onboarding`, `lock`.
-
-### 5.2 State and data flow
-
-- `SessionManager` exposes `StateFlow<SessionState>` with `Initializing`, `StorageUnavailable`, `SignedOut`, `Locked`, `Active(profiles, selected, role)` and `KeyRejected`.
-- Any 401 or 403 moves the session to `KeyRejected`, which shows a single re-authentication screen.
-- Mutations go through one serial queue per resource, so writes on the same list or setting key are ordered.
-- Optimistic changes are an overlay of pending operations over server state. A failure removes only its own operation and triggers a refetch.
-- Retries are limited to idempotent calls (GET, PUT, DELETE, PATCH with absolute values). POST is never retried. `Retry-After` is honoured with jitter and at most two retries.
-- A shared `Semaphore(4)` limits concurrent analytics requests.
-- Catalogs (blocklists, natives, services, categories, TLDs, trackers) are cached in memory for the session.
-
-### 5.3 Native API mapping
-
-| Need | API |
-|---|---|
-| Secret storage | `KeyGenParameterSpec` AES-256-GCM, StrongBox when available, `setUnlockedDeviceRequired(true)`. Ciphertext and IV in `AtomicFile`. The app lock flag is bound as GCM associated data |
-| App lock | Platform `BiometricPrompt`, `ActivityLifecycleCallbacks` with a `SystemClock.elapsedRealtime()` background timer, `FLAG_SECURE` while locked or when "Hide in Recents" is on |
-| Networking | `HttpsURLConnection` with `useCaches = false`, `instanceFollowRedirects = false`, bounded reads, cancellation through `disconnect()` |
-| Validation | `java.net.IDN`, `android.net.InetAddresses.isNumericAddress` |
-| Connectivity | `ConnectivityManager.registerDefaultNetworkCallback` |
-| Downloads | `DownloadManager` for log exports |
-| Per-app language | `LocaleManager` |
-| Splash | Platform `SplashScreen` |
-| Transport policy | Network security config with cleartext off and system trust anchors only |
-
-### 5.4 Threat model
-
-Assets: the API key (full account control), query logs (browsing history), profile configuration, linked IP update token.
-
-| Adversary | Controls |
-|---|---|
-| Other apps | Only the launcher activity is exported. No backups. Clipboard copies marked sensitive. No logging in release builds |
-| Physical access | App lock with no first-frame flash. `FLAG_SECURE`. Recovery is "sign out and wipe", never a bypass |
-| Network attacker | TLS with system CAs. The key header is attached only when the host is `api.nextdns.io` or `ipv4.api.nextdns.io`. No redirects |
-| Malicious server data | Typed decoding, unknown enum values kept as `Unknown(raw)`, 4 MiB body cap, 64 KiB SSE line cap, control and bidi characters stripped |
-| Third-party SDKs | Sentry opt-in with a unit-tested `beforeSend` scrubber. FCM opt-in, gms flavor only |
-| Supply chain | Exact version pins, dependency verification, wrapper validation |
-
-Out of scope: rooted or compromised OS, and NextDNS server compromise beyond data validation.
-
-### 5.5 Input validation
-
-Everything entering `:core` passes a validator that returns a typed result. Covered inputs: API key charset and length, profile IDs, domains (URL stripping, IDN to ASCII, label and total length, trailing dot), TLDs against the catalog, rewrite answers (IP literal or domain), DDNS hostnames, profile names, invite emails and roles, recreation times, FCM payloads. URL path segments are encoded one at a time and `.` or `..` are rejected.
-
-### 5.6 Data lifecycle
-
-- **In memory.** The key is decrypted once per session. Logs, analytics and catalogs live only in memory and are cleared on sign-out or profile switch.
-- **On disk.** The vault file and non-sensitive preferences only. No HTTP cache. Log exports go to the user-chosen Downloads location through `DownloadManager`.
-- **Sign-out.** Delete the vault file and Keystore key, cancel all jobs and clear state.
-- **No encryption available.** Session-only mode. The key is never written in plaintext.
-
----
-
-## 6. Roadmap
-
-Each milestone builds, ships its own tests and is committed separately.
-
-| Milestone | Content |
-|---|---|
-| M0 | Android SDK in the container, Kotlin DSL and version catalog, module split, remove AGP opt-outs, dependency verification, strict lint. Verify every undocumented endpoint from section 2.1 against a real API key |
-| M1 | `:core` validators, models and `AppError`, with table-driven tests (path traversal, IDN, pasted URLs, bidi characters) |
-| M2 | HTTP client. Tests cover errors in a 200 body, 401 and 403, 429 with `Retry-After`, no POST retry, redirects not followed, oversized bodies, malformed JSON and cancellation |
-| M3 | NextDNS DTOs and repositories for every endpoint in section 2. SSE parser with resume, backoff and dedup |
-| M4 | Keystore vault and legacy migration. Instrumented tests for invalidated key, corrupt file and no plaintext fallback |
-| M5 | Session and AppLock state machines. Tests for no first-frame flash, background timeout, clock change, credential removal, sign-in cancellation and `KeyRejected` |
-| M6 | Native shell and design system. Platform splash, BiometricPrompt, LocaleManager, theme with dynamic, brand and contrast schemes, status colour roles, adaptive navigation. Remove AppCompat, biometric, splashscreen and the icon library |
-| M7 | Overview and Analytics parity: device filter, root toggle, reason drill-down, IPs card, custom range |
-| M8 | Logs parity: device, raw and error filters, lifecycle-aware streaming, insights, time toggle, download, adaptive list-detail |
-| M9 | Lists, Security, Privacy and Parental parity: live catalogs, TLD picker, recreation schedule and per-item flags |
-| M10 | Setup screen: status, endpoints, Private DNS flow, linked IP, DDNS, guides |
-| M11 | Settings parity: retention options, location change, block page CA, age verification, rewrites, sharing, duplicate, delete, leave, create profile, role-aware read-only UI |
-| M12 | Sentry and FCM hardening: fix the uncaught handler, scrubber tests, FCM opt-in with the permission requested in context |
-| M13 | Accessibility and polish: TalkBack pass, chart tables, 200% font scale, RTL, screenshot tests, localized error strings |
-| M14 | Release hardening: R8 audit, baseline profile, upgrade test from the previous APK, README and privacy policy update |
-
----
-
-## 7. Open decisions
+### 1.2 Open, with recommendations
 
 | # | Question | Recommendation |
 |---|---|---|
-| D1 | Networking stack | `HttpsURLConnection`. Two fewer libraries and less instrumentation surface, at the cost of about 250 lines of owned client code and HTTP/1.1 only |
-| D2 | Has this native branch shipped to users? | If not, drop `security-crypto` entirely and accept a one-time reset of theme, app lock and Sentry settings. If yes, keep it for one release to migrate those values |
-| D3 | minSdk | Keep 32. API 32 users lose per-app language only |
-| D4 | Certificate pinning | No pinning. System CAs only. A NextDNS certificate rotation would otherwise break the app |
-| D5 | FCM announcements | Opt-in toggle, off by default |
-| D6 | Account features | Hand off to the web as described in section 2.3 |
-| D7 | Service favicons | Monogram avatars by default. Loading `favicons.nextdns.io` reveals the viewed services to that host, so it would be an opt-in |
+| D1 | Networking stack | Platform `HttpsURLConnection`. Two fewer libraries and less instrumentation surface, at the cost of about 300 lines of owned client code and HTTP/1.1 only |
+| D2 | Legacy settings migration | Drop `security-crypto` entirely. Upgrading users re-enter an API key anyway, so a one-time reset of theme, app lock and error reporting is acceptable |
+| D3 | minSdk | Keep 32. API 32 loses per-app language only |
+| D4 | Certificate pinning | None. System CAs only. Provider certificate rotations would otherwise break the app |
+| D5 | Build flavors and FCM | One build, Firebase removed. Announcements move to an in-app "What's new" screen (section 6.2) |
+| D6 | Account features | Web hand-off for both providers |
+| D7 | Service favicons | Monogram avatars by default. Remote favicons only as an opt-in because they reveal viewed services to a third party |
+| D8 | Share target (add a shared link's domain to a block or allow rule) | Yes, cheap and high value |
+| D9 | Multiple accounts | Yes. Required anyway once a user can hold both a NextDNS and a Control D account |
+| D10 | Offline behavior | Clear offline state, no disk cache in v1. Revisit an encrypted last-overview cache after launch |
+| D11 | Profile backup | Export and import of a profile's configuration as JSON, per provider. Cross-provider conversion is a later, separate decision |
+| D12 | Home screen widget and Quick Settings tile | Post-launch (v1.1). Not needed for parity |
+| D13 | Control D analytics and activity log | Not in the public API. Hand off to the Control D dashboard and ask Control D whether a supported endpoint exists (section 4.4) |
+| D14 | New name | Pick from a vetted shortlist after trademark checks (section 5.2) |
+| D15 | applicationId | Keep `com.doubleangels.nextdnsmanagement` so Play users upgrade in place. Rename only code namespaces (section 5.4) |
+
+---
+
+## 2. Audit of the current app
+
+The branch replaced the WebView wrapper with Kotlin and Jetpack Compose on `api.nextdns.io` (commit `54d7065`). Findings below refer to that code. There are no automated tests.
+
+### 2.1 Critical
+
+| # | Problem | Location | Consequence |
+|---|---|---|---|
+| C1 | The filtered uncaught exception handler returns without delegating for "ignored" exceptions, matched by loose substrings like `cancel` and `timeout` | `sentry/SentryManager.java` | A matching exception on the main thread kills it while the process lives on. The app freezes instead of crashing |
+| C2 | Keystore or Tink failure falls back to plaintext and writes the API key in clear text. The plaintext copy survives later successful launches | `sharedpreferences/SharedPreferencesManager.java` | A full-account credential on disk in plaintext, while onboarding claims encryption |
+| C3 | With app lock on and the device screen lock removed, `unlock()` returns silently | `MainActivity.kt` | Permanent lockout. Clearing data is the only way out |
+
+### 2.2 High, correctness and races
+
+| # | Problem | Location |
+|---|---|---|
+| H1 | All methods retried on 429 and 5xx, including POST. `Retry-After` ignored. Duplicate rewrites and entries are possible | `api/NextDnsApi.kt` |
+| H2 | Paging race. The cancelled job's `finally` resets `loading` after the new job set it, so `loadMore` fires a duplicate first page | `ui/logs/LogsViewModel.kt` |
+| H3 | Live stream ignores lifecycle, runs in the background, never reconnects and never de-duplicates | `ui/logs/LogsViewModel.kt` |
+| H4 | Snapshot rollback erases concurrent successful edits. Concurrent PATCH calls on one setting can land out of order | `data/EntryListController.kt`, `ui/profile/ProfileViewModel.kt` |
+| H5 | Sign-in stores the key before validation. Rotation cancels the scope, the cancellation is treated as an error and reported | `ui/SessionViewModel.kt` |
+| H6 | App lock shows one frame of the dashboard on cold start. Timeout counts from last unlock on the wall clock, not from backgrounding | `MainActivity.kt`, `ui/NextDnsApp.kt` |
+| H7 | A revoked key yields a separate error on every screen with no route back to sign-in | all ViewModels |
+
+### 2.3 High, security and privacy
+
+| # | Problem |
+|---|---|
+| S1 | OkHttp follows redirects and strips only `Authorization` on cross-host redirects, never `X-Api-Key` |
+| S2 | `addPathSegments` resolves `..` and splits on `/`, so an entry ID like `../../x` retargets requests |
+| S3 | Sentry Gradle plugin defaults instrument OkHttp, file I/O and Compose. Breadcrumbs carry URLs with `search=<domain>`. View hierarchy, root check and auto breadcrumbs are on |
+| S4 | Firebase initialises and subscribes on every sign-in without consent. Notification permission requested without rationale |
+| S5 | `setRecentsScreenshotEnabled` is API 33+, so API 32 shows the dashboard in Recents |
+
+### 2.4 Medium
+
+- No input validation for pasted URLs, IDN, trailing dots, rewrite answers or name lengths. Server domains rendered raw, allowing homoglyphs and bidi control characters.
+- Untyped errors, including the magic string `"invalid_key"`, hardcoded English messages and raw exception text in the UI.
+- Unbounded response bodies and SSE lines.
+- Overview fires 13 parallel requests per refresh with retries on top.
+- Key decrypted on the main thread for every request.
+- Unneeded permissions `WAKE_LOCK`, `ACCESS_WIFI_STATE`, `ACCESS_NOTIFICATION_POLICY` and the `http` `<queries>` entry.
+- Copied domains not marked sensitive.
+- `test.nextdns.io` status code ignored, so HTML responses become Sentry reports.
+- Accessibility gaps: status by colour only, charts without semantics, no stable list keys.
+- Hardcoded blocklist, native tracker, service and category catalogs. TLDs as free text.
+
+### 2.5 Process
+
+- Zero tests. CI runs `./gradlew test` on nothing, and `test-dev.yml` only triggers on pushes to `dev`.
+- `MissingTranslation` downgraded to a warning.
+- `gradle.properties` opts out of AGP 9 defaults (built-in Kotlin, new DSL, R8 strict full mode).
+
+### 2.6 Dependency plan
+
+| Current | Replacement | Reason |
+|---|---|---|
+| `security-crypto` (EncryptedSharedPreferences, Tink) | Android Keystore AES-256-GCM plus `AtomicFile` in `noBackupFilesDir` | Deprecated, heavy, and the source of the plaintext fallback |
+| `androidx.biometric`, `appcompat` | Platform `BiometricPrompt` with API 30+ authenticators | Native on minSdk 32 |
+| `core-splashscreen` | Platform `SplashScreen` | Native on minSdk 32 |
+| AppCompat locale service | `LocaleManager` | Native on 33+ |
+| `material-icons-extended` | About 30 Material Symbols vector drawables | Huge and unmaintained |
+| OkHttp, Okio | `HttpsURLConnection` (D1) | Small API surface per provider |
+| `kotlinx-serialization` tree walking | Typed `@Serializable` DTOs | Compile-time, no reflection |
+| `firebase-messaging`, `google-services` plugin | Removed (D5) | Privacy, single build |
+| Sentry defaults | Sentry with instrumentation and auto-installation off | Opt-in, scrubbed |
+
+### 2.7 Unhandled edge cases
+
+Screen lock removed under app lock. Keystore key invalidated. Process death or rotation during sign-in. Key revoked mid-session. 429 with `Retry-After`. Offline start. Stream drop, network change, Doze. Live sessions exceeding the entry cap. Timezone or DST change. Pasted URLs, IDN, trailing dots, wildcards. Selected profile deleted on the server. Control characters in server strings. List limits (`listLimitExceeded` at 5,000 list entries, 500 rewrites, 50 shared users). Edits made on the web while the app is open. Control D tokens restricted to allowed IPs failing when the phone changes networks.
+
+---
+
+## 3. NextDNS parity with my.nextdns.io
+
+### 3.1 Method
+
+- Extracted routes, menus, API calls and translation keys from the dashboard bundle `https://my.nextdns.io/static/js/main.a1e3cbc7.js` on 2026-11-20.
+- Read `https://nextdns.github.io/api/`.
+- Probed catalog endpoints without authentication.
+
+Public catalogs confirmed: `/privacy/blocklists?locale=`, `/privacy/natives`, `/parentalControl/services`, `/parentalControl/categories`, `/security/tlds` (with Spamhaus score), `/trackers/:id`.
+
+Undocumented endpoints used by the dashboard, to verify with an API key in M0: `/profiles/:id/setup`, `/profiles/:id/setup/linkedIp` on `ipv4.api.nextdns.io`, `/profiles/:id/access`, the `parentalControl.recreation` object, `privacy.rotatingAdDomains`, `settings.ageVerification`, `/accounts/@me`, `/accounts/@me/usage`, `/account/apiKeys`. Unauthenticated `/accounts/@me` returns a bare `403`, unlike `/profiles`, which suggests account endpoints are session-only.
+
+### 3.2 Matrix
+
+Legend: ✅ present, 🟡 partial, ❌ missing, 🌐 deliberate web hand-off.
+
+| Area | Site feature | Today | Plan |
+|---|---|---|---|
+| Setup | Status check with all states and remediation hints | 🟡 | Full status card |
+| Setup | Endpoints: ID, DoH, DoT, IPv6, DNS stamp | ❌ | Copyable endpoint list |
+| Setup | Android Private DNS guide | 🟡 | Copy hostname then open Settings, with a clear note that apps cannot set Private DNS |
+| Setup | Platform guides | ❌ | Short cards linking to official guides |
+| Setup | Linked IP, link current IP, DNS servers, update URL | ❌ | Section with the update token treated as a secret |
+| Setup | DDNS hostname | ❌ | Validated set and unset |
+| Setup | IPv6 test, device identification help | ❌ | Included |
+| Security | Nine protection toggles | 🟡 generic | Typed toggles with labels and descriptions. Deprecated fields hidden |
+| Security | Blocked TLDs with Spamhaus section | 🟡 free text | Searchable catalog picker |
+| Privacy | Blocklists with description, entries, update date | 🟡 hardcoded | Live catalog |
+| Privacy | Native tracking | 🟡 hardcoded | Live catalog |
+| Privacy | Disguised trackers, affiliate links, rotating ad domains | 🟡 generic | Typed toggles |
+| Parental | Services and categories with active switch | 🟡 hardcoded | Live catalog |
+| Parental | Per-item recreation flag and weekly recreation schedule | ❌ | Schedule editor with time pickers |
+| Parental | SafeSearch, YouTube restricted, block bypass | 🟡 generic | Typed toggles |
+| Lists | Add, toggle, remove | ✅ | Keep with validation |
+| Lists | Limit errors, search | ❌ | Typed error, local filter |
+| Analytics | Counters, chart, domains, reasons, devices, protocols, query types, DNSSEC, encryption, IP versions, destinations | ✅ | Keep |
+| Analytics | Device filter, root domains, reason drill-down, client IPs, custom range | ❌ | Add |
+| Logs | Search, status, paging, allow or block, clear | ✅ | Keep, fix H2 |
+| Logs | Error filter, device filter, raw mode, time format, tracker insights, download | ❌ | Add |
+| Logs | Streaming | 🟡 | Rebuild with lifecycle, resume, backoff |
+| Settings | Rename, logs toggles, block page, performance, web3, rewrites | ✅ | Keep |
+| Settings | Site's nine retention options, location change, block page CA status, age verification | 🟡 or ❌ | Add |
+| Settings | Sharing with roles, duplicate, delete, leave, create profile | ❌ | Add if the API key is accepted |
+| Profiles | Role awareness (viewer read-only) | ❌ | Enforced in UI |
+| Account | Usage | ❌ | In-app if API key accepted, else 🌐 |
+| Account | API keys, email, password, 2FA, subscription, invoices, business, affiliate, delete account, invites | ❌ | 🌐 |
+
+### 3.3 Verdict
+
+Every profile-level feature is in scope. Account features need a password session or involve billing. Building them would mean collecting the user's password or conflicting with Google Play billing rules, so they hand off to `my.nextdns.io/account`.
+
+---
+
+## 4. Control D support
+
+### 4.1 What the public API offers
+
+Source: `https://docs.controld.com/llms.txt` and the API reference, read 2026-11-20.
+
+| Item | Detail |
+|---|---|
+| Base URL | `https://api.controld.com` |
+| Auth | `Authorization: Bearer <token>`. Tokens are **Read** or **Write** and can be restricted to allowed IPs |
+| Envelope | `{"success": true, "body": {...}}` or `{"success": false, "body": [], "error": {"message", "code"}}`. The first three digits of `code` match the HTTP status |
+| Keys | Every object has a primary key `PK` |
+| Orgs | `X-Force-Org-Id` header to act inside a sub-organization |
+| Public catalog | `GET /services/categories` works without a token |
+
+Documented resources:
+
+| Resource | Endpoints |
+|---|---|
+| Profiles | List, create, modify, delete |
+| Filters | Native and external lists, enable or disable one, batch modify |
+| Services | Catalog by category, profile service rules (block, bypass, redirect through a proxy location) |
+| Custom rules | Create, modify, delete. Actions BLOCK, BYPASS, SPOOF (IP or hostname), REDIRECT (proxy). Optional comment up to 64 characters |
+| Folders | Create, modify, delete, list rules per folder, folder-level action |
+| Default rule | Read and modify |
+| Profile options | AI malware, DNS rebind protection, IPv4/IPv6 compatibility, DNSSEC off, block and redirect TTLs, SafeSearch, restricted YouTube and others |
+| Restrictions | Catalog, enable, disable |
+| Endpoints (devices) | List, create, modify, delete, types, assigned profiles, analytics level |
+| Access | Known IPs (latest 50), authorize, remove |
+| Misc | `/ip` (current IP and datacenter), `/proxies`, `/network` |
+| Analytics | Only log levels and storage regions |
+| Account | `/users`, billing (payments, products, subscriptions), organizations (members, sub-orgs) |
+| Org network | Internal domains |
+
+### 4.2 What it does not offer
+
+The activity log, statistics and real-time logging shown in the Control D dashboard have **no documented API**. The app cannot offer Control D analytics or logs unless Control D provides a supported endpoint (D13). Undocumented dashboard endpoints will not be scraped, because they can break without notice and may breach Control D's terms.
+
+### 4.3 Concept mapping
+
+| Concept | NextDNS | Control D | Shared UI |
+|---|---|---|---|
+| Configuration unit | Profile | Profile | Profile switcher |
+| Device identity | Device name in endpoint | Endpoint (device) with its own resolvers and one or more profiles | Provider-specific "Devices" screen |
+| Domain overrides | Denylist and allowlist (active flag) | Custom rules with BLOCK, BYPASS, SPOOF, REDIRECT and folders | "Rules" screen with an action picker. Actions a provider lacks are hidden |
+| DNS rewrites | Rewrites | SPOOF rules | Covered by Rules |
+| Blocklists | Privacy blocklists | Filters (native with modes, external) | "Filters" screen |
+| Services | Parental services (block) | Services (block, bypass, redirect) | "Services" screen |
+| Categories | Parental categories | Native filters and service categories | Mapped inside Filters and Services |
+| Fallback | None | Default rule | Control D only |
+| Protection options | Security and privacy toggles | Profile options and restrictions | "Protection" screen with typed toggles |
+| Read-only access | Viewer role | Read token | One `Permission.ReadOnly` state |
+| Analytics and logs | Full API | Not available | Hidden for Control D with a dashboard link |
+| Linked IP | Linked IP and DDNS | Authorized IPs, known IPs | Provider-specific section in Setup |
+| Traffic redirection | None | Proxy locations | Control D only |
+
+### 4.4 Control D scope for v1
+
+In scope: account connection with a Read or Write token, profiles (list, create, rename, delete), filters with modes, services by category with locations, custom rules and folders, default rule, profile options, restrictions, endpoints (list, create, edit, delete, analytics level, resolver details with copy actions), known and authorized IPs, current IP and datacenter check, proxy location list, account summary from `/users`.
+
+Hand-off to the Control D dashboard: analytics and activity log (unless D13 changes), billing, organizations, members and sub-organizations, internal domains, SSO and passkeys.
+
+Specific handling:
+
+- Read tokens put the whole account in read-only mode with an explanation.
+- A 403 from a token with allowed IPs is explained ("This token only works from specific networks") instead of a generic error.
+- Organization accounts work for the main organization. Sub-organization switching through `X-Force-Org-Id` is post-launch.
+
+### 4.5 Outreach to providers
+
+Send a short, courtesy message to both NextDNS and Control D before beta. It should state that the app is unofficial, describe how it uses the public APIs, and ask two questions. For NextDNS, whether the undocumented profile endpoints in section 3.1 are supported for API keys. For Control D, whether an analytics or activity log endpoint for tokens exists or is planned. No affiliation, endorsement or use of their logos should be implied.
+
+---
+
+## 5. Rebrand
+
+### 5.1 Goals
+
+- A name that works for any DNS provider, so adding a third provider later does not need another rebrand.
+- No provider trademark in the app name, icon or developer name. Provider names appear only descriptively, for example "Manage your NextDNS and Control D settings".
+- Continuity. Existing users upgrade in place and can still find the app by its old name for a while.
+
+### 5.2 Choosing the name
+
+1. Draft 8 to 10 candidates. Short, pronounceable, not a generic dictionary word alone, not containing "NextDNS", "Control D", "Next" or "Control".
+2. Screen each against the USPTO, EUIPO and WIPO Global Brand databases in classes 9 and 42, Google Play and App Store search, GitHub organisation and repository names, and a domain.
+3. Shortlist three. Optionally gather community feedback on the shortlist (not an open poll, which tends to surface names that fail the checks).
+4. Decide, then reserve the domain, a GitHub repository name and social handles before announcing.
+
+Illustrative directions only, each must pass step 2: a resolver theme ("Resolva"), a filter or gate theme ("Gatewise"), a control panel theme ("DNS Deck"). These are examples, not recommendations.
+
+### 5.3 Brand system
+
+- One seed colour that drives the Material 3 fallback schemes (section 10). Check contrast for the blocked and allowed status roles against it.
+- Adaptive launcher icon with a **monochrome layer** for Android 13+ themed icons, a splash icon, and a notification-free design since FCM goes away.
+- Store assets: icon, feature graphic, phone and tablet screenshots in all supported locales, short and full descriptions.
+- A neutral illustration style for empty states. No provider logos inside the app, except where a provider's published brand guidelines explicitly allow descriptive use. Default to the provider name in text.
+- Replace the bundled `nextdns_logo` drawable.
+
+### 5.4 Technical rebrand
+
+| Item | Plan |
+|---|---|
+| applicationId | Keep `com.doubleangels.nextdnsmanagement` (D15). Changing it creates a new Play listing and strands every user |
+| Kotlin namespace and packages | Rename to `com.doubleangels.<newname>` during the module split in M0. The applicationId is independent |
+| App label, strings, `donottranslate.xml` URLs | Update in M6 |
+| GitHub repository | Rename at launch. GitHub redirects the old URL. Update README badges and links |
+| Play listing | Rename title, add "formerly NextDNS Manager" in the full description for six months |
+| Sentry | New project name and release naming. Old project archived |
+| Tally forms, donation and privacy policy URLs | Recreate or update under the new name |
+| Privacy policy | Rewrite to cover both providers and the removal of Firebase |
+| `whatsnew/`, fastlane metadata | Rewrite for the launch release |
+| Disclaimers | "Not affiliated with NextDNS Inc. or Control D." Generic, in the app and listing |
+
+---
+
+## 6. Distribution changes: F-Droid exit and single build
+
+### 6.1 F-Droid exit
+
+1. Ship one final F-Droid release of the legacy app with an in-app notice. It should say that F-Droid support ends, name the new app, and link to Play and GitHub. This change happens on the legacy release branch, not on `native-api-app`.
+2. After the notice has been live for at least four weeks, open a merge request in `fdroiddata` that disables the app with a short reason. Otherwise F-Droid keeps building tags automatically, and the builds start failing once the foss flavor is removed.
+3. Explain in the README and FAQ that F-Droid installs are signed with F-Droid's key, so moving to the Play or GitHub build means uninstalling first. The user re-enters their API key, which the rewrite requires anyway.
+4. Remove F-Droid badges, the installation section, the update-time table, the signing table and the FCM FAQ from the README.
+
+### 6.2 Single build, Firebase removed (D5)
+
+- Remove the `gms` and `foss` flavors, `google-services.json`, the Google Services plugin, `CustomFirebaseMessagingService`, `MessagingInitializer`, `FlavorHooks` and the `processFoss…GoogleServices` workaround.
+- Remove the foss jobs from `deploy.yml` and `test-dev.yml`. GitHub Releases ships one signed `app-release.apk`. Play gets the bundle.
+- Replace push announcements with a "What's new" screen shown once per version, from bundled release notes.
+- The single build works on de-Googled devices, so the GitHub APK covers former F-Droid users. Document Obtainium as an update option for GitHub installs.
+- Use the existing FCM topic **once more** from the legacy app to announce the transition (section 12) before Firebase is removed.
+
+---
+
+## 7. Architecture
+
+### 7.1 Modules
+
+```
+:core                 Pure Kotlin/JVM. Models, validators, AppError, HTTP client,
+                      SSE parser, capability interfaces, Session, Accounts and
+                      AppLock state machines (injected clock and lifecycle).
+:provider:nextdns     Pure Kotlin/JVM. NextDNS DTOs and capability implementations.
+:provider:controld    Pure Kotlin/JVM. Control D DTOs and capability implementations.
+:platform             Android, no UI. Keystore vault, BiometricPrompt wrapper,
+                      connectivity, preferences, clipboard, DownloadManager.
+:app                  Compose UI, ViewModels, design system, AppGraph.
+:baselineprofile      Baseline profile generator and Macrobenchmark.
+```
+
+### 7.2 Provider abstraction
+
+Each provider implements only the capabilities it supports. The UI builds navigation from the capabilities of the active account. No lowest-common-denominator model is forced on both.
+
+| Capability | NextDNS | Control D |
+|---|---|---|
+| `Profiles` (list, create, rename, delete, duplicate) | ✅ | ✅ (no duplicate) |
+| `Analytics` | ✅ | ❌ |
+| `QueryLogs` and `LogStream` | ✅ | ❌ |
+| `Rules` (actions vary) | Allow, deny | Block, bypass, spoof, redirect, folders |
+| `Filters` | Blocklists, natives, TLDs | Native with modes, external |
+| `Services` | Block | Block, bypass, redirect |
+| `Protection` toggles | Security, privacy, parental | Options, restrictions, default rule |
+| `Schedules` | Recreation time | ❌ in public API |
+| `Endpoints` | Setup endpoints | Devices with resolvers |
+| `IpLinking` | Linked IP, DDNS | Authorized and known IPs |
+| `Sharing` | Access with roles | ❌ (organizations hand off) |
+| `ConnectionCheck` | `test.nextdns.io` | `/ip` |
+| `ProfileBackup` | ✅ | ✅ |
+
+A shared **contract test suite** runs against both adapters with recorded fixtures, so each capability behaves the same way regardless of provider.
+
+### 7.3 Accounts and session
+
+- `Account(id, provider, label, permission)` with its secret in the vault under that account ID. Multiple accounts are supported (D9). The top bar switches account and profile.
+- `SessionState` per active account: `Initializing`, `StorageUnavailable`, `NoAccounts`, `Locked`, `Active(account, profiles, selected)`, `CredentialRejected(account)`.
+- Any 401 or 403 moves that account to `CredentialRejected` with one re-authentication screen. The Control D allowed-IP case gets its own message.
+- Replacing a credential in place is supported, so rotating a key does not require removing the account.
+
+### 7.4 Data flow and state
+
+- Unidirectional flow. One immutable `UiState` per screen as `StateFlow`, collected with `collectAsStateWithLifecycle`. Streams use `WhileSubscribed(5_000)`.
+- Typed results with a sealed `AppError`. Provider error codes map into it in the adapters.
+- Mutations go through one serial queue per resource. Optimistic changes are an overlay of pending operations. A failure removes only its own operation and refetches.
+- Retries only for idempotent calls, honouring `Retry-After` with jitter and at most two retries. POST is never retried.
+- `Semaphore(4)` limits concurrent analytics requests.
+- Data refreshes when the app returns to the foreground, so edits made on the web are picked up.
+- Manual dependency injection through `AppGraph`. Type-safe Navigation 3 with saved back stack.
+
+### 7.5 Native API mapping
+
+| Need | API |
+|---|---|
+| Secret storage | Keystore AES-256-GCM, StrongBox when available, `setUnlockedDeviceRequired(true)`, `AtomicFile`. Account ID, provider and app lock flag bound as associated data |
+| App lock | Platform `BiometricPrompt`, `ActivityLifecycleCallbacks` with an `elapsedRealtime()` background timer, `FLAG_SECURE` |
+| Networking | `HttpsURLConnection`, no caches, no redirects, bounded reads, cancellation by `disconnect()` |
+| Validation | `java.net.IDN`, `android.net.InetAddresses` |
+| Connectivity | `ConnectivityManager.registerDefaultNetworkCallback` |
+| Downloads | `DownloadManager` |
+| Sharing in | `ACTION_SEND` intent filter for `text/plain` |
+| Language, splash | `LocaleManager`, platform `SplashScreen` |
+
+---
+
+## 8. Security and privacy model
+
+### 8.1 Assets
+
+NextDNS API keys and Control D tokens (full account control), query logs (browsing history), profile configuration, linked IP update tokens.
+
+### 8.2 Threats and controls
+
+| Adversary | Controls |
+|---|---|
+| Other apps | Only the launcher and share activities exported. No backups. Sensitive clipboard flag. No logging in release |
+| Physical access | App lock with no first-frame flash. `FLAG_SECURE`. Biometric re-auth for destructive actions (delete profile, clear logs, change log location, remove account). Recovery means "remove account and wipe", never a bypass |
+| Network attacker | TLS with system CAs. Credentials bound to hosts: `X-Api-Key` only to `api.nextdns.io` and `ipv4.api.nextdns.io`, `Authorization: Bearer` only to `api.controld.com`. No redirects |
+| Malicious server data | Typed decoding, `Unknown(raw)` for unknown enums, 4 MiB body cap, 64 KiB SSE line cap, control and bidi characters stripped, punycode in details |
+| Third-party SDKs | Firebase removed. Sentry opt-in with a unit-tested scrubber and instrumentation off |
+| Supply chain | Exact pins, Gradle dependency verification, wrapper validation, OSV-Scanner, secret scanning |
+
+Out of scope: rooted or compromised OS, provider server compromise beyond data validation.
+
+### 8.3 Validation boundary
+
+Validators in `:core` return typed results for NextDNS keys, Control D tokens, profile IDs, domains (URL stripping, IDN to ASCII, label and total length, trailing dot), TLDs against the catalog, rewrite and spoof targets (IP literal or hostname), proxy identifiers against `/proxies`, DDNS hostnames, profile and folder names, rule comments (64 characters for Control D), invite emails and roles, schedule times and shared text from the share target. URL path segments are encoded one at a time, and `.` and `..` are rejected.
+
+### 8.4 Data lifecycle
+
+- **Memory.** Credentials decrypted once per session. Logs, analytics and catalogs held in memory only, cleared on account switch, profile switch or sign-out.
+- **Disk.** Vault file and non-sensitive preferences only. No HTTP cache. Exports go through `DownloadManager` or the system file picker to a location the user chooses.
+- **Removal.** Removing an account deletes its vault entry and cancels its jobs. Removing the last account deletes the Keystore key.
+- **No encryption available.** Session-only mode. Credentials are never written in plaintext.
+
+### 8.5 Verification
+
+- Map every control to OWASP MASVS and record a test or a written justification for each.
+- MobSF static scan of each release candidate.
+- A local diagnostics export (scrubbed of credentials, domains and IPs) for bug reports, since error reporting stays off by default.
+
+---
+
+## 9. Modern Android standards
+
+### 9.1 Build and tooling
+
+- Kotlin DSL build scripts, `plugins {}` blocks, `gradle/libs.versions.toml` with exact versions, Compose BOM.
+- Remove AGP 9 opt-outs. Adopt built-in Kotlin, the new DSL, R8 strict full mode, stable configuration cache.
+- Gradle dependency verification and wrapper checksum validation.
+- Lint `warningsAsErrors`, `MissingTranslation` back to error at release.
+- `explicitApi()` and `allWarningsAsErrors` in the pure Kotlin modules.
+- 16 KB page size compliance. Drop `useLegacyPackaging`.
+- Baseline profile through the `androidx.baselineprofile` plugin.
+- Gradle Managed Devices for instrumented tests.
+
+### 9.2 Testing pyramid
+
+| Layer | Tooling | Scope |
+|---|---|---|
+| Unit | JUnit, `kotlinx-coroutines-test`, MockWebServer (test only) | Validators, client, SSE, adapters, state machines, ViewModels |
+| Contract | Shared suite with recorded fixtures | Every capability against both providers |
+| Instrumented | AndroidX Test on managed devices | Vault, biometric wrapper, share intent |
+| UI | Compose UI test | Onboarding for both providers, lock, add rule, toggle, read-only mode, account switch |
+| Screenshot | Compose Preview Screenshot Testing | Light, dark, dynamic, high contrast, 200% font, RTL |
+| Performance | Macrobenchmark | Cold start, log scrolling |
+
+### 9.3 Acceptance budgets
+
+| Metric | Target |
+|---|---|
+| Cold start to first frame on a mid-range device | Under 500 ms |
+| Release APK size | Under 8 MB |
+| `:core` and provider line coverage | At least 85% |
+| Lint warnings | Zero |
+| Crash-free sessions in beta | At least 99.5% before each rollout step |
+| Jank in log scrolling | Under 1% slow frames |
+
+Each milestone has a definition of done: builds, tests green, budgets not regressed, documentation updated, committed.
+
+---
+
+## 10. Material 3 design system
+
+### 10.1 Foundations
+
+- Stable Compose Material 3. Expressive components only once stable.
+- Dynamic colour by default. Brand fallback schemes from the seed in section 5.3, plus medium and high contrast schemes chosen through `UiModeManager.getContrast()` on Android 14+.
+- Custom status colour roles (`blocked`, `allowed`, `redirected`, `neutral` with on and container variants) for every scheme, harmonised to the primary. No hardcoded colours in screens.
+- Default type scale with the system font. Monospace for domains, IDs and endpoints.
+- M3 shape scale, tonal elevation through surface container roles, M3 motion tokens, reduced motion respected.
+- Material Symbols Outlined, filled for the selected navigation item.
+
+### 10.2 Layout and navigation
+
+- `NavigationSuiteScaffold` switches bar, rail and drawer by window size class.
+- Destinations come from capabilities. For example: Overview, Logs, Rules, Filters, Services, Protection, Devices or Setup, Settings.
+- `ListDetailPaneScaffold` for logs, rules and devices on tablets and foldables.
+- Top bar holds the account and profile switcher and, for NextDNS, the device filter.
+- Edge-to-edge and predictive back everywhere.
+
+### 10.3 Components by pattern
+
+| Pattern | Component |
+|---|---|
+| Provider choice in onboarding | Two large `ElevatedCard` options with the provider name in text |
+| Range | Segmented buttons plus `DateRangePicker` |
+| Log search | `SearchBar` |
+| Filters | `FilterChip` rows |
+| Refresh | `PullToRefreshBox` |
+| Rule action | Segmented buttons for block, bypass, spoof, redirect, showing only supported actions |
+| Removing list items | Swipe with an undo `Snackbar` |
+| Irreversible actions | `AlertDialog` with an explicit verb and biometric re-auth when app lock is on |
+| Catalog pickers | Full-screen dialog with search |
+| Settings rows | `ListItem` with trailing `Switch`, whole row toggles |
+| Schedules | `TimePicker` dialogs |
+| Loading, empty, error | Skeletons, shared empty and error composables with one action |
+| Unavailable capability | Informational card explaining the limit, with a link to the provider dashboard |
+
+### 10.4 Accessibility
+
+48 dp targets. Status never by colour alone. Charts with semantic summaries and a table view. Usable at 200% font. RTL verified. WCAG AA contrast for custom roles. Headings and focus order for TalkBack. Bidi isolation for domains.
+
+---
+
+## 11. Release, compliance and operations
+
+### 11.1 Upgrading users
+
+The production app is the WebView version. Its users have never entered an API key. On first launch after the upgrade they see a one-screen explainer. It says what changed, why an API key or token is needed, where to find it for each provider, and how the credential is stored. Settings that cannot migrate are listed plainly.
+
+### 11.2 Store compliance
+
+- Play Data safety form rewritten. Credentials stored on device, query logs displayed but not collected, crash reports optional, no data shared, Firebase removed.
+- Play listing renamed with the old name kept in the description for six months.
+- Content rating questionnaire re-checked.
+- Target API level kept current.
+
+### 11.3 Translations
+
+- 14 locales today and hundreds of new strings. The existing Tally "incorrect translation" form stays. Weblate (hosted for free for libre projects) is recommended for the new string volume.
+- String freeze at the start of beta. Translators get four weeks before release.
+- `check-strings.py` runs in CI. `MissingTranslation` becomes an error for release builds, with English fallback allowed only for strings added after the freeze.
+
+### 11.4 CI and automation
+
+- `test-dev.yml` runs on every push and pull request, including `native-api-app`.
+- Jobs: unit and contract tests, lint, managed-device instrumented tests, screenshot tests, dependency verification, OSV-Scanner, secret scanning, release build.
+- `deploy.yml`: one APK and one bundle, signing for the new module layout, Play upload through fastlane `supply`.
+- Dependabot configured for the version catalog and GitHub Actions.
+
+### 11.5 Release process
+
+1. Play internal testing for maintainers.
+2. Closed testing for community volunteers, plus GitHub pre-releases.
+3. Open testing for at least two weeks.
+4. Production staged rollout at 5%, 20%, 50% and 100%, gated on the crash-free budget and no open critical issues.
+5. Rollback plan. Halt the rollout in Play Console and ship a fix forward. Keep the last legacy build signed and archived.
+6. Parity sign-off checklist generated from sections 3.2 and 4.4 before production.
+
+### 11.6 Documentation
+
+- README rewritten for the new name and both providers.
+- FAQ: why an API key or token is needed, why F-Droid ended, why Control D has no logs in the app, how to move from F-Droid.
+- CONTRIBUTING, an architecture overview and short decision records in `docs/adr/`.
+- SECURITY.md updated with the new threat model summary and reporting process.
+
+### 11.7 Legal
+
+- Confirm the new name passes trademark checks before any public use.
+- Descriptive, nominative use of "NextDNS" and "Control D" only, with the non-affiliation disclaimer.
+- Privacy policy updated before the beta opens.
+
+---
+
+## 12. Community communication plan
+
+### 12.1 Channels
+
+| Channel | Audience | Use |
+|---|---|---|
+| Pinned GitHub Discussion (or pinned issue) | Contributors, power users | Canonical announcement and Q&A thread, linked from everything else |
+| README banner | Visitors | Short notice linking to the announcement |
+| Legacy app FCM topic `general` (one final use) | Play and GitHub gms users | Transition notice and beta invitation |
+| Legacy app in-app notice | All legacy users including F-Droid | Shown once per launch until dismissed |
+| Play listing "What's new" and description | Play users | Release notes and the rename |
+| r/nextdns, NextDNS help forum, r/ControlD, Control D community | Provider communities | Launch posts, following each community's self-promotion rules |
+| GitHub Releases | Sideload users | Changelog and migration notes |
+
+### 12.2 Timeline
+
+T is the production launch date. Dates are relative so the plan survives schedule changes.
+
+| When | Action | Message |
+|---|---|---|
+| Before T-12 weeks | Name chosen and cleared (D14). Domain and repository name reserved | Internal |
+| T-12 weeks | Announcement 1: pinned Discussion and README banner | The app is being rebuilt natively. It gets a new name, adds Control D, F-Droid support ends, Firebase is removed. Why, what stays the same, a rough timeline and how to join the beta |
+| T-10 weeks | Courtesy messages to NextDNS and Control D (section 4.5) | Unofficial app, API usage, two questions |
+| T-8 weeks | Final legacy release with in-app notice, also on F-Droid. One FCM push to `general` | F-Droid ends, the new name is coming, beta sign-up link |
+| T-6 weeks | Closed beta opens. Announcement 2 | How to join, what to test, how to report issues |
+| T-4 weeks | String freeze. Call for translators | Weblate link |
+| T-3 weeks | Open beta. Migration guide and FAQ published | Step-by-step move, including from F-Droid |
+| T-1 week | Release candidate. Store listing assets ready | Launch date confirmed |
+| T | Staged rollout begins. Repository renamed. Announcement 3 in all channels | What's new, the new name, links |
+| T+2 weeks | Rollout reaches 100%. `fdroiddata` merge request to disable the app (at least four weeks after the T-8 notice) | F-Droid listing retired |
+| T+4 weeks | Retrospective post | What landed, known issues, what's next (widget, tile, sub-organizations) |
+| T+6 months | Remove "formerly NextDNS Manager" from the listing. Archive the old Sentry project | |
+
+### 12.3 Message guidelines
+
+- Lead with what users must do, if anything, and when.
+- Explain the API key or token requirement honestly. It replaces signing in through a web page, and it is stored encrypted on the device.
+- Be explicit that the app is not affiliated with either provider.
+- Give F-Droid users a concrete path (GitHub APK, optionally with Obtainium) and acknowledge the inconvenience.
+- One canonical thread for questions, so answers do not fragment across channels.
+
+---
+
+## 13. Roadmap
+
+Stages are ordered so that each depends only on earlier ones. Milestones inside a stage can overlap where noted. Every milestone ends with a commit, green CI and a short summary of what was built, how it was tested and the trade-offs.
+
+### Stage 0. Decisions and preparation (no app code)
+
+| ID | Milestone | Exit criteria |
+|---|---|---|
+| M0.1 | Resolve D1 to D15 | Recorded in section 1 |
+| M0.2 | Name selection and trademark screening (section 5.2) | Name cleared, domain and repository name reserved |
+| M0.3 | Brand seed colour, icon with monochrome layer, store asset plan | Assets in the repository |
+| M0.4 | API verification with a real NextDNS key and a Control D token (Read and Write) for every endpoint in sections 3.1 and 4.1 | Results table committed. Plan adjusted where endpoints are unavailable |
+| M0.5 | Community announcement 1 and provider outreach | Section 12 timeline started |
+
+### Stage 1. Foundation
+
+| ID | Milestone | Exit criteria |
+|---|---|---|
+| M1 | Build modernisation: Kotlin DSL, version catalog, module split with renamed namespaces, AGP opt-outs removed, dependency verification, strict lint, CI on every push | Empty modules build. CI runs unit tests, lint and scans |
+| M2 | `:core` validators, models, `AppError`, capability interfaces | Table-driven tests including path traversal, IDN, pasted URLs, bidi |
+| M3 | HTTP client with host-bound credential injection for both auth schemes | Tests: error envelopes for both providers, 401 and 403, 429 with `Retry-After`, no POST retry, no redirects, oversize body, malformed JSON, cancellation |
+| M4 | `:platform` vault with multiple accounts | Instrumented tests: invalidated key, corrupt file, no plaintext fallback, per-account isolation |
+| M5 | Accounts, Session and AppLock state machines | Tests: no first-frame flash, background timeout, clock change, credential removal recovery, sign-in cancellation, `CredentialRejected`, credential replacement |
+
+### Stage 2. Provider data layers (M6 and M7 can run in parallel)
+
+| ID | Milestone | Exit criteria |
+|---|---|---|
+| M6 | `:provider:nextdns` with every endpoint in section 3, including the SSE stream with resume, backoff and dedup | Contract suite green. SSE parser tests for partial lines, comments, oversize lines |
+| M7 | `:provider:controld` with every endpoint in section 4.4 | Contract suite green. Read-token and allowed-IP error tests |
+
+### Stage 3. App shell and design system
+
+| ID | Milestone | Exit criteria |
+|---|---|---|
+| M8 | Design system: brand and dynamic schemes, contrast schemes, status roles, typography, shapes, icons, shared components | Screenshot tests for all schemes |
+| M9 | Native shell: platform splash, BiometricPrompt, `FLAG_SECURE`, LocaleManager, connectivity, adaptive navigation from capabilities, Firebase and flavors removed, old dependencies removed | App starts, locks and navigates on phone and tablet |
+| M10 | Onboarding and accounts: provider choice, credential entry with validation, upgrade explainer, account switcher, credential replacement, read-only mode | UI tests for both providers |
+
+### Stage 4. NextDNS features
+
+| ID | Milestone | Exit criteria |
+|---|---|---|
+| M11 | Overview and analytics parity | Device filter, root toggle, reason drill-down, client IPs, custom range |
+| M12 | Logs parity | Filters, raw mode, lifecycle streaming, insights, time toggle, download, list-detail layout |
+| M13 | Rules, filters, services and protection parity | Live catalogs, TLD picker, recreation schedule, typed toggles |
+| M14 | Setup and settings parity | Status, endpoints, Private DNS flow, linked IP, DDNS, retention, location, CA status, age verification, rewrites, sharing, create, duplicate, delete, leave, role awareness |
+
+### Stage 5. Control D features
+
+| ID | Milestone | Exit criteria |
+|---|---|---|
+| M15 | Profiles, filters with modes, services with locations, default rule, options and restrictions | Contract and UI tests |
+| M16 | Custom rules and folders with all four actions | Validation of spoof and redirect targets |
+| M17 | Endpoints, resolvers, known and authorized IPs, `/ip` check, proxy list, account summary, dashboard hand-off cards | UI tests including read-only token |
+
+### Stage 6. Cross-provider features and hardening
+
+| ID | Milestone | Exit criteria |
+|---|---|---|
+| M18 | Share target, profile backup and import, offline state | Tests for shared URL parsing and backup round trips |
+| M19 | Telemetry and diagnostics: Sentry instrumentation off, scrubber tests, fixed uncaught handler, local diagnostics export | Scrubber unit tests, no network calls before opt-in |
+| M20 | Security verification: MASVS mapping, biometric re-auth for destructive actions, MobSF scan, OSV clean | Report committed |
+| M21 | Accessibility and polish: TalkBack pass, chart tables, 200% font, RTL, localized errors, performance budgets met | Screenshot and Macrobenchmark results |
+
+### Stage 7. Release readiness
+
+| ID | Milestone | Exit criteria |
+|---|---|---|
+| M22 | String freeze and translation round | All locales complete or explicitly deferred |
+| M23 | Store and legal: listing, screenshots, Data safety, privacy policy, README, FAQ, SECURITY, ADRs | Reviewed and merged |
+| M24 | Legacy branch final release with in-app notice and the last FCM push (outside this branch) | Shipped at T-8 weeks |
+| M25 | Beta programme: internal, closed, open | Crash-free budget met, parity checklist signed off |
+
+### Stage 8. Launch and follow-up
+
+| ID | Milestone | Exit criteria |
+|---|---|---|
+| M26 | Staged production rollout, repository rename, launch announcements | 100% rollout |
+| M27 | F-Droid retirement merge request, README cleanup | Listing disabled |
+| M28 | Retrospective and v1.1 planning (widget, Quick Settings tile, Control D sub-organizations, encrypted offline cache, Control D analytics if an API appears) | Plan committed |
+
+---
+
+## 14. Risks
+
+| Risk | Likelihood | Impact | Mitigation |
+|---|---|---|---|
+| Undocumented NextDNS endpoints reject API keys | Medium | Setup, sharing and recreation features drop to web hand-off | Verify in M0.4 before building them |
+| Control D never offers an analytics API | High | No Control D logs in the app | Clear in-app explanation and dashboard link. Revisit if an API appears |
+| Chosen name conflicts with a trademark | Low after screening | Forced second rebrand | Formal search in M0.2 before any public use |
+| F-Droid users do not see the notice | Medium | Users stuck on an old build | Four-week notice window, README, community posts, disabled listing explains the move |
+| Upgrading users abandon the app at the API key step | Medium | Uninstalls, poor reviews | Explainer screen, provider-specific instructions, beta feedback on copy |
+| Provider API breaking changes | Medium | Features break | Typed decoding with `Unknown`, contract tests, fast release pipeline |
+| Scope creep from parity on two providers | High | Delays | Stage order lets NextDNS ship first if needed. Control D stages can move to a fast follow without blocking launch |
