@@ -10,15 +10,16 @@ This is the single source of truth for the rewrite. It covers the audit of the c
 1. [Decisions](#1-decisions)
 2. [Audit of the current app](#2-audit-of-the-current-app)
 3. [Parity with my.nextdns.io](#3-parity-with-mynextdnsio)
-4. [Distribution changes: F-Droid exit and single build](#4-distribution-changes-f-droid-exit-and-single-build)
-5. [Architecture](#5-architecture)
-6. [Security and privacy model](#6-security-and-privacy-model)
-7. [Modern Android standards](#7-modern-android-standards)
-8. [Material 3 design system](#8-material-3-design-system)
-9. [Release, compliance and operations](#9-release-compliance-and-operations)
-10. [Community communication plan](#10-community-communication-plan)
-11. [Roadmap](#11-roadmap)
-12. [Risks](#12-risks)
+4. [Open GitHub issues](#4-open-github-issues)
+5. [Distribution changes: F-Droid exit and single build](#5-distribution-changes-f-droid-exit-and-single-build)
+6. [Architecture](#6-architecture)
+7. [Security and privacy model](#7-security-and-privacy-model)
+8. [Modern Android standards](#8-modern-android-standards)
+9. [Material 3 design system](#9-material-3-design-system)
+10. [Release, compliance and operations](#10-release-compliance-and-operations)
+11. [Community communication plan](#11-community-communication-plan)
+12. [Roadmap](#12-roadmap)
+13. [Risks](#13-risks)
 
 ---
 
@@ -34,6 +35,9 @@ This is the single source of truth for the rewrite. It covers the audit of the c
 | A4 | Keep the name NextDNS Manager and the current branding. No rebrand |
 | A5 | NextDNS only. No other DNS providers |
 | A6 | Notify the current community before, during and after the transition |
+| A7 | Every open feature request is in v1 scope, except alternate store distribution ([#449](https://github.com/doubleangels/nextdnsmanager/issues/449)). See section 4 |
+| A8 | Multiple NextDNS accounts ship in v1 ([#539](https://github.com/doubleangels/nextdnsmanager/issues/539)) |
+| A9 | A home screen widget, a Private DNS toggle and app shortcuts ship in v1 ([#626](https://github.com/doubleangels/nextdnsmanager/issues/626), [#646](https://github.com/doubleangels/nextdnsmanager/issues/646), [#604](https://github.com/doubleangels/nextdnsmanager/issues/604)) |
 
 ### 1.2 Open, with recommendations
 
@@ -43,14 +47,17 @@ This is the single source of truth for the rewrite. It covers the audit of the c
 | D2 | Legacy settings migration | Drop `security-crypto` entirely. Upgrading users enter an API key anyway, so a one-time reset of theme, app lock and error reporting is acceptable |
 | D3 | minSdk | Keep 32. API 32 loses per-app language only |
 | D4 | Certificate pinning | None. System CAs only. A NextDNS certificate rotation would otherwise break the app |
-| D5 | Build flavors and FCM | One build, Firebase removed. Announcements move to an in-app "What's new" screen (section 4.2) |
+| D5 | Build flavors and FCM | One build, Firebase removed. Announcements move to an in-app "What's new" screen (section 5.2) |
 | D6 | Account features | Web hand-off to `my.nextdns.io/account` |
 | D7 | Service favicons | Monogram avatars by default. Remote favicons only as an opt-in because they reveal viewed services to a third party |
 | D8 | Share target (add a shared link's domain to the denylist or allowlist) | Yes, cheap and high value |
-| D9 | Multiple NextDNS accounts | v1.1. The vault design supports it, but it is not needed for parity |
-| D10 | Offline behavior | Clear offline state, no disk cache in v1 |
+| D9 | Multiple NextDNS accounts | Decided, v1 (A8) |
+| D10 | Offline behavior | Clear offline state. Only the minimal profile list the widget and shortcuts need is stored, encrypted (section 7.4) |
 | D11 | Profile backup | Export and import of a profile's configuration as JSON |
-| D12 | Home screen widget and Quick Settings tile | v1.1 |
+| D12 | Home screen widget and Quick Settings tile | Decided, v1 (A9) |
+| D13 | How the app gets permission to change Private DNS | A one-time ADB grant of `WRITE_SECURE_SETTINGS`, with in-app instructions. No Shizuku in v1, because it adds a third-party library and a privileged service. Revisit Shizuku if users ask after launch |
+| D14 | Private DNS toggle surface ([#646](https://github.com/doubleangels/nextdnsmanager/issues/646) asks for a notification) | A Quick Settings tile as the main surface, plus an optional persistent notification with mode actions for users who prefer it. The tile needs no notification permission and no ongoing notification |
+| D15 | Widget implementation | Platform `AppWidgetProvider` with `RemoteViews` and system dynamic colour resources. Glance is first-party but adds a dependency for a single widget |
 
 ---
 
@@ -165,7 +172,8 @@ Legend: ✅ present, 🟡 partial, ❌ missing, 🌐 deliberate web hand-off.
 | Analytics | Counters, chart, domains, reasons, devices, protocols, query types, DNSSEC, encryption, IP versions, destinations | ✅ | Keep |
 | Analytics | Device filter, root domains, reason drill-down, client IPs, custom range | ❌ | Add |
 | Logs | Search, status, paging, allow or block, clear | ✅ | Keep, fix H2 |
-| Logs | Error filter, device filter, raw mode, time format, tracker insights, download | ❌ | Add |
+| Logs | Error filter, device filter, raw mode, time format, tracker insights | ❌ | Add |
+| Logs | Download | ❌ (broken in the legacy app, [#712](https://github.com/doubleangels/nextdnsmanager/issues/712)) | CSV saved through the system "Save as" dialog |
 | Logs | Streaming | 🟡 | Rebuild with lifecycle, resume, backoff |
 | Settings | Rename, logs toggles, block page, performance, web3, rewrites | ✅ | Keep |
 | Settings | Site's nine retention options, location change, block page CA status, age verification | 🟡 or ❌ | Add |
@@ -180,49 +188,77 @@ Every profile-level feature is in scope. Account features need a password sessio
 
 ---
 
-## 4. Distribution changes: F-Droid exit and single build
+## 4. Open GitHub issues
 
-### 4.1 F-Droid exit
+Reviewed on 2026-11-20. Ten issues are open. Alternate store distribution ([#449](https://github.com/doubleangels/nextdnsmanager/issues/449)) is out of scope by decision. The rest are covered below. Once this plan is approved, each issue should get a comment linking to its milestone (section 11).
+
+### 4.1 Feature requests
+
+| Issue | Request | Plan | Milestone |
+|---|---|---|---|
+| [#539](https://github.com/doubleangels/nextdnsmanager/issues/539) | Several NextDNS accounts, managed independently in one app | Multiple accounts, each with its own API key in the vault and its own profiles. An account switcher sits in the top bar and onboarding offers "Add another account". The request also asks for separate cookies and fingerprints so NextDNS cannot link the accounts. That doesn't apply to an API client, and the app won't try to hide that one device and IP manage several accounts. The FAQ will say so plainly | M4, M5, M10 |
+| [#646](https://github.com/doubleangels/nextdnsmanager/issues/646) | One-tap switching of Android Private DNS between Off, Automatic and NextDNS | **Private DNS control** (section 6.5). A Quick Settings tile cycles Off, Automatic and the selected NextDNS profile. An optional persistent notification offers the same actions. Writing the system setting needs `WRITE_SECURE_SETTINGS`, granted once over ADB with guided instructions (D13). Without the grant, the tile copies the hostname and opens network settings | M17 |
+| [#626](https://github.com/doubleangels/nextdnsmanager/issues/626) | A home screen widget to switch the Private DNS profile quickly | **Profile widget** listing the account's profiles with the active one highlighted. Tapping a profile switches Private DNS directly when the ADB grant exists. Otherwise it copies the profile's DoT hostname and opens network settings. A second, smaller "Open Private DNS settings" widget is included | M18 |
+| [#604](https://github.com/doubleangels/nextdnsmanager/issues/604) | Bookmarks to specific pages of specific profiles, including on the launcher | **App shortcuts.** Any screen of any profile can be pinned to the launcher with `ShortcutManager.requestPinShortcut`, from a "Add to home screen" action in each screen's overflow menu. Recently used profile pages appear as dynamic launcher shortcuts. Shortcuts open through validated deep links and still respect app lock | M19 |
+
+### 4.2 Bug reports and questions resolved by the rewrite
+
+These are reported against the legacy WebView app. The rewrite replaces the code involved, and each gets a regression test.
+
+| Issue | Problem | How the rewrite resolves it | Milestone |
+|---|---|---|---|
+| [#712](https://github.com/doubleangels/nextdnsmanager/issues/712) | Log download saves an unreadable file in app storage with no "Save as" prompt | Logs download through the API as CSV and are saved with the system "Save as" dialog (`ACTION_CREATE_DOCUMENT`). The user chooses the location and the file is readable by other apps | M12 |
+| [#682](https://github.com/doubleangels/nextdnsmanager/issues/682) | Blank screen after folding or unfolding | Native adaptive layouts with state that survives configuration changes. Tested on a foldable Gradle Managed Device with posture and size changes | M9, M21 |
+| [#666](https://github.com/doubleangels/nextdnsmanager/issues/666) | A black square covers selected text | Native text with `SelectionContainer` where selection makes sense (domains, IDs, endpoints) and the standard text toolbar | M8 |
+| [#541](https://github.com/doubleangels/nextdnsmanager/issues/541) | The horizontal tab bar stutters and sticks | The WebView tab bar is replaced by adaptive native navigation. Covered by the scrolling jank budget | M9, M21 |
+| [#698](https://github.com/doubleangels/nextdnsmanager/issues/698) | Wi-Fi won't connect while Private DNS is set | Usually a network that blocks DNS-over-TLS on port 853 or has a captive portal. The Setup screen detects when Private DNS is configured but not working (`LinkProperties.isPrivateDnsActive()` and `getPrivateDnsServerName()`) and explains what to try. Private DNS control (#646) also makes switching to Automatic one tap | M14, M17 |
+
+## 5. Distribution changes: F-Droid exit and single build
+
+### 5.1 F-Droid exit
 
 1. Ship one final F-Droid release of the legacy app with an in-app notice. It says that F-Droid support ends and links to Play and GitHub Releases. This change happens on the legacy release branch, not on `native-api-app`.
 2. After the notice has been live for at least four weeks, open a merge request in `fdroiddata` that disables the app with a short reason. Otherwise F-Droid keeps building tags automatically, and the builds start failing once the foss flavor is removed.
 3. Explain in the README and FAQ that F-Droid installs are signed with F-Droid's key, so moving to the Play or GitHub build means uninstalling first. The user enters their API key once, which the rewrite requires anyway.
 4. Remove F-Droid badges, the installation section, the update-time table, the signing table and the FCM FAQ from the README.
 
-### 4.2 Single build, Firebase removed (D5)
+### 5.2 Single build, Firebase removed (D5)
 
 - Remove the `gms` and `foss` flavors, `google-services.json`, the Google Services plugin, `CustomFirebaseMessagingService`, `MessagingInitializer`, `FlavorHooks` and the `processFoss…GoogleServices` workaround.
 - Remove the foss jobs from `deploy.yml` and `test-dev.yml`. GitHub Releases ships one signed `app-release.apk`. Play gets the bundle.
 - Replace push announcements with a "What's new" screen shown once per version, from bundled release notes.
 - The single build works on de-Googled devices, so the GitHub APK covers former F-Droid users. Document Obtainium as an update option for GitHub installs.
-- Use the existing FCM topic **once more** from the legacy app to announce the transition (section 10) before Firebase is removed.
+- Use the existing FCM topic **once more** from the legacy app to announce the transition (section 11) before Firebase is removed.
 
 ---
 
-## 5. Architecture
+## 6. Architecture
 
-### 5.1 Modules
+### 6.1 Modules
 
 ```
 :core              Pure Kotlin/JVM. Models, validators, AppError, HTTP client,
                    SSE parser, NextDNS DTOs and repositories, Session and
                    AppLock state machines (injected clock and lifecycle).
 :platform          Android, no UI. Keystore vault, BiometricPrompt wrapper,
-                   connectivity, preferences, clipboard, DownloadManager.
+                   connectivity, preferences, clipboard, Storage Access
+                   Framework, Private DNS control, shortcuts, widget data.
 :app               Compose UI, ViewModels, design system, AppGraph.
 :baselineprofile   Baseline profile generator and Macrobenchmark.
 ```
 
-Feature packages in `:app`: `overview`, `logs`, `lists`, `setup`, `security`, `privacy`, `parental`, `settings`, `sharing`, `appsettings`, `onboarding`, `lock`.
+Feature packages in `:app`: `overview`, `logs`, `lists`, `setup`, `security`, `privacy`, `parental`, `settings`, `sharing`, `accounts`, `privatedns` (tile and notification), `widget`, `shortcuts`, `appsettings`, `onboarding`, `lock`.
 
-### 5.2 Session
+### 6.2 Accounts and session
 
-- `SessionState`: `Initializing`, `StorageUnavailable`, `SignedOut`, `Locked`, `Active(profiles, selected, role)`, `KeyRejected`.
-- Any 401 or 403 moves the session to `KeyRejected` with one re-authentication screen.
-- Replacing the API key in place is supported, so rotating a key does not require signing out.
-- The vault stores secrets per account ID from day one, so multiple accounts (D9) can be added later without a storage migration.
+- `Account(id, label, keySuffix)`, with the API key in the vault under the account ID. Any number of accounts ([#539](https://github.com/doubleangels/nextdnsmanager/issues/539)). Labels default to the account's first profile name and can be renamed.
+- `SessionState` for the active account: `Initializing`, `StorageUnavailable`, `NoAccounts`, `Locked`, `Active(account, profiles, selected, role)`, `KeyRejected(account)`.
+- Switching accounts cancels the previous account's jobs and clears its in-memory data before the new account loads, so data never crosses accounts.
+- Any 401 or 403 moves that account to `KeyRejected` with one re-authentication screen. Other accounts are unaffected.
+- Replacing an API key in place is supported, so rotating a key does not require removing the account.
+- App lock covers the whole app, not individual accounts.
 
-### 5.3 Data flow and state
+### 6.3 Data flow and state
 
 - Unidirectional flow. One immutable `UiState` per screen as `StateFlow`, collected with `collectAsStateWithLifecycle`. Streams use `WhileSubscribed(5_000)`.
 - Typed results with a sealed `AppError`. API error codes map into it in the repositories.
@@ -232,8 +268,9 @@ Feature packages in `:app`: `overview`, `logs`, `lists`, `setup`, `security`, `p
 - Catalogs are cached in memory for the session.
 - Data refreshes when the app returns to the foreground, so edits made on the web are picked up.
 - Manual dependency injection through `AppGraph`. Type-safe Navigation 3 with saved back stack.
+- Every screen has a typed route `(accountId, profileId, destination)`. The same routes power deep links from shortcuts and the widget.
 
-### 5.4 Native API mapping
+### 6.4 Native API mapping
 
 | Need | API |
 |---|---|
@@ -242,43 +279,60 @@ Feature packages in `:app`: `overview`, `logs`, `lists`, `setup`, `security`, `p
 | Networking | `HttpsURLConnection`, no caches, no redirects, bounded reads, cancellation by `disconnect()` |
 | Validation | `java.net.IDN`, `android.net.InetAddresses` |
 | Connectivity | `ConnectivityManager.registerDefaultNetworkCallback` |
-| Downloads | `DownloadManager` |
+| Log download and backups | Storage Access Framework `ACTION_CREATE_DOCUMENT` and `ACTION_OPEN_DOCUMENT` |
 | Sharing in | `ACTION_SEND` intent filter for `text/plain` |
 | Language, splash | `LocaleManager`, platform `SplashScreen` |
+| Private DNS status | `ConnectivityManager` `LinkProperties.isPrivateDnsActive()` and `getPrivateDnsServerName()` |
+| Private DNS changes | `Settings.Global` keys `private_dns_mode` and `private_dns_specifier`, only with `WRITE_SECURE_SETTINGS` granted over ADB |
+| Quick Settings tile | `TileService` |
+| Persistent toggle notification | `NotificationManager` with a low-importance channel and action buttons, opt-in |
+| Widget | `AppWidgetProvider` with `RemoteViews` and system dynamic colour resources |
+| Launcher shortcuts | `ShortcutManager` dynamic shortcuts and `requestPinShortcut` |
 
+### 6.5 Private DNS control
+
+Shared by the Quick Settings tile ([#646](https://github.com/doubleangels/nextdnsmanager/issues/646)), the optional notification, the widget ([#626](https://github.com/doubleangels/nextdnsmanager/issues/626)) and the Setup screen.
+
+- **Reading state** uses public `LinkProperties` APIs and needs no permission. It reports Off, Automatic or Hostname, and whether Private DNS is actually working on the current network ([#698](https://github.com/doubleangels/nextdnsmanager/issues/698)).
+- **Changing state** needs `WRITE_SECURE_SETTINGS`. Apps cannot request it at runtime. The user grants it once with `adb shell pm grant com.doubleangels.nextdnsmanagement android.permission.WRITE_SECURE_SETTINGS`. A guided screen shows the command with copy actions, links to a wireless debugging guide, and checks the grant.
+- **Writes are limited** to the two Private DNS keys. The hostname is always generated by the app from a validated profile ID and optional device name (`<device>-<profileId>.dns.nextdns.io`), never typed free-form.
+- **Without the grant**, every surface falls back to copying the hostname (marked sensitive) and opening network settings, with a short note on where Private DNS lives on the device.
+- **Modes cycle** Off, Automatic and the selected profile. The tile label and subtitle show the current mode and profile name.
+- The persistent notification is opt-in, asks for `POST_NOTIFICATIONS` only when the user turns it on, and uses a low-importance channel.
 ---
 
-## 6. Security and privacy model
+## 7. Security and privacy model
 
-### 6.1 Assets
+### 7.1 Assets
 
 The API key (full account control), query logs (browsing history), profile configuration, the linked IP update token.
 
-### 6.2 Threats and controls
+### 7.2 Threats and controls
 
 | Adversary | Controls |
 |---|---|
-| Other apps | Only the launcher and share activities exported. No backups. Sensitive clipboard flag. No logging in release |
-| Physical access | App lock with no first-frame flash. `FLAG_SECURE`. Biometric re-auth for destructive actions (delete profile, clear logs, change log location, sign out). Recovery means "sign out and wipe", never a bypass |
+| Other apps | Only the launcher activity, the share target, the tile service (bound only by the system through `BIND_QUICK_SETTINGS_TILE`) and the widget receiver are exported. Shortcut and widget intents are treated as untrusted input. Their routes are parsed and validated against known accounts and profiles, and unknown values fall back to Overview. No backups. Sensitive clipboard flag. No logging in release |
+| Physical access | App lock with no first-frame flash. Opening a shortcut or a widget link still requires unlocking. While app lock is on, the widget shows profile names only if the user allows it in settings, and otherwise shows "Profile 1", "Profile 2". `FLAG_SECURE`. Biometric re-auth for destructive actions (delete profile, clear logs, change log location, sign out). Recovery means "sign out and wipe", never a bypass |
 | Network attacker | TLS with system CAs. `X-Api-Key` attached only to `api.nextdns.io` and `ipv4.api.nextdns.io`. No redirects |
 | Malicious server data | Typed decoding, `Unknown(raw)` for unknown enums, 4 MiB body cap, 64 KiB SSE line cap, control and bidi characters stripped, punycode in details |
 | Third-party SDKs | Firebase removed. Sentry opt-in with a unit-tested scrubber and instrumentation off |
 | Supply chain | Exact pins, Gradle dependency verification, wrapper validation, OSV-Scanner, secret scanning |
+| Misuse of `WRITE_SECURE_SETTINGS` | Granted only by the user over ADB. Used only for the two Private DNS keys, behind one class with unit tests. Hostnames come from validated profile IDs. The store listing, FAQ and privacy policy explain the use |
 
 Out of scope: rooted or compromised OS, NextDNS server compromise beyond data validation.
 
-### 6.3 Validation boundary
+### 7.3 Validation boundary
 
 Validators in `:core` return typed results for the API key, profile IDs, domains (URL stripping, IDN to ASCII, label and total length, trailing dot), TLDs against the catalog, rewrite answers (IP literal or hostname), DDNS hostnames, profile names, invite emails and roles, recreation times and shared text from the share target. URL path segments are encoded one at a time, and `.` and `..` are rejected.
 
-### 6.4 Data lifecycle
+### 7.4 Data lifecycle
 
 - **Memory.** The key is decrypted once per session. Logs, analytics and catalogs held in memory only, cleared on profile switch or sign-out.
-- **Disk.** Vault file and non-sensitive preferences only. No HTTP cache. Exports go through `DownloadManager` or the system file picker to a location the user chooses.
-- **Sign-out.** Deletes the vault entry and the Keystore key, cancels all jobs, clears state.
+- **Disk.** Vault file, non-sensitive preferences, and a small encrypted profile index (account ID, profile ID, profile name) that the widget, tile and shortcuts need when the app is not running. No HTTP cache. Log downloads and backups are written only to a location the user picks in the "Save as" dialog.
+- **Removing an account.** Deletes its vault entry and profile index entries, removes its pinned and dynamic shortcuts (`ShortcutManager.disableShortcuts` with an explanation), refreshes widgets and cancels its jobs. Removing the last account also deletes the Keystore key.
 - **No encryption available.** Session-only mode. The key is never written in plaintext.
 
-### 6.5 Verification
+### 7.5 Verification
 
 - Map every control to OWASP MASVS and record a test or a written justification for each.
 - MobSF static scan of each release candidate.
@@ -286,9 +340,9 @@ Validators in `:core` return typed results for the API key, profile IDs, domains
 
 ---
 
-## 7. Modern Android standards
+## 8. Modern Android standards
 
-### 7.1 Build and tooling
+### 8.1 Build and tooling
 
 - Kotlin DSL build scripts, `plugins {}` blocks, `gradle/libs.versions.toml` with exact versions, Compose BOM.
 - Remove AGP 9 opt-outs. Adopt built-in Kotlin, the new DSL, R8 strict full mode, stable configuration cache.
@@ -299,17 +353,17 @@ Validators in `:core` return typed results for the API key, profile IDs, domains
 - Baseline profile through the `androidx.baselineprofile` plugin.
 - Gradle Managed Devices for instrumented tests.
 
-### 7.2 Testing pyramid
+### 8.2 Testing pyramid
 
 | Layer | Tooling | Scope |
 |---|---|---|
 | Unit | JUnit, `kotlinx-coroutines-test`, MockWebServer (test only) | Validators, client, SSE, repositories, state machines, ViewModels |
-| Instrumented | AndroidX Test on managed devices | Vault, biometric wrapper, share intent |
-| UI | Compose UI test | Onboarding, lock, add domain, toggle setting, viewer read-only |
+| Instrumented | AndroidX Test on managed devices, including a foldable profile | Vault, biometric wrapper, share intent, shortcut and widget deep links, tile service, Private DNS control with and without the grant, fold and unfold ([#682](https://github.com/doubleangels/nextdnsmanager/issues/682)) |
+| UI | Compose UI test | Onboarding, adding and switching accounts, lock, add domain, toggle setting, viewer read-only, log download "Save as" ([#712](https://github.com/doubleangels/nextdnsmanager/issues/712)), text selection ([#666](https://github.com/doubleangels/nextdnsmanager/issues/666)) |
 | Screenshot | Compose Preview Screenshot Testing | Light, dark, dynamic, high contrast, 200% font, RTL |
 | Performance | Macrobenchmark | Cold start, log scrolling |
 
-### 7.3 Acceptance budgets
+### 8.3 Acceptance budgets
 
 | Metric | Target |
 |---|---|
@@ -324,9 +378,9 @@ Each milestone has a definition of done: builds, tests green, budgets not regres
 
 ---
 
-## 8. Material 3 design system
+## 9. Material 3 design system
 
-### 8.1 Foundations
+### 9.1 Foundations
 
 - Stable Compose Material 3. Expressive components only once stable.
 - Dynamic colour by default. Fallback light and dark schemes generated in Material Theme Builder from the existing brand colour (`@color/main`), plus medium and high contrast schemes chosen through `UiModeManager.getContrast()` on Android 14+.
@@ -336,15 +390,15 @@ Each milestone has a definition of done: builds, tests green, budgets not regres
 - Material Symbols Outlined, filled for the selected navigation item.
 - Launcher icon gains a monochrome layer for Android 13+ themed icons.
 
-### 8.2 Layout and navigation
+### 9.2 Layout and navigation
 
 - `NavigationSuiteScaffold` switches bar, rail and drawer by window size class.
 - Destinations: Overview, Logs, Lists, Profile (Setup, Security, Privacy, Parental control, Settings) and App settings.
 - `ListDetailPaneScaffold` for logs and lists on tablets and foldables.
-- Top bar holds the profile switcher and the device filter.
+- Top bar holds the account and profile switcher and the device filter. With one account, only the profile switcher shows.
 - Edge-to-edge and predictive back everywhere.
 
-### 8.3 Components by pattern
+### 9.3 Components by pattern
 
 | Pattern | Component |
 |---|---|
@@ -359,39 +413,45 @@ Each milestone has a definition of done: builds, tests green, budgets not regres
 | Recreation schedule | `TimePicker` dialogs |
 | Loading, empty, error | Skeletons, shared empty and error composables with one action |
 | Web hand-off | Informational card with a link to the dashboard |
+| Account switcher | Top bar menu with avatars (monogram), the active account checked, "Add account" and "Manage accounts" at the bottom |
+| Pin to home screen | "Add to home screen" in each screen's overflow menu, using the system pin dialog |
+| Private DNS grant | Step-by-step screen with copyable commands, a "Check again" button and a clear explanation of what the permission allows |
+| Quick Settings tile | Active, inactive and unavailable states with the mode as subtitle, following the system tile style |
+| Widget | Rounded `RemoteViews` layout using system dynamic colours (`@android:color/system_accent1_*` and neutral roles), resizable, with a compact single-profile layout and a list layout |
 
-### 8.4 Accessibility
+### 9.4 Accessibility
 
 48 dp targets. Status never by colour alone. Charts with semantic summaries and a table view. Usable at 200% font. RTL verified. WCAG AA contrast for custom roles. Headings and focus order for TalkBack. Bidi isolation for domains.
 
 ---
 
-## 9. Release, compliance and operations
+## 10. Release, compliance and operations
 
-### 9.1 Upgrading users
+### 10.1 Upgrading users
 
 The production app is the WebView version. Its users have never entered an API key. On first launch after the upgrade they see a one-screen explainer. It says what changed, why an API key is needed, where to find it on `my.nextdns.io/account`, and how the key is stored. Settings that cannot migrate are listed plainly.
 
-### 9.2 Store compliance
+### 10.2 Store compliance
 
 - Play Data safety form rewritten. API key stored on device, query logs displayed but not collected, crash reports optional, no data shared, Firebase removed.
+- `WRITE_SECURE_SETTINGS` is declared in the manifest but only usable after a manual ADB grant. The store description, FAQ and privacy policy explain what it does and that it is optional. Check Play's policy on this permission during M24.
 - Content rating questionnaire re-checked.
 - Target API level kept current.
 
-### 9.3 Translations
+### 10.3 Translations
 
 - 14 locales and hundreds of new strings. The existing Tally "incorrect translation" form stays. Weblate (free hosting for libre projects) is recommended for the new string volume.
 - String freeze at the start of beta. Translators get four weeks before release.
 - `check-strings.py` runs in CI. `MissingTranslation` becomes an error for release builds, with English fallback allowed only for strings added after the freeze.
 
-### 9.4 CI and automation
+### 10.4 CI and automation
 
 - `test-dev.yml` runs on every push and pull request, including `native-api-app`.
 - Jobs: unit tests, lint, managed-device instrumented tests, screenshot tests, dependency verification, OSV-Scanner, secret scanning, release build.
 - `deploy.yml`: one APK and one bundle, signing for the new module layout, Play upload through fastlane `supply`.
 - Dependabot configured for the version catalog and GitHub Actions.
 
-### 9.5 Release process
+### 10.5 Release process
 
 1. Play internal testing for maintainers.
 2. Closed testing for community volunteers, plus GitHub pre-releases.
@@ -400,7 +460,7 @@ The production app is the WebView version. Its users have never entered an API k
 5. Rollback plan. Halt the rollout in Play Console and ship a fix forward. Keep the last legacy build signed and archived.
 6. Parity sign-off checklist generated from section 3.2 before production.
 
-### 9.6 Documentation
+### 10.6 Documentation
 
 - README updated for the native app, the single build and the F-Droid exit.
 - FAQ: why an API key is needed, why F-Droid ended, how to move from F-Droid, why account settings open the website.
@@ -408,16 +468,16 @@ The production app is the WebView version. Its users have never entered an API k
 - SECURITY.md updated with the threat model summary and reporting process.
 - Privacy policy updated for the removal of Firebase and the API key model before the beta opens.
 
-### 9.7 Legal
+### 10.7 Legal
 
 - Keep the existing non-affiliation disclaimer.
 - Confirm that the bundled `nextdns_logo` drawable and the store graphics are acceptable use for an unofficial app, or replace them with an original icon.
 
 ---
 
-## 10. Community communication plan
+## 11. Community communication plan
 
-### 10.1 Channels
+### 11.1 Channels
 
 | Channel | Audience | Use |
 |---|---|---|
@@ -429,13 +489,14 @@ The production app is the WebView version. Its users have never entered an API k
 | r/nextdns and the NextDNS help forum | NextDNS community | Beta call and launch post, following each community's self-promotion rules |
 | GitHub Releases | Sideload users | Changelog and migration notes |
 
-### 10.2 Timeline
+### 11.2 Timeline
 
 T is the production launch date. Dates are relative so the plan survives schedule changes.
 
 | When | Action | Message |
 |---|---|---|
 | T-12 weeks | Announcement 1: pinned Discussion and README banner | The app is being rebuilt natively on the NextDNS API, F-Droid support ends, Firebase is removed. Why, what stays the same, a rough timeline and how to join the beta |
+| T-11 weeks | Comment on each open issue in section 4 with its milestone, and add a GitHub milestone label. Close each issue when its milestone ships in a beta | The request is planned for the native app, with a link to this plan |
 | T-10 weeks | Courtesy message to NextDNS (section 3.1 questions) | Unofficial app, API usage, which undocumented endpoints are supported for API keys |
 | T-8 weeks | Final legacy release with in-app notice, also on F-Droid. One FCM push to `general` | F-Droid ends, beta sign-up link |
 | T-6 weeks | Closed beta opens. Announcement 2 | How to join, what to test, how to report issues |
@@ -444,19 +505,20 @@ T is the production launch date. Dates are relative so the plan survives schedul
 | T-1 week | Release candidate. Store listing assets ready | Launch date confirmed |
 | T | Staged rollout begins. Announcement 3 in all channels | What's new, links |
 | T+2 weeks | Rollout reaches 100%. `fdroiddata` merge request to disable the app (at least four weeks after the T-8 notice) | F-Droid listing retired |
-| T+4 weeks | Retrospective post | What landed, known issues, what's next (multiple accounts, widget, tile) |
+| T+4 weeks | Retrospective post | What landed, known issues, what's next |
 
-### 10.3 Message guidelines
+### 11.3 Message guidelines
 
 - Lead with what users must do, if anything, and when.
 - Explain the API key requirement honestly. It replaces signing in through a web page, and it is stored encrypted on the device.
 - Keep the non-affiliation statement.
 - Give F-Droid users a concrete path (GitHub APK, optionally with Obtainium) and acknowledge the inconvenience.
 - One canonical thread for questions, so answers do not fragment across channels.
+- Credit the people who opened the feature requests when announcing the features they asked for.
 
 ---
 
-## 11. Roadmap
+## 12. Roadmap
 
 Stages are ordered so that each depends only on earlier ones. Every milestone ends with a commit, green CI and a short summary of what was built, how it was tested and the trade-offs.
 
@@ -464,19 +526,19 @@ Stages are ordered so that each depends only on earlier ones. Every milestone en
 
 | ID | Milestone | Exit criteria |
 |---|---|---|
-| M0.1 | Resolve D1 to D12 | Recorded in section 1 |
+| M0.1 | Resolve D1 to D15 | Recorded in section 1 |
 | M0.2 | API verification with a real NextDNS key for every endpoint in section 3.1 | Results table committed. Plan adjusted where endpoints are unavailable |
-| M0.3 | Community announcement 1 and NextDNS outreach | Section 10 timeline started |
+| M0.3 | Community announcement 1, issue comments and NextDNS outreach | Section 11 timeline started |
 
 ### Stage 1. Foundation
 
 | ID | Milestone | Exit criteria |
 |---|---|---|
 | M1 | Build modernisation: Kotlin DSL, version catalog, module split, AGP opt-outs removed, dependency verification, strict lint, CI on every push | Empty modules build. CI runs unit tests, lint and scans |
-| M2 | `:core` validators, models, `AppError` | Table-driven tests including path traversal, IDN, pasted URLs, bidi |
+| M2 | `:core` validators, models, `AppError`, typed routes | Table-driven tests including path traversal, IDN, pasted URLs, bidi, malformed deep link routes |
 | M3 | HTTP client with host-bound key injection | Tests: errors in a 200 body, 400, 401 and 403, 429 with `Retry-After`, no POST retry, no redirects, oversize body, malformed JSON, cancellation |
-| M4 | `:platform` Keystore vault | Instrumented tests: invalidated key, corrupt file, no plaintext fallback |
-| M5 | Session and AppLock state machines | Tests: no first-frame flash, background timeout, clock change, credential removal recovery, sign-in cancellation, `KeyRejected`, key replacement |
+| M4 | `:platform` Keystore vault with multiple accounts and the encrypted profile index | Instrumented tests: invalidated key, corrupt file, no plaintext fallback, per-account isolation |
+| M5 | Accounts, Session and AppLock state machines | Tests: no first-frame flash, background timeout, clock change, credential removal recovery, sign-in cancellation, `KeyRejected` per account, key replacement, account switch clears data |
 
 ### Stage 2. Data layer
 
@@ -489,49 +551,59 @@ Stages are ordered so that each depends only on earlier ones. Every milestone en
 
 | ID | Milestone | Exit criteria |
 |---|---|---|
-| M8 | Design system: dynamic, fallback and contrast schemes, status roles, typography, shapes, icons with monochrome launcher layer, shared components | Screenshot tests for all schemes |
-| M9 | Native shell: platform splash, BiometricPrompt, `FLAG_SECURE`, LocaleManager, connectivity, adaptive navigation, Firebase and flavors removed, old dependencies removed | App starts, locks and navigates on phone and tablet |
-| M10 | Onboarding: API key entry with validation, upgrade explainer, key replacement, read-only role handling | UI tests |
+| M8 | Design system: dynamic, fallback and contrast schemes, status roles, typography, shapes, icons with monochrome launcher layer, shared components, text selection behaviour ([#666](https://github.com/doubleangels/nextdnsmanager/issues/666)) | Screenshot tests for all schemes |
+| M9 | Native shell: platform splash, BiometricPrompt, `FLAG_SECURE`, LocaleManager, connectivity, adaptive navigation ([#541](https://github.com/doubleangels/nextdnsmanager/issues/541)), state that survives fold and unfold ([#682](https://github.com/doubleangels/nextdnsmanager/issues/682)), Firebase and flavors removed, old dependencies removed | App starts, locks and navigates on phone, tablet and foldable |
+| M10 | Onboarding and accounts: API key entry with validation, upgrade explainer, add, rename, switch and remove accounts ([#539](https://github.com/doubleangels/nextdnsmanager/issues/539)), key replacement, read-only role handling | UI tests |
 
-### Stage 4. Features
+### Stage 4. Parity features
 
 | ID | Milestone | Exit criteria |
 |---|---|---|
 | M11 | Overview and analytics parity | Device filter, root toggle, reason drill-down, client IPs, custom range |
-| M12 | Logs parity | Filters, raw mode, streaming, insights, time toggle, download, list-detail layout |
+| M12 | Logs parity | Filters, raw mode, streaming, insights, time toggle, CSV download through "Save as" ([#712](https://github.com/doubleangels/nextdnsmanager/issues/712)), list-detail layout |
 | M13 | Lists, security, privacy and parental parity | Live catalogs, TLD picker, recreation schedule, typed toggles, list limits |
-| M14 | Setup parity | Status, endpoints, Private DNS flow, linked IP, DDNS, guides |
+| M14 | Setup parity | Status, endpoints, Private DNS guidance including the "configured but not working" state ([#698](https://github.com/doubleangels/nextdnsmanager/issues/698)), linked IP, DDNS, guides |
 | M15 | Settings and profile parity | Retention, location, CA status, age verification, rewrites, sharing, create, duplicate, delete, leave, role awareness |
 
-### Stage 5. Extras and hardening
+### Stage 5. Android extras requested by the community
+
+These build on the typed routes from M2 and the profile index from M4, so they come after the screens they link to exist.
 
 | ID | Milestone | Exit criteria |
 |---|---|---|
 | M16 | Share target, profile backup and import, offline state, "What's new" screen | Tests for shared URL parsing and backup round trips |
-| M17 | Telemetry and diagnostics: Sentry instrumentation off, scrubber tests, fixed uncaught handler, local diagnostics export | No network calls before opt-in |
-| M18 | Security verification: MASVS mapping, biometric re-auth for destructive actions, MobSF scan, OSV clean | Report committed |
-| M19 | Accessibility and polish: TalkBack pass, chart tables, 200% font, RTL, localized errors, performance budgets met | Screenshot and Macrobenchmark results |
+| M17 | Private DNS control ([#646](https://github.com/doubleangels/nextdnsmanager/issues/646)): status reading, ADB grant flow, Quick Settings tile, optional notification, hostname generation | Unit tests for hostname generation and mode cycling. Instrumented tests with and without the grant |
+| M18 | Home screen widgets ([#626](https://github.com/doubleangels/nextdnsmanager/issues/626)): profile list widget and "Open Private DNS settings" widget, app lock privacy option | Instrumented tests for widget updates, deep links and account removal |
+| M19 | App shortcuts ([#604](https://github.com/doubleangels/nextdnsmanager/issues/604)): pin any screen of any profile, dynamic recent shortcuts, cleanup on account or profile removal | Instrumented tests for pinned shortcut intents, validation of tampered intents, app lock on shortcut launch |
 
-### Stage 6. Release readiness
-
-| ID | Milestone | Exit criteria |
-|---|---|---|
-| M20 | String freeze and translation round | All locales complete or explicitly deferred |
-| M21 | Store and docs: listing, screenshots, Data safety, privacy policy, README, FAQ, SECURITY, ADRs | Reviewed and merged |
-| M22 | Legacy branch final release with in-app notice and the last FCM push (outside this branch) | Shipped at T-8 weeks |
-| M23 | Beta programme: internal, closed, open | Crash-free budget met, parity checklist signed off |
-
-### Stage 7. Launch and follow-up
+### Stage 6. Hardening
 
 | ID | Milestone | Exit criteria |
 |---|---|---|
-| M24 | Staged production rollout and launch announcements | 100% rollout |
-| M25 | F-Droid retirement merge request, README cleanup | Listing disabled |
-| M26 | Retrospective and v1.1 planning (multiple accounts, widget, Quick Settings tile, encrypted offline cache) | Plan committed |
+| M20 | Telemetry and diagnostics: Sentry instrumentation off, scrubber tests, fixed uncaught handler, local diagnostics export | No network calls before opt-in |
+| M21 | Accessibility, polish and performance: TalkBack pass, chart tables, 200% font, RTL, localized errors, foldable posture tests, budgets met ([#682](https://github.com/doubleangels/nextdnsmanager/issues/682), [#541](https://github.com/doubleangels/nextdnsmanager/issues/541)) | Screenshot and Macrobenchmark results |
+| M22 | Security verification: MASVS mapping including the tile, widget, shortcuts and `WRITE_SECURE_SETTINGS`, biometric re-auth for destructive actions, MobSF scan, OSV clean | Report committed |
+
+### Stage 7. Release readiness
+
+| ID | Milestone | Exit criteria |
+|---|---|---|
+| M23 | String freeze and translation round | All locales complete or explicitly deferred |
+| M24 | Store and docs: listing, screenshots, Data safety, permission review, privacy policy, README, FAQ (including the ADB grant and multiple accounts), SECURITY, ADRs | Reviewed and merged |
+| M25 | Legacy branch final release with in-app notice and the last FCM push (outside this branch) | Shipped at T-8 weeks |
+| M26 | Beta programme: internal, closed, open | Crash-free budget met, parity checklist and section 4 issues signed off |
+
+### Stage 8. Launch and follow-up
+
+| ID | Milestone | Exit criteria |
+|---|---|---|
+| M27 | Staged production rollout and launch announcements. Close the resolved issues in section 4 | 100% rollout |
+| M28 | F-Droid retirement merge request, README cleanup | Listing disabled |
+| M29 | Retrospective and v1.1 planning (encrypted offline cache, optional Shizuku support if requested) | Plan committed |
 
 ---
 
-## 12. Risks
+## 13. Risks
 
 | Risk | Likelihood | Impact | Mitigation |
 |---|---|---|---|
@@ -539,4 +611,6 @@ Stages are ordered so that each depends only on earlier ones. Every milestone en
 | F-Droid users do not see the notice | Medium | Users stuck on an old build | Four-week notice window, README, community posts |
 | Upgrading users abandon the app at the API key step | Medium | Uninstalls, poor reviews | Explainer screen, clear instructions, beta feedback on copy |
 | NextDNS API breaking changes (the API is still labelled beta) | Medium | Features break | Typed decoding with `Unknown`, fixture tests, fast release pipeline |
-| Parity scope delays launch | Medium | Late release | Stage 4 milestones are independent. Lower-value parity items can ship in v1.1 |
+| Parity scope delays launch | Medium | Late release | Stage 4 and Stage 5 milestones are independent. Lower-value items can ship in v1.1 |
+| Few users complete the ADB grant | High | The tile and widget mostly fall back to copy and open settings | Make the fallback useful on its own, keep the grant guide short, and rely on beta feedback since the app collects no usage analytics |
+| Google Play objects to `WRITE_SECURE_SETTINGS` | Low | Private DNS switching removed from the Play build | Review the policy in M24. The fallback flow keeps the tile and widget useful |
